@@ -215,7 +215,7 @@ public class OutsiderInventory implements IInventory, INameable {
      * over items.
      */
     private int storePartialItemStack(ItemStack itemStackIn) {
-        int i = this.storeItemStack(itemStackIn);
+        int i = this.getStorableItemStack(itemStackIn);
         if (i == -1) {
             i = this.getFirstEmptyStack();
         }
@@ -260,7 +260,7 @@ public class OutsiderInventory implements IInventory, INameable {
      * Stores a stack in the entity's inventory. It first tries to place it in the selected slot in the entity's hotbar,
      * then the offhand slot, then any available/empty slot in the entity's inventory.
      */
-    public int storeItemStack(ItemStack itemStackIn) {
+    public int getStorableItemStack(ItemStack itemStackIn) {
         if (this.canMergeStacks(this.getStackInSlot(this.mainHandSlotIndex), itemStackIn)) {
             return this.mainHandSlotIndex;
         } else if (this.canMergeStacks(this.getStackInSlot(40), itemStackIn)) {
@@ -271,11 +271,13 @@ public class OutsiderInventory implements IInventory, INameable {
                     return i;
                 }
             }
-
             return -1;
         }
     }
-
+    public boolean storeItemStack(ItemStack itemStack)
+    {
+        return add(getStorableItemStack(itemStack),itemStack);
+    }
     /**
      * Decrement the number of animations remaining. Only called on client side. This is used to handle the animation of
      * receiving a block.
@@ -365,7 +367,7 @@ public class OutsiderInventory implements IInventory, INameable {
     public void placeItemBackInInventory(World worldIn, ItemStack stack) {
         if (!worldIn.isRemote) {
             while(!stack.isEmpty()) {
-                int i = this.storeItemStack(stack);
+                int i = this.getStorableItemStack(stack);
                 if (i == -1) {
                     i = this.getFirstEmptyStack();
                 }

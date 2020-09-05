@@ -1,9 +1,9 @@
-package top.leonx.vanity.entity.ai.brain.utilitybased.decoration;
+package top.leonx.vanity.ai.utilitybased.decoration;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.entity.ai.brain.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
 import top.leonx.vanity.util.BinaryFunc;
 
 public class InertiaTask<T extends LivingEntity> extends UtilityBasedTask<T> {
@@ -38,24 +38,24 @@ public class InertiaTask<T extends LivingEntity> extends UtilityBasedTask<T> {
 
 
     @Override
-    public void action(ServerWorld world, T entity, long executionDuration) {
-        child.action(world,entity,executionDuration);
+    public void onUpdate(ServerWorld world, T entity, long executionDuration) {
+        child.callForUpdate(world, entity, executionDuration);
     }
 
     @Override
-    public void ending(ServerWorld world, T entity, long executionDuration) {
-        child.ending(world,entity,executionDuration);
+    public void onEnd(ServerWorld world, T entity, long executionDuration) {
+        child.callForEnd(world, entity, executionDuration);
     }
 
-
-    @Override
-    public Task.Status getStatus() {
-        return child.getStatus();
-    }
 
     @Override
     public double getUtilityScore(ServerWorld world, T entity, long executionDuration) {
         return child.getUtilityScore(world,entity,executionDuration)+getInertia(executionDuration);
+    }
+
+    @Override
+    protected void onStart(ServerWorld world, T entity, long executionDuration) {
+        child.callForStart(world,entity,executionDuration);
     }
 
     public double getInertia(double executionDuration)

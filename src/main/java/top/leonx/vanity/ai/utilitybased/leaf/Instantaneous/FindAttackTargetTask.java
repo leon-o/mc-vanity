@@ -1,4 +1,4 @@
-package top.leonx.vanity.entity.ai.brain.utilitybased.leaf;
+package top.leonx.vanity.ai.utilitybased.leaf.Instantaneous;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.entity.Entity;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+@SuppressWarnings("NullableProblems")
 public class FindAttackTargetTask extends Task<OutsiderEntity> {
     private final Predicate<Entity> filter;
     public FindAttackTargetTask(Predicate<Entity> filter) {

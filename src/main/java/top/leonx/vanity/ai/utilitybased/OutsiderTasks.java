@@ -1,4 +1,4 @@
-package top.leonx.vanity.entity.ai.brain.utilitybased;
+package top.leonx.vanity.ai.utilitybased;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -7,9 +7,9 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
 import top.leonx.vanity.entity.OutsiderEntity;
-import top.leonx.vanity.entity.ai.brain.utilitybased.leaf.AttackTargetTask;
-import top.leonx.vanity.entity.ai.brain.utilitybased.leaf.DefendWithShieldTask;
-import top.leonx.vanity.entity.ai.brain.utilitybased.leaf.FindAttackTargetTask;
+import top.leonx.vanity.ai.utilitybased.leaf.continuous.AttackTargetTask;
+import top.leonx.vanity.ai.utilitybased.leaf.continuous.DefendWithShieldTask;
+import top.leonx.vanity.ai.utilitybased.leaf.Instantaneous.FindAttackTargetTask;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.util.AIUtil;
 

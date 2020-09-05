@@ -37,7 +37,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.container.OutsiderContainer;
-import top.leonx.vanity.entity.ai.brain.utilitybased.OutsiderTasks;
+import top.leonx.vanity.ai.utilitybased.OutsiderTasks;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.util.GeneralFoodStats;
 import top.leonx.vanity.util.OutsiderInventory;
@@ -438,7 +438,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.updateArmSwingProgress();
         if (this.getHealth() > 0.0F && !this.isSpectator()) {
             AxisAlignedBB axisalignedbb;
-            if (this.isPassenger() && (this.getRidingEntity() != null && !this.getRidingEntity().removed)) {
+            if (this.isPassenger() && (this.getRidingEntity() != null && this.getRidingEntity().isAlive())) {
                 axisalignedbb = this.getBoundingBox().union(this.getRidingEntity().getBoundingBox()).grow(1.0D, 0.0D, 1.0D);
             } else {
                 axisalignedbb = this.getBoundingBox().grow(1.0D, 0.5D, 1.0D);
@@ -463,7 +463,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
             ItemStack copy = itemstack.copy();
             if (!itemEntity.cannotPickup() && (itemEntity.getOwnerId() == null || itemEntity.lifespan - itemEntity.age <= 200 || itemEntity.getOwnerId().equals(
-                    this.getUniqueID())) && ( i <= 0 || this.inventory.storeItemStack(itemstack)!=-1 || inventory.addItemStackToInventory(itemstack))) {
+                    this.getUniqueID())) && ( i <= 0 || this.inventory.getStorableItemStack(itemstack)!=-1 || inventory.addItemStackToInventory(itemstack))) {
                 copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
 
                 onItemPickup(this, i);
@@ -599,6 +599,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         if (!this.world.isRemote) {
             this.foodStats.tick(this);
             if (this.foodStats.needFood() && !isHandActive()) {
+                //noinspection ConstantConditions
                 if (this.inventory.findAndHeld(Hand.MAIN_HAND, ItemStack::isFood, Comparator.comparingDouble(a->a.getSecond().getItem().getFood().getHealing())  )) {
                     setActiveHand(Hand.MAIN_HAND);
                 }

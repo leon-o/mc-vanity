@@ -1,4 +1,4 @@
-package top.leonx.vanity.entity.ai.brain.utilitybased.leaf;
+package top.leonx.vanity.ai.utilitybased.leaf.continuous;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
@@ -6,7 +6,7 @@ import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.entity.OutsiderEntity;
-import top.leonx.vanity.entity.ai.brain.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -23,7 +23,12 @@ public class DefendWithShieldTask extends UtilityBasedTask<OutsiderEntity> {
     }
 
     @Override
-    public void action(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+    public void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+
+    }
+
+    @Override
+    public void onUpdate(ServerWorld world, OutsiderEntity entity, long executionDuration) {
         Optional<LivingEntity> hurtBy = entity.getBrain().getMemory(MemoryModuleType.HURT_BY_ENTITY);
         hurtBy.ifPresent(t->{
             entity.getLookController().setLookPositionWithEntity(t,20,20);
@@ -34,7 +39,7 @@ public class DefendWithShieldTask extends UtilityBasedTask<OutsiderEntity> {
     }
 
     @Override
-    public void ending(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+    public void onEnd(ServerWorld world, OutsiderEntity entity, long executionDuration) {
         if(entity.getActiveHand()==Hand.OFF_HAND)
             entity.stopActiveHand();
     }

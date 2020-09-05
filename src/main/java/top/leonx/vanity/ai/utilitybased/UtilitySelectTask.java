@@ -1,4 +1,4 @@
-package top.leonx.vanity.entity.ai.brain.utilitybased;
+package top.leonx.vanity.ai.utilitybased;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleStatus;
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("NullableProblems")
 public class UtilitySelectTask<T extends LivingEntity> extends Task<T> {
     public List<UtilityBasedTask<T>> children                = new ArrayList<>();
     public UtilityBasedTask<T> currentTask;
@@ -33,7 +34,7 @@ public class UtilitySelectTask<T extends LivingEntity> extends Task<T> {
     @Override
     protected void updateTask(ServerWorld worldIn, T owner, long gameTime) {
         if(currentTask!=null)
-            currentTask.action(worldIn, owner, gameTime- currentTaskStartedTime);
+            currentTask.callForUpdate(worldIn, owner, gameTime- currentTaskStartedTime);
 
 
         selectChildTask(worldIn,owner,gameTime);
@@ -61,6 +62,7 @@ public class UtilitySelectTask<T extends LivingEntity> extends Task<T> {
             if(task.canStart(worldIn,entityIn,gameTimeIn))
             {
                 currentTask=task;
+                currentTask.callForStart(worldIn, entityIn, gameTimeIn);
                 currentTaskStartedTime =gameTimeIn;
                 break;
             }

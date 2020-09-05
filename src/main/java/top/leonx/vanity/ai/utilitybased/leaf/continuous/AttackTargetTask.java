@@ -1,10 +1,10 @@
-package top.leonx.vanity.entity.ai.brain.utilitybased.leaf;
+package top.leonx.vanity.ai.utilitybased.leaf.continuous;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.entity.OutsiderEntity;
-import top.leonx.vanity.entity.ai.brain.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
 
 public class AttackTargetTask extends UtilityBasedTask<OutsiderEntity> {
     public AttackTargetTask() {
@@ -15,7 +15,12 @@ public class AttackTargetTask extends UtilityBasedTask<OutsiderEntity> {
     }
 
     @Override
-    public void action(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+    public void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+
+    }
+
+    @Override
+    public void onUpdate(ServerWorld world, OutsiderEntity entity, long executionDuration) {
         LivingEntity target = entity.getAttackTarget();
         if(target ==null) return;
 
@@ -26,7 +31,7 @@ public class AttackTargetTask extends UtilityBasedTask<OutsiderEntity> {
     }
 
     @Override
-    public void ending(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+    public void onEnd(ServerWorld world, OutsiderEntity entity, long executionDuration) {
         LivingEntity target = entity.getAttackTarget();
         if(target ==null) return;
 
