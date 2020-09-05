@@ -1,0 +1,728 @@
+package top.leonx.vanity.entity;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.mojang.datafixers.Dynamic;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.*;
+import net.minecraft.entity.ai.brain.Brain;
+import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.entity.ai.brain.schedule.Activity;
+import net.minecraft.entity.ai.brain.sensor.Sensor;
+import net.minecraft.entity.ai.brain.sensor.SensorType;
+import net.minecraft.entity.boss.dragon.EnderDragonPartEntity;
+import net.minecraft.entity.item.ArmorStandEntity;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerAbilities;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.entity.projectile.ProjectileHelper;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.SwordItem;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.network.play.server.SEntityVelocityPacket;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.Effects;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.*;
+import net.minecraft.util.math.*;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.fml.network.NetworkHooks;
+import top.leonx.vanity.container.OutsiderContainer;
+import top.leonx.vanity.entity.ai.brain.utilitybased.OutsiderTasks;
+import top.leonx.vanity.init.ModEntityTypes;
+import top.leonx.vanity.util.GeneralFoodStats;
+import top.leonx.vanity.util.OutsiderInventory;
+import top.leonx.vanity.util.PlayerSimulator;
+
+import javax.annotation.Nullable;
+import java.util.Comparator;
+import java.util.List;
+
+@SuppressWarnings({"NullableProblems", "UnusedReturnValue"})
+public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated {
+    private static final ImmutableList<MemoryModuleType<?>>                                  MEMORY_TYPES    = ImmutableList.of(MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.HOME,
+                                                                                                                                MemoryModuleType.JOB_SITE, MemoryModuleType.MEETING_POINT,
+                                                                                                                                MemoryModuleType.MOBS, MemoryModuleType.VISIBLE_MOBS,
+                                                                                                                                MemoryModuleType.VISIBLE_VILLAGER_BABIES,
+                                                                                                                                MemoryModuleType.NEAREST_PLAYERS,
+                                                                                                                                MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.WALK_TARGET,
+                                                                                                                                MemoryModuleType.LOOK_TARGET, MemoryModuleType.INTERACTION_TARGET,
+                                                                                                                                MemoryModuleType.BREED_TARGET, MemoryModuleType.PATH,
+                                                                                                                                MemoryModuleType.INTERACTABLE_DOORS, MemoryModuleType.field_225462_q,
+                                                                                                                                MemoryModuleType.NEAREST_BED, MemoryModuleType.HURT_BY,
+                                                                                                                                MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE,
+                                                                                                                                MemoryModuleType.SECONDARY_JOB_SITE, MemoryModuleType.HIDING_PLACE,
+                                                                                                                                MemoryModuleType.HEARD_BELL_TIME,
+                                                                                                                                MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE,
+                                                                                                                                MemoryModuleType.LAST_SLEPT, MemoryModuleType.field_226332_A_,
+                                                                                                                                MemoryModuleType.LAST_WORKED_AT_POI,
+                                                                                                                                MemoryModuleType.GOLEM_LAST_SEEN_TIME);
+    private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES    = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
+                                                                                                                                SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED,
+                                                                                                                                SensorType.HURT_BY, SensorType.GOLEM_LAST_SEEN);
+    public final         OutsiderInventory                                                   inventory       = new OutsiderInventory(this);
+    private final        GeneralFoodStats<OutsiderEntity>                                    foodStats       = new GeneralFoodStats<>();
+    private final        PlayerAbilities                                                     abilities       = new PlayerAbilities();
+    private final        CooldownTracker                                                     cooldownTracker = new CooldownTracker();
+
+    //public final  OutsiderContainer container;
+    public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
+        super(type, world);
+        moveController = new OutsiderMovementController(this);
+
+    }
+
+    @Override
+    public void addExhaustion(float exhaustion) {
+        if (!this.abilities.disableDamage) {
+            if (!this.world.isRemote) {
+                this.foodStats.addExhaustion(exhaustion);
+            }
+
+        }
+    }
+
+    public void addMovementStat(double x, double y, double z) {
+        if (!this.isPassenger()) {
+            double twiceSum = x * x + y * y + z * z;
+            if (this.isSwimming()) {
+                int i = Math.round(MathHelper.sqrt(twiceSum) * 100.0F);
+                if (i > 0) {
+                    //this.addStat(Stats.SWIM_ONE_CM, i);
+                    this.addExhaustion(0.01F * (float) i * 0.01F);
+                }
+            } else if (this.areEyesInFluid(FluidTags.WATER, true)) {
+                int j = Math.round(MathHelper.sqrt(twiceSum) * 100.0F);
+                if (j > 0) {
+                    //this.addStat(Stats.WALK_UNDER_WATER_ONE_CM, j);
+                    this.addExhaustion(0.01F * (float) j * 0.01F);
+                }
+            } else if (this.isInWater()) {
+                int k = Math.round(MathHelper.sqrt(x * x + z * z) * 100.0F);
+                if (k > 0) {
+                    //this.addStat(Stats.WALK_ON_WATER_ONE_CM, k);
+                    this.addExhaustion(0.01F * (float) k * 0.01F);
+                }
+//            } else if (this.isOnLadder()) {
+////                if (y > 0.0D) {
+////                    //this.addStat(Stats.CLIMB_ONE_CM, (int)Math.round(y * 100.0D));
+////                }
+            } else if (this.onGround) {
+                int l = Math.round(MathHelper.sqrt(x * x + z * z) * 100.0F);
+                if (l > 0) {
+                    if (this.isSprinting()) {
+                        //this.addStat(Stats.SPRINT_ONE_CM, l);
+                        this.addExhaustion(0.1F * (float) l * 0.01F);
+                    } else if (this.isCrouching()) {
+                        //this.addStat(Stats.CROUCH_ONE_CM, l);
+                        this.addExhaustion(0.0F * (float) l * 0.01F);
+                    } else {
+                        //this.addStat(Stats.WALK_ONE_CM, l);
+                        this.addExhaustion(0.0F * (float) l * 0.01F);
+                    }
+                }
+            } /*else if (this.isElytraFlying()) {
+                int i1 = Math.round(MathHelper.sqrt(twiceSum) * 100.0F);
+                //this.addStat(Stats.AVIATE_ONE_CM, i1);
+            } else {
+                int j1 = Math.round(MathHelper.sqrt(x * x + z * z) * 100.0F);
+                if (j1 > 25) {
+                    //this.addStat(Stats.FLY_ONE_CM, j1);
+                }
+            }*/
+
+        }
+    }
+
+    public boolean attackEntityAsMob(Entity targetEntity) {
+        swingArm(Hand.MAIN_HAND);
+        boolean result = false;
+        if (targetEntity.canBeAttackedWithItem()) {
+            if (!targetEntity.hitByEntity(this)) {
+                float f = (float) this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+                float f1;
+                if (targetEntity instanceof LivingEntity) {
+                    f1 = EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), ((LivingEntity) targetEntity).getCreatureAttribute());
+                } else {
+                    f1 = EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), CreatureAttribute.UNDEFINED);
+                }
+
+                float f2 = this.getAttackCoolingPercentage(0.5F);
+                f = f * (0.2F + f2 * f2 * 0.8F);
+                f1 = f1 * f2;
+                this.resetAttackCooldown();
+                if (f > 0.0F || f1 > 0.0F) {
+                    boolean flag  = f2 > 0.9F;
+                    boolean flag1 = false;
+                    int     i     = 0;
+                    i = i + EnchantmentHelper.getKnockbackModifier(this);
+                    if (this.isSprinting() && flag) {
+                        this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, this.getSoundCategory(), 1.0F, 1.0F);
+                        ++i;
+                        flag1 = true;
+                    }
+
+                    boolean isCriticalhit = flag && this.fallDistance > 0.0F && !this.onGround && !this.isOnLadder() && !this.isInWater() && !this.isPotionActive(
+                            Effects.BLINDNESS) && !this.isPassenger() && targetEntity instanceof LivingEntity;
+                    isCriticalhit = isCriticalhit && !this.isSprinting();
+                    float criticalhitResult = 1; //TODO Critical Hit
+                    if (isCriticalhit) {
+                        f *= criticalhitResult;
+                    }
+
+                    f = f + f1;
+                    boolean isSweep = false;
+                    double  d0      = this.distanceWalkedModified - this.prevDistanceWalkedModified;
+                    if (flag && !isCriticalhit && !flag1 && this.onGround && d0 < (double) this.getAIMoveSpeed()) {
+                        ItemStack itemstack = this.getHeldItem(Hand.MAIN_HAND);
+                        if (itemstack.getItem() instanceof SwordItem) {
+                            isSweep = true;
+                        }
+                    }
+
+                    float   f4     = 0.0F;
+                    boolean isFire = false;
+                    int     j      = EnchantmentHelper.getFireAspectModifier(this);
+                    if (targetEntity instanceof LivingEntity) {
+                        f4 = ((LivingEntity) targetEntity).getHealth();
+                        if (j > 0 && !targetEntity.isBurning()) {
+                            isFire = true;
+                            targetEntity.setFire(1);
+                        }
+                    }
+
+                    Vec3d   vec3d           = targetEntity.getMotion();
+                    boolean isAttackSuccess = targetEntity.attackEntityFrom(DamageSource.causeMobDamage(this), f);
+                    result = isAttackSuccess;
+                    if (isAttackSuccess) {
+                        if (i > 0) {
+                            if (targetEntity instanceof LivingEntity) {
+                                ((LivingEntity) targetEntity).knockBack(this, (float) i * 0.5F, MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F)),
+                                                                        -MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F)));
+                            } else {
+                                targetEntity.addVelocity(-MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F)) * (float) i * 0.5F, 0.1D,
+                                                         MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F)) * (float) i * 0.5F);
+                            }
+
+                            this.setMotion(this.getMotion().mul(0.6D, 1.0D, 0.6D));
+                            this.setSprinting(false);
+                        }
+
+                        if (isSweep) {
+                            float f3 = 1.0F + EnchantmentHelper.getSweepingDamageRatio(this) * f;
+
+                            for (LivingEntity livingentity : this.world.getEntitiesWithinAABB(LivingEntity.class, targetEntity.getBoundingBox().grow(1.0D, 0.25D, 1.0D))) {
+                                if (livingentity != this && livingentity != targetEntity && !this.isOnSameTeam(
+                                        livingentity) && (!(livingentity instanceof ArmorStandEntity) || !((ArmorStandEntity) livingentity).hasMarker()) && this.getDistanceSq(livingentity) < 9.0D) {
+                                    livingentity.knockBack(this, 0.4F, MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F)), -MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F)));
+                                    livingentity.attackEntityFrom(DamageSource.causeMobDamage(this), f3);
+                                }
+                            }
+
+                            this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, this.getSoundCategory(), 1.0F, 1.0F);
+                            this.spawnSweepParticles();
+                        }
+
+                        if (targetEntity instanceof ServerPlayerEntity && targetEntity.velocityChanged) {
+                            ((ServerPlayerEntity) targetEntity).connection.sendPacket(new SEntityVelocityPacket(targetEntity));
+                            targetEntity.velocityChanged = false;
+                            targetEntity.setMotion(vec3d);
+                        }
+
+                        if (isCriticalhit) {
+                            this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, this.getSoundCategory(), 1.0F, 1.0F);
+                            this.onCriticalHit(targetEntity);
+                        }
+
+                        if (!isCriticalhit && !isSweep) {
+                            if (flag) {
+                                this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, this.getSoundCategory(), 1.0F, 1.0F);
+                            } else {
+                                this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, this.getSoundCategory(), 1.0F, 1.0F);
+                            }
+                        }
+
+                        if (f1 > 0.0F) {
+                            this.onEnchantmentCritical(targetEntity);
+                        }
+
+                        this.setLastAttackedEntity(targetEntity);
+                        if (targetEntity instanceof LivingEntity) {
+                            EnchantmentHelper.applyThornEnchantments((LivingEntity) targetEntity, this);
+                        }
+
+                        EnchantmentHelper.applyArthropodEnchantments(this, targetEntity);
+                        ItemStack itemstack1 = this.getHeldItemMainhand();
+                        Entity    entity     = targetEntity;
+                        if (targetEntity instanceof EnderDragonPartEntity) {
+                            entity = ((EnderDragonPartEntity) targetEntity).dragon;
+                        }
+
+                        if (!this.world.isRemote && !itemstack1.isEmpty() && entity instanceof LivingEntity) {
+                            ItemStack copy = itemstack1.copy();
+
+                            if (targetEntity instanceof LivingEntity) {
+                                itemstack1.getItem().hitEntity(copy, (LivingEntity) targetEntity, this);
+                                if (itemstack1.isEmpty()) {
+                                    this.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
+                                }
+                            }
+
+                        }
+
+                        if (targetEntity instanceof LivingEntity) {
+                            float f5 = f4 - ((LivingEntity) targetEntity).getHealth();
+                            if (j > 0) {
+                                targetEntity.setFire(j * 4);
+                            }
+
+                            if (this.world instanceof ServerWorld && f5 > 2.0F) {
+                                int k = (int) ((double) f5 * 0.5D);
+                                ((ServerWorld) this.world).spawnParticle(ParticleTypes.DAMAGE_INDICATOR, targetEntity.getPosX(), targetEntity.getPosYHeight(0.5D), targetEntity.getPosZ(), k, 0.1D,
+                                                                         0.0D, 0.1D, 0.2D);
+                            }
+                        }
+
+                        this.addExhaustion(0.1F);
+                    } else {
+                        this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, this.getSoundCategory(), 1.0F, 1.0F);
+                        if (isFire) {
+                            targetEntity.extinguish();
+                        }
+                    }
+                }
+
+            }
+        }
+
+        return result;
+    }
+
+    public boolean attackLootAt() {
+        double maxDist       = getBlockReachDistance();
+        Vec3d  startVec      = getEyePosition(1f);
+        Vec3d  lookDirection = getLook(1F);
+        Vec3d  endVec        = startVec.add(lookDirection.scale(maxDist));
+        EntityRayTraceResult traceResult = ProjectileHelper.rayTraceEntities(world, this, startVec, endVec, this.getBoundingBox().expand(lookDirection.scale(maxDist)).expand(1, 1, 1),
+                                                                             (entity) -> entity instanceof LivingEntity && canAttack((LivingEntity) entity), maxDist * maxDist);
+        if (traceResult != null) {
+            LivingEntity entity = (LivingEntity) traceResult.getEntity();
+            attackEntityAsMob(entity);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean canAttack(LivingEntity target) {
+        return super.canAttack(target) && getDistance(target) <= getBlockReachDistance();
+    }
+
+    @Nullable
+    @Override
+    public AgeableEntity createChild(AgeableEntity ageable) {
+        return new OutsiderEntity(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE, this.world);
+    }
+
+    @Nullable
+    public ItemEntity dropItem(ItemStack droppedItem, boolean dropAround, boolean traceItem) {
+        if (droppedItem.isEmpty()) {
+            return null;
+        } else {
+            double     d0         = this.getPosYEye() - (double) 0.3F;
+            ItemEntity itementity = new ItemEntity(this.world, this.getPosX(), d0, this.getPosZ(), droppedItem);
+            itementity.setPickupDelay(40);
+            if (traceItem) {
+                itementity.setThrowerId(this.getUniqueID());
+            }
+
+            if (dropAround) {
+                float f  = this.rand.nextFloat() * 0.5F;
+                float f1 = this.rand.nextFloat() * ((float) Math.PI * 2F);
+                itementity.setMotion(-MathHelper.sin(f1) * f, 0.2F, MathHelper.cos(f1) * f);
+            } else {
+                //float f7 = 0.3F;
+                float f8 = MathHelper.sin(this.rotationPitch * ((float) Math.PI / 180F));
+                float f2 = MathHelper.cos(this.rotationPitch * ((float) Math.PI / 180F));
+                float f3 = MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F));
+                float f4 = MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F));
+                float f5 = this.rand.nextFloat() * ((float) Math.PI * 2F);
+                float f6 = 0.02F * this.rand.nextFloat();
+                itementity.setMotion((double) (-f3 * f2 * 0.3F) + Math.cos(f5) * (double) f6, -f8 * 0.3F + 0.1F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F,
+                                     (double) (f4 * f2 * 0.3F) + Math.sin(f5) * (double) f6);
+            }
+
+            return itementity;
+        }
+    }
+
+    public PlayerAbilities getAbilities() {
+        return abilities;
+    }
+
+    @Override
+    public Iterable<ItemStack> getArmorInventoryList() {
+        return inventory.armorInventory;
+
+    }
+
+    public float getAttackCooldownPeriod() {
+        return (float) (1.0D / this.getAttribute(SharedMonsterAttributes.ATTACK_SPEED).getValue() * 20.0D);
+    }
+
+    public float getAttackCoolingPercentage(float partialTicks) {
+        return MathHelper.clamp(((float) this.ticksSinceLastSwing + partialTicks) / this.getAttackCooldownPeriod(), 0.0F, 1.0F);
+    }
+
+    public float getBlockReachDistance() {
+        float attrib = (float) getAttribute(PlayerEntity.REACH_DISTANCE).getValue();
+        return attrib - 0.5F;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Brain<OutsiderEntity> getBrain() {
+        return (Brain<OutsiderEntity>) super.getBrain();
+    }
+
+    public ServerPlayerEntity getFakePlayer() {
+        if (world.isRemote) return null;
+        return PlayerSimulator.getFakePlayer((ServerWorld) world).get();
+    }
+
+    public float getFinalMoveSpeed() {
+        double baseSpeed = getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
+        if (isSprinting()) baseSpeed *= 1.5;
+        else if (isSneaking()) baseSpeed *= 0.3;
+
+        return (float) (3.3 * baseSpeed) * getSpeedFactor();
+    }
+
+    @Override
+    public GeneralFoodStats<OutsiderEntity> getFoodStats() {
+        return foodStats;
+    }
+
+    public CooldownTracker getItemCooldownTracker() {
+        return this.cooldownTracker;
+    }
+
+    @Override
+    public ItemStack getItemStackFromSlot(EquipmentSlotType slotIn) {
+        if (slotIn == EquipmentSlotType.MAINHAND) {
+            return this.inventory.getMainHandSlotIndex();
+        } else if (slotIn == EquipmentSlotType.OFFHAND) {
+            return this.inventory.offHandInventory.get(0);
+        } else {
+            return slotIn.getSlotType() == EquipmentSlotType.Group.ARMOR ? this.inventory.armorInventory.get(slotIn.getIndex()) : ItemStack.EMPTY;
+        }
+    }
+
+    @Override
+    public HandSide getPrimaryHand() {
+        return HandSide.RIGHT;
+    }
+
+    @Override
+    public void livingTick() {
+        super.livingTick();
+        this.updateArmSwingProgress();
+        if (this.getHealth() > 0.0F && !this.isSpectator()) {
+            AxisAlignedBB axisalignedbb;
+            if (this.isPassenger() && (this.getRidingEntity() != null && !this.getRidingEntity().removed)) {
+                axisalignedbb = this.getBoundingBox().union(this.getRidingEntity().getBoundingBox()).grow(1.0D, 0.0D, 1.0D);
+            } else {
+                axisalignedbb = this.getBoundingBox().grow(1.0D, 0.5D, 1.0D);
+            }
+
+            List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this, axisalignedbb);
+
+            for (Entity entity : list) {
+                if (entity instanceof ItemEntity && entity.isAlive()) {
+                    onCollideWithItemEntity((ItemEntity) entity);
+                }
+            }
+        }
+    }
+
+    public void onCollideWithItemEntity(ItemEntity itemEntity) {
+        if (!this.world.isRemote) {
+            if (itemEntity.cannotPickup()) return;
+            ItemStack itemstack = itemEntity.getItem();
+            int       i         = itemstack.getCount();
+
+
+            ItemStack copy = itemstack.copy();
+            if (!itemEntity.cannotPickup() && (itemEntity.getOwnerId() == null || itemEntity.lifespan - itemEntity.age <= 200 || itemEntity.getOwnerId().equals(
+                    this.getUniqueID())) && ( i <= 0 || this.inventory.storeItemStack(itemstack)!=-1 || inventory.addItemStackToInventory(itemstack))) {
+                copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
+
+                onItemPickup(this, i);
+                if (itemstack.isEmpty()) {
+                    onItemPickup(this, i);
+                    itemEntity.remove();
+                    itemstack.setCount(i);
+                }
+            }
+
+        }
+    }
+
+    public void onCriticalHit(Entity entityHit) {
+    }
+
+    public void onEnchantmentCritical(Entity entityHit) {
+    }
+
+    @Override
+    public ItemStack onFoodEaten(World world, ItemStack stack) {
+        getFoodStats().consume(stack.getItem(), stack);
+        return super.onFoodEaten(world, stack);
+    }
+
+    @SuppressWarnings("unused")
+    public void placeBlock(BlockPos pos) {
+        //TODO PLACE BLOCK
+        if (world.isRemote) return;
+        ServerPlayerEntity fakePlayer = getFakePlayer();
+        ItemStack          stack      = new ItemStack(Items.DIRT);
+        fakePlayer.setHeldItem(Hand.MAIN_HAND, stack);
+        fakePlayer.interactionManager.func_219441_a(fakePlayer, world, stack, Hand.MAIN_HAND, new BlockRayTraceResult(new Vec3d(0, 0, 0), Direction.UP, pos, false));
+    }
+
+    @Override
+    public boolean processInteract(PlayerEntity player, Hand hand) {
+
+        if(!world.isRemote)
+        {
+            INamedContainerProvider provider = new INamedContainerProvider() {
+                @Override
+                public ITextComponent getDisplayName() {
+                    return OutsiderEntity.this.getDisplayName();
+                }
+
+                @Override
+                public Container createMenu(int id, PlayerInventory inventory, PlayerEntity player) {
+                    return new OutsiderContainer(id,inventory,OutsiderEntity.this);
+                }
+            };
+            NetworkHooks.openGui((ServerPlayerEntity) player,provider,t->t.writeInt(this.getEntityId()));
+            this.lookController.setLookPosition(player.getEyePosition(1F));
+            return true;
+        }
+
+        return super.processInteract(player, hand);
+    }
+
+    @Override
+    public void readAdditional(CompoundNBT compound) {
+        super.readAdditional(compound);
+        foodStats.read(compound);
+        abilities.read(compound);
+        ListNBT listnbt = compound.getList("Inventory", 10);
+        this.inventory.read(listnbt);
+    }
+
+    public void resetAttackCooldown() {
+        this.ticksSinceLastSwing = 0;
+    }
+
+    @SuppressWarnings("unused")
+    public void resetBrain(ServerWorld serverWorldIn) {
+        Brain<OutsiderEntity> brain = this.getBrain();
+        brain.stopAllTasks(serverWorldIn, this);
+        this.brain = brain.copy();
+        this.initBrain(this.getBrain());
+    }
+
+    @Override
+    public void setAIMoveSpeed(float speedIn) {
+        float moveForward = this.moveForward;
+        super.setAIMoveSpeed(speedIn);  //moveForward changed in MobEntity
+        setMoveForward(moveForward);
+    }
+
+    @Override
+    public void setItemStackToSlot(EquipmentSlotType slotIn, ItemStack stack) {
+        if (slotIn == EquipmentSlotType.MAINHAND) {
+            //this.playEquipSound(stack);
+            this.inventory.mainInventory.set(this.inventory.mainHandSlotIndex, stack);
+        } else if (slotIn == EquipmentSlotType.OFFHAND) {
+            //this.playEquipSound(stack);
+            this.inventory.offHandInventory.set(0, stack);
+        } else if (slotIn.getSlotType() == EquipmentSlotType.Group.ARMOR) {
+            this.playEquipSound(stack);
+            this.inventory.armorInventory.set(slotIn.getIndex(), stack);
+        }
+    }
+
+    @Override
+    public void setJumping(boolean jumping) {
+        super.setJumping(jumping);
+        if (this.isSprinting()) {
+            this.addExhaustion(0.2F);
+        } else {
+            this.addExhaustion(0.05F);
+        }
+    }
+
+    @Override
+    public void setMoveForward(float amount) {
+        super.setMoveForward(amount);
+        addMovementStat(0, 0, amount);
+    }
+
+    @Override
+    public void setMoveVertical(float amount) {
+        super.setMoveVertical(amount);
+        addMovementStat(0, 1, 0);
+    }
+
+    @Override
+    public boolean shouldHeal() {
+        return this.getHealth() > 0.0F && this.getHealth() < this.getMaxHealth();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        this.inventory.tick();
+        if (!this.world.isRemote) {
+            this.foodStats.tick(this);
+            if (this.foodStats.needFood() && !isHandActive()) {
+                if (this.inventory.findAndHeld(Hand.MAIN_HAND, ItemStack::isFood, Comparator.comparingDouble(a->a.getSecond().getItem().getFood().getHealing())  )) {
+                    setActiveHand(Hand.MAIN_HAND);
+                }
+
+            }
+            tickCooldown();
+        }
+    }
+
+    public void tickCooldown() {
+        ++this.ticksSinceLastSwing;
+        this.cooldownTracker.tick();
+    }
+
+    @Override
+    public void writeAdditional(CompoundNBT compound) {
+        super.writeAdditional(compound);
+        foodStats.write(compound);
+        abilities.write(compound);
+        compound.put("Inventory", this.inventory.write(new ListNBT()));
+    }
+
+    @Override
+    protected Brain<OutsiderEntity> createBrain(Dynamic<?> dynamicIn) {
+        Brain<OutsiderEntity> brain = new Brain<>(MEMORY_TYPES, SENSOR_TYPES, dynamicIn);
+        this.initBrain(brain);
+        return brain;
+    }
+
+    @Override
+    protected void damageEntity(DamageSource damageSrc, float damageAmount) {
+        super.damageEntity(damageSrc, damageAmount);
+        this.addExhaustion(damageSrc.getHungerDamage());
+    }
+
+//    @Override
+//    public boolean attackEntityFrom(DamageSource source, float amount) {
+//        return super.attackEntityFrom(source, amount);
+//    }
+
+    protected void blockUsingShield(LivingEntity entityIn) {
+        super.blockUsingShield(entityIn);
+        if (entityIn.getHeldItemMainhand().canDisableShield(this.activeItemStack, this, entityIn)) {
+            this.disableShield(true);
+        }
+
+    }
+
+    //////
+
+    // SHIELD
+
+    //////
+
+    public void disableShield(boolean cri) {
+        float f = 0.25F + (float)EnchantmentHelper.getEfficiencyModifier(this) * 0.05F;
+        if (cri) {
+            f += 0.75F;
+        }
+
+        if (this.rand.nextFloat() < f) {
+            this.cooldownTracker.setCooldown(this.getActiveItemStack().getItem(), 100);
+            this.resetActiveHand();
+            this.world.setEntityState(this, (byte)30);
+        }
+
+    }
+
+    protected void damageShield(float damage) {
+        if (damage >= 3.0F && this.activeItemStack.isShield(this)) {
+            int i = 1 + MathHelper.floor(damage);
+            Hand hand = this.getActiveHand();
+            this.activeItemStack.damageItem(i, this, (entity) -> entity.sendBreakAnimation(hand));
+            if (this.activeItemStack.isEmpty()) {
+                if (hand == Hand.MAIN_HAND) {
+                    this.setItemStackToSlot(EquipmentSlotType.MAINHAND, ItemStack.EMPTY);
+                } else {
+                    this.setItemStackToSlot(EquipmentSlotType.OFFHAND, ItemStack.EMPTY);
+                }
+
+                this.activeItemStack = ItemStack.EMPTY;
+                this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 0.8F, 0.8F + this.world.rand.nextFloat() * 0.4F);
+            }
+        }
+
+    }
+    private void initBrain(Brain<OutsiderEntity> brain) {
+        //float f = getFinalMoveSpeed();
+        brain.registerActivity(Activity.CORE, OutsiderTasks.protectPlayer());
+        //brain.registerActivity(Activity.IDLE, ImmutableList.of(Pair.of(2, new FirstShuffledTask<>(ImmutableList.of(Pair.of(new WalkToTargetTask(200), 1), Pair.of(new FindWalkTargetTask(), 1))))));
+
+
+        brain.setDefaultActivities(ImmutableSet.of(Activity.CORE));
+        brain.setFallbackActivity(Activity.CORE);
+        brain.switchTo(Activity.CORE);
+        brain.updateActivity(this.world.getDayTime(), this.world.getGameTime());
+    }
+
+    @Override
+    protected void registerAttributes() {
+        super.registerAttributes();
+        this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1);
+        this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_SPEED);
+        this.getAttributes().registerAttribute(PlayerEntity.REACH_DISTANCE);
+        this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.1D);
+
+    }
+
+    protected void spawnSweepParticles() {
+        double d0 = -MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F));
+        double d1 = MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F));
+        if (this.world instanceof ServerWorld) {
+            ((ServerWorld) this.world).spawnParticle(ParticleTypes.SWEEP_ATTACK, this.getPosX() + d0, this.getPosYHeight(0.5D), this.getPosZ() + d1, 0, d0, 0.0D, d1, 0.0D);
+        }
+    }
+
+    protected void updateAITasks() {
+        this.world.getProfiler().startSection("brain");
+        this.getBrain().tick((ServerWorld) this.world, this);
+        this.world.getProfiler().endSection();
+
+
+        super.updateAITasks();
+    }
+
+
+}
