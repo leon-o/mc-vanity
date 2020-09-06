@@ -27,7 +27,10 @@ public class RandomDelayTask<T extends LivingEntity> extends UtilityBasedTask<T>
     @Override
     public void onUpdate(ServerWorld world, T entity, long executionDuration) {
         if(executionDuration>duration)
+        {
             utilityScoreCalculator=realScoreCalculator;
+            submitResult(Result.SUCCESS);
+        }
     }
 
     @Override
