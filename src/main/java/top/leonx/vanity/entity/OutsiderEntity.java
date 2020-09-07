@@ -21,6 +21,7 @@ import net.minecraft.entity.projectile.ProjectileHelper;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.SwordItem;
@@ -490,15 +491,30 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     @SuppressWarnings("unused")
-    public void placeBlock(BlockPos pos) {
-        //TODO PLACE BLOCK
-        if (world.isRemote) return;
+    public ActionResultType placeBlock(ImmutableList<BlockItem> blockItems) {
+        if (world.isRemote) return ActionResultType.PASS;
         ServerPlayerEntity fakePlayer = getFakePlayer();
-        ItemStack          stack      = new ItemStack(Items.DIRT);
-        fakePlayer.setHeldItem(Hand.MAIN_HAND, stack);
-        fakePlayer.interactionManager.func_219441_a(fakePlayer, world, stack, Hand.MAIN_HAND, new BlockRayTraceResult(new Vec3d(0, 0, 0), Direction.UP, pos, false));
-    }
+        //noinspection SuspiciousMethodCalls
+        inventory.findAndHeld(Hand.MAIN_HAND, t->t.getItem() instanceof BlockItem &&blockItems.contains(t.getItem()), Comparator.comparingInt(t->t.getSecond().getCount()));
 
+        return placeHeldBlockOnLookAt();
+    }
+    public ActionResultType placeHeldBlockOnLookAt()
+    {
+        if (world.isRemote) return ActionResultType.PASS;
+        ItemStack stack = getHeldItemMainhand();
+        if(!(stack.getItem() instanceof BlockItem)) return ActionResultType.FAIL;
+        ServerPlayerEntity fakePlayer = getFakePlayer();
+        fakePlayer.setHeldItem(Hand.MAIN_HAND, stack);
+
+        Vec3d eyePos = getEyePosition(1F);
+        Vec3d lookVec=getLookVec();
+        Vec3d endPos = eyePos.add(lookVec.scale(getBlockReachDistance()));
+
+        RayTraceContext rayTraceContext=new RayTraceContext(eyePos, endPos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE,this);
+        BlockRayTraceResult rayTraceResult = world.rayTraceBlocks(rayTraceContext);
+        return fakePlayer.interactionManager.func_219441_a(fakePlayer, world, stack, Hand.MAIN_HAND, rayTraceResult);
+    }
     @Override
     public boolean processInteract(PlayerEntity player, Hand hand) {
 

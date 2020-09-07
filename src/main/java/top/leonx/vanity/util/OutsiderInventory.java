@@ -110,7 +110,7 @@ public class OutsiderInventory implements IInventory, INameable {
             if(predicate.test(mainInventory.get(i)))
                 matched.add(new Pair<>(i,mainInventory.get(i)));
         }
-        Optional<Pair<Integer, ItemStack>> max = matched.stream().max(comparator);
+        Optional<Pair<Integer, ItemStack>> max = matched.stream().max(comparator==null?Comparator.comparingInt(Pair::getFirst):comparator);
         if(max.isPresent())
         {
             int index = max.get().getFirst();
@@ -122,6 +122,11 @@ public class OutsiderInventory implements IInventory, INameable {
             return true;
         }else
             return false;
+    }
+    public ItemStack findItemStack(Predicate<ItemStack> predicate, Comparator<ItemStack> comparator)
+    {
+        Optional<ItemStack> max = allInventories.stream().flatMap(Collection::stream).filter(predicate).max(comparator);
+        return max.orElse(ItemStack.EMPTY);
     }
     public static boolean isHotbar(int index) {
         return index >= 0 && index < 9;
