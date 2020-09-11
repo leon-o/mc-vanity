@@ -1,26 +1,18 @@
-package top.leonx.vanity.ai.utilitybased.leaf.continuous;
+package top.leonx.vanity.ai.tree.leaf.continuous;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.world.server.ServerWorld;
+import top.leonx.vanity.ai.tree.UtilityBasedTreeTask;
 import top.leonx.vanity.entity.OutsiderEntity;
-import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 
 import java.util.Comparator;
 import java.util.Optional;
 
-public class DefendWithShieldTask extends UtilityBasedTask<OutsiderEntity> {
-    public DefendWithShieldTask() {
-        super((w,e,t)->{
-            Optional<LivingEntity> hurtBy = e.getBrain().getMemory(MemoryModuleType.HURT_BY_ENTITY);
-            if(hurtBy.isPresent())
-                return 1d-e.getHealth()/e.getMaxHealth();
-
-            return 0d;
-        });
-    }
+public class DefendWithShieldTask extends BehaviorTreeTask<OutsiderEntity> {
 
     @Override
     public void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {

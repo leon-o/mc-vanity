@@ -1,11 +1,11 @@
-package top.leonx.vanity.ai.utilitybased;
+package top.leonx.vanity.ai.tree;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.util.TernaryFunc;
+import top.leonx.vanity.VanityMod;
 
-public abstract class UtilityBasedTask<T extends LivingEntity> {
-    public TernaryFunc<ServerWorld,T,Long,Double> utilityScoreCalculator;
+public abstract class BehaviorTreeTask<T extends LivingEntity> {
+    //public TernaryFunc<ServerWorld,T,Long,Double> utilityScoreCalculator;
     private Result result;
 
     public Result getResult() {
@@ -16,28 +16,17 @@ public abstract class UtilityBasedTask<T extends LivingEntity> {
         this.result = result;
     }
 
-    public UtilityBasedTask()
-    {
-        utilityScoreCalculator=(a,b,c)->0D;
-    }
-    public UtilityBasedTask(TernaryFunc<ServerWorld,T,Long,Double> calculator)
-    {
-        utilityScoreCalculator=calculator;
-    }
-
-    public double getUtilityScore(ServerWorld world, T entity,long executionDuration)
-    {
-        return utilityScoreCalculator==null?0D:utilityScoreCalculator.compute(world,entity,executionDuration);
-    }
     public void callForEnd(ServerWorld world, T entity,long executionDuration)
     {
-        submitResult(Result.SUCCESS);
+        if(getResult()== Result.RUNNING)
+            submitResult(Result.SUCCESS);
         onEnd(world, entity, executionDuration);
     }
     public void callForStart(ServerWorld world, T entity, long executionDuration)
     {
         onStart(world,entity,executionDuration);
         submitResult(Result.RUNNING);
+        System.out.println(" start "+this.toString());
     }
     public void callForUpdate(ServerWorld world, T entity, long executionDuration)
     {

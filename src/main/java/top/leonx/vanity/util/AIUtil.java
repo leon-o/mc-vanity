@@ -4,7 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -18,6 +20,7 @@ import net.minecraft.world.storage.loot.LootContext;
 import net.minecraft.world.storage.loot.LootParameterSets;
 import net.minecraft.world.storage.loot.LootParameters;
 import net.minecraft.world.storage.loot.LootTable;
+import top.leonx.vanity.entity.OutsiderEntity;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,8 +57,10 @@ public class AIUtil {
         return 5;
     }
 
-    public static Collection<ItemStack> getLivingEntityDrops(LivingEntity entity) {
-        ResourceLocation resourcelocation = entity.getLootTableResourceLocation();
+    public static Collection<ItemStack> getLivingEntityDrops(Entity entity) {
+        if(!(entity instanceof LivingEntity)) return Collections.emptyList();
+        LivingEntity livingEntity=(LivingEntity)entity;
+        ResourceLocation resourcelocation = livingEntity.getLootTableResourceLocation();
         LootTable        loottable        = Objects.requireNonNull(entity.world.getServer()).getLootTableManager().getLootTableFromLocation(resourcelocation);
 
         LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerWorld) entity.world)).withRandom(random).withParameter(LootParameters.POSITION, entity.getPosition()).withParameter(
@@ -70,5 +75,37 @@ public class AIUtil {
     {
         RecipeManager manager = world.getServer().getRecipeManager();
         return manager.getRecipes().stream().filter(t -> t.getRecipeOutput().equals(itemStack)).collect(Collectors.toList());
+    }
+
+    public static double sigmod(double x,double scale,double bias)
+    {
+        return 1/(1+Math.exp(-x*scale+bias));
+    }
+
+    public static double entityDangerousAssessment(LivingEntity target, LivingEntity owner)
+    {
+        return 0;
+    }
+    public static LivingEntity getMostDangerousEntityNear(OutsiderEntity entity)
+    {
+        Optional<List<LivingEntity>> visibleMobsOpt = entity.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
+        if (visibleMobsOpt.isPresent()) {
+            List<LivingEntity>     visibleMobs   = visibleMobsOpt.get();
+            Optional<LivingEntity> mostDangerous = visibleMobs.stream().max(Comparator.comparingDouble(mob -> AIUtil.entityDangerousAssessment(mob, entity)));
+            return mostDangerous.orElse(null);
+        }
+        return null;
+    }
+
+    public static LivingEntity getClosestFoodProvider(OutsiderEntity entity)
+    {
+        Optional<List<LivingEntity>> visibleMobsOpt = entity.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
+        if (visibleMobsOpt.isPresent())
+        {
+            Optional<LivingEntity> closestFoodProvider = visibleMobsOpt.get().stream().filter(mob -> AIUtil.getLivingEntityDrops(mob).stream().anyMatch(ItemStack::isFood)).min(
+                    Comparator.comparingDouble(mob -> mob.getDistanceSq(entity)));
+            return closestFoodProvider.orElse(null);
+        }
+        return null;
     }
 }

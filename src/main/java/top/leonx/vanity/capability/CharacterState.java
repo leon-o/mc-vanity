@@ -15,7 +15,7 @@ public class CharacterState {
     boolean needInit = true;
     private       CompoundNBT      root        = new CompoundNBT();
     private       MOOD             currentMood;
-
+    private UUID followedEntityUuid;
     public Gender getGender() {
         String genderStr = root.getString(Keys.GENDER);
         return genderStr.length() > 0 && genderStr.equals("male") ? Gender.MALE : Gender.FEMALE;
@@ -52,6 +52,7 @@ public class CharacterState {
     public CompoundNBT getRoot() {
         writeRelationMap();
         writeLoveMap();
+        root.putUniqueId("followed_entity",followedEntityUuid==null?new UUID(0,0):followedEntityUuid);
         return root;
     }
 
@@ -60,6 +61,10 @@ public class CharacterState {
         ComputeMOOD();
         readRelationMap();
         readLoveMap();
+        followedEntityUuid=root.getUniqueId("followed_entity");
+        if(followedEntityUuid.getMostSignificantBits()==0 && followedEntityUuid.getLeastSignificantBits()==0)
+            followedEntityUuid=null;
+
     }
 
     public Gender getSexualOrientation() {
@@ -94,7 +99,14 @@ public class CharacterState {
     public void setState(String key, float value) {
         root.putFloat(key, value);
     }
-
+    public UUID getFollowedEntity()
+    {
+        return followedEntityUuid;
+    }
+    public void setFollowedEntity(UUID uuid)
+    {
+        followedEntityUuid=uuid;
+    }
     private void ComputeMOOD() {
         currentMood = MOOD.NORMAL;
         CompoundNBT moodNbt = root.getCompound(Keys.MOOD);

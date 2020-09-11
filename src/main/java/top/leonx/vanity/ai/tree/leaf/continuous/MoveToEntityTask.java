@@ -1,23 +1,19 @@
-package top.leonx.vanity.ai.utilitybased.leaf.continuous;
+package top.leonx.vanity.ai.tree.leaf.continuous;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.util.TernaryFunc;
 
-public class MoveToEntityTask<T extends MobEntity> extends UtilityBasedTask<T> {
+public class MoveToEntityTask<T extends MobEntity> extends BehaviorTreeTask<T> {
     public LivingEntity targetEntity;
 
     public MoveToEntityTask(LivingEntity targetEntity) {
         this.targetEntity = targetEntity;
     }
 
-    public MoveToEntityTask(TernaryFunc<ServerWorld, T, Long, Double> calculator, LivingEntity targetEntity) {
-        super(calculator);
-        this.targetEntity = targetEntity;
-    }
 
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {

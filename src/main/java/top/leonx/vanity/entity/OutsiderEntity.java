@@ -23,12 +23,12 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.*;
@@ -37,11 +37,14 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkHooks;
+import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.container.OutsiderContainer;
-import top.leonx.vanity.ai.utilitybased.OutsiderTasks;
+import top.leonx.vanity.ai.OutsiderTasks;
+import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.util.GeneralFoodStats;
 import top.leonx.vanity.util.OutsiderInventory;
+import top.leonx.vanity.util.PlayerSimPathNavigator;
 import top.leonx.vanity.util.PlayerSimulator;
 
 import javax.annotation.Nullable;
@@ -80,6 +83,11 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         super(type, world);
         moveController = new OutsiderMovementController(this);
 
+    }
+
+    @Override
+    protected PathNavigator createNavigator(World worldIn) {
+        return new PlayerSimPathNavigator(this,worldIn);
     }
 
     @Override
@@ -714,6 +722,24 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         brain.updateActivity(this.world.getDayTime(), this.world.getGameTime());
     }
 
+    public ServerPlayerEntity getFollowedPlayer()
+    {
+        if(world.isRemote)return null;
+        Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntity());
+        return entity instanceof ServerPlayerEntity?(ServerPlayerEntity)entity:null ;
+    }
+    public void setFollowedPlayer(ServerPlayerEntity entity)
+    {
+        getCharacterState().setFollowedEntity(entity.getUniqueID());
+    }
+    public CharacterState characterState;
+    public CharacterState getCharacterState()
+    {
+        if(characterState==null) {
+            characterState=getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(new CharacterState());
+        }
+        return characterState;
+    }
     @Override
     protected void registerAttributes() {
         super.registerAttributes();

@@ -1,16 +1,13 @@
-package top.leonx.vanity.ai.utilitybased.leaf.Instantaneous;
+package top.leonx.vanity.ai.tree.leaf.Instantaneous;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.item.BlockItem;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.entity.OutsiderEntity;
 
-import java.util.function.Function;
-
-public class PlaceBlockTask extends UtilityBasedTask<OutsiderEntity> {
+public class PlaceBlockTask extends BehaviorTreeTask<OutsiderEntity> {
     public ImmutableList<BlockItem>           blockItems;
     @Override
     protected void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {

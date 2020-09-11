@@ -1,25 +1,20 @@
-package top.leonx.vanity.ai.utilitybased.leaf.continuous;
+package top.leonx.vanity.ai.tree.leaf.continuous;
 
 import net.minecraft.entity.MobEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.util.TernaryFunc;
 
 import java.util.function.Function;
 
-public class LookTurnToTask<T extends MobEntity> extends UtilityBasedTask<T> {
+public class LookTurnToTask<T extends MobEntity> extends BehaviorTreeTask<T> {
     public Function<T,Vec3d> targetPosGetter;
     private final static int timeout=100;
     public LookTurnToTask(Function<T,Vec3d> targetPos) {
         this.targetPosGetter = targetPos;
     }
 
-    public LookTurnToTask(TernaryFunc<ServerWorld, T, Long, Double> calculator, Function<T,Vec3d> targetPos) {
-        super(calculator);
-        this.targetPosGetter = targetPos;
-    }
 
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {

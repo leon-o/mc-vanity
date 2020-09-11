@@ -1,35 +1,28 @@
-package top.leonx.vanity.ai.utilitybased.composite;
+package top.leonx.vanity.ai.tree.composite;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.util.TernaryFunc;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SelectorTask<T extends LivingEntity> extends UtilityBasedTask<T> {
-    public List<UtilityBasedTask<T>> children;
-    public boolean                   continueWhenSuccess =false;
-    public SelectorTask() {
+public class SequencesTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
+    public List<BehaviorTreeTask<T>> children;
+    public boolean                   continueWhenFail=false;
+    public SequencesTask() {
         children=new ArrayList<>();
     }
 
-    public SelectorTask(List<UtilityBasedTask<T>> children) {
+    public SequencesTask(List<BehaviorTreeTask<T>> children) {
         this.children = children;
     }
 
-    public SelectorTask(TernaryFunc<ServerWorld, T, Long, Double> calculator) {
-        super(calculator);
-    }
-    public SelectorTask(TernaryFunc<ServerWorld, T, Long, Double> calculator, List<UtilityBasedTask<T>> children) {
-        super(calculator);
-        this.children = children;
-    }
 
-    int runningPointer=0;
-    UtilityBasedTask<T> runningTask;
-    boolean             anySuccess;
+    int                 runningPointer=0;
+    BehaviorTreeTask<T> runningTask;
+    boolean             allSuccess;
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         runningPointer=0;
@@ -50,18 +43,19 @@ public class SelectorTask<T extends LivingEntity> extends UtilityBasedTask<T> {
         {
             runningTask.callForEnd(world,entity,executionDuration);
 
-            anySuccess |=runningTask.getResult()==Result.SUCCESS;
+            allSuccess&=runningTask.getResult()==Result.SUCCESS;
 
-            if(anySuccess && !continueWhenSuccess)
-                submitResult(Result.SUCCESS);
-
+            if(!allSuccess && !continueWhenFail) {
+                submitResult(Result.FAIL);
+                return;
+            }
             runningPointer++;
             if(runningPointer<children.size())
             {
                 runningTask = children.get(runningPointer);
                 runningTask.callForStart(world,entity,executionDuration);
             }else{
-                submitResult(anySuccess ?Result.SUCCESS:Result.FAIL);
+                submitResult(allSuccess?Result.SUCCESS:Result.FAIL);
             }
         }
     }

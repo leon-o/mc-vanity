@@ -1,24 +1,23 @@
-package top.leonx.vanity.ai.utilitybased.leaf.continuous;
+package top.leonx.vanity.ai.tree.leaf.continuous;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.util.AIUtil;
 
 import java.util.Comparator;
 
 
-public class PutBlockBelowTask<T extends OutsiderEntity> extends UtilityBasedTask<T> {
+public class PutBlockBelowTask<T extends OutsiderEntity> extends BehaviorTreeTask<T> {
 
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {

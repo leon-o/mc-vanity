@@ -1,11 +1,11 @@
-package top.leonx.vanity.ai.utilitybased.leaf.continuous;
+package top.leonx.vanity.ai.tree.leaf.continuous;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.server.ServerWorld;
-import top.leonx.vanity.ai.utilitybased.UtilityBasedTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.util.TernaryFunc;
 
-public class RandomDelayTask<T extends LivingEntity> extends UtilityBasedTask<T> {
+public class RandomDelayTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
     private final TernaryFunc<ServerWorld,T,Long,Double> dummyUtilityScore = (w, e, t)-> Double.MAX_VALUE;
     private       TernaryFunc<ServerWorld,T,Long,Double> realScoreCalculator;
     private       int duration;
@@ -20,15 +20,12 @@ public class RandomDelayTask<T extends LivingEntity> extends UtilityBasedTask<T>
     @Override
     public void onStart(ServerWorld world, T entity, long executionDuration) {
         duration= (int) (Math.random()*(maxDuration- minDuration)+ minDuration);
-        realScoreCalculator=utilityScoreCalculator;
-        utilityScoreCalculator= dummyUtilityScore;
     }
 
     @Override
     public void onUpdate(ServerWorld world, T entity, long executionDuration) {
         if(executionDuration>duration)
         {
-            utilityScoreCalculator=realScoreCalculator;
             submitResult(Result.SUCCESS);
         }
     }
