@@ -32,7 +32,8 @@ public class DialogButton extends ToggleWidget {
     public void renderButton(int mouseX, int mouseY, float partialTicks) {
         super.renderButton(mouseX, mouseY, partialTicks);
         FontRenderer fontRenderer = Minecraft.getInstance().fontRenderer;
-        this.drawCenteredString(fontRenderer, getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, color);
+        fontRenderer.drawString(getMessage(),this.x+fontRenderer.getStringWidth(getMessage())/2f,this.y + (this.height - 8) / 2f,color);
+        //this.drawCenteredString(fontRenderer, getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, color);
     }
 
     @Override

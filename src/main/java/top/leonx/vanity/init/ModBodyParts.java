@@ -26,14 +26,14 @@ public class ModBodyParts {
 
     public static final AbstractBodyPart   SKIN_FEMALE_1 = new SkinBodyPart().setRegistryName("skin_female_1");
 
-    public static final AbstractBodyPart   MOUTH_DEBUG = new MouthBodyPart().setRegistryName("mouth_debug");
+//    public static final AbstractBodyPart   MOUTH_DEBUG = new MouthBodyPart().setRegistryName("mouth_debug");
     public static final AbstractBodyPart   MOUTH_1=new MouthBodyPart().setRegistryName("mouth_1");
 
 
     public static final AbstractBodyPart[] ITEMS         = {
             FRINGE_1, FRINGE_2, PONYTAIL, LONG_HAIR, DOUBLE_PONYTAIL, LONG_DOUBLE_PONYTAIL, MOHICAN,FRINGE_3, FRINGE_4,
             EYE_1,EYE_2,EYE_3, SKIN_FEMALE_1,
-            MOUTH_DEBUG,MOUTH_1
+            /*MOUTH_DEBUG,*/MOUTH_1
     };
 
     public static void register() {

@@ -6,9 +6,11 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import top.leonx.vanity.VanityMod;
+import top.leonx.vanity.client.gui.Label;
 import top.leonx.vanity.client.gui.dialog.DialogButton;
 import top.leonx.vanity.client.gui.dialog.ProcessBar;
 import top.leonx.vanity.container.OutsiderContainer;
+import top.leonx.vanity.entity.OutsiderEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
     int halfH,halfW, dialogPanelLeft, dialogPanelTop, dialogPanelBottom, dialogPanelWidth =256,dialogPanelHeight=80;
     int infoPanelLeft,infoPanelTop,infoPanelBottom,infoPanelWidth=80,infoPanelHeight=96;
     private final List<DialogButton> dialogButtons=new ArrayList<>();
+    private final List<Label> labels=new ArrayList<>();
     private ProcessBar relationShipProcessBar;
     private ProcessBar loveShipProcessBar;
     public DialogScreen(OutsiderContainer screenContainer, PlayerInventory inv, ITextComponent titleIn) {
@@ -31,11 +34,11 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
         halfH=height/2;
         halfW=width/2;
         infoPanelLeft=halfW-(dialogPanelWidth+infoPanelWidth)/2;
-        infoPanelTop=height-infoPanelHeight;
+        infoPanelTop=height-infoPanelHeight-16;
         infoPanelBottom=infoPanelTop+infoPanelHeight;
 
         dialogPanelLeft =infoPanelLeft+infoPanelWidth;
-        dialogPanelTop =height-dialogPanelHeight;
+        dialogPanelTop =height-dialogPanelHeight-16;
         dialogPanelBottom = dialogPanelTop +dialogPanelHeight;
         dialogButtons.clear();
 
@@ -59,11 +62,17 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
                 s.setMessage("DISBAND");
             }
         };
-        relationShipProcessBar= new ProcessBar(infoPanelLeft+8,infoPanelTop+24,72,5);
-        loveShipProcessBar= new ProcessBar(infoPanelLeft+8,infoPanelTop+32,72,5);
+        addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+4,infoPanelTop+4));
+        addLabel(new Label("Relationship").setXY(infoPanelLeft+4,infoPanelTop+24));
+        relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5);
+        addLabel(new Label("Love").setXY(infoPanelLeft+4,infoPanelTop+40));
+        loveShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+48,68,5);
         loveShipProcessBar.type= ProcessBar.Type.PINK;
     }
-
+    private void addLabel(Label label)
+    {
+        this.labels.add(label);
+    }
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         //this.renderBackground();
@@ -75,9 +84,12 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
         super.render(mouseX, mouseY, partialTicks);
-        relationShipProcessBar.value=partialTicks;
+        relationShipProcessBar.value=container.outsider.getCharacterState().getRelationWith(container.getPlayer().getUniqueID());
         relationShipProcessBar.render(mouseX,mouseY,partialTicks);
-        loveShipProcessBar.value=1-partialTicks;
+        loveShipProcessBar.value=container.outsider.getCharacterState().getLoveWith(container.getPlayer().getUniqueID());
         loveShipProcessBar.render(mouseX,mouseY,partialTicks);
+        for (Label label : labels) {
+            label.render(mouseX,mouseY,partialTicks);
+        }
     }
 }

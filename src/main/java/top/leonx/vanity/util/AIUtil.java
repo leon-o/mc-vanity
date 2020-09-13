@@ -137,7 +137,8 @@ public class AIUtil {
                 baseValue*=attributeModifier.getAmount();
             }
         }
-        baseValue+=EnchantmentHelper.getModifierForCreature(stack, targetEntity.getCreatureAttribute());
+        if(targetEntity!=null)
+            baseValue+=EnchantmentHelper.getModifierForCreature(stack, targetEntity.getCreatureAttribute());
 
         return baseValue;
     }

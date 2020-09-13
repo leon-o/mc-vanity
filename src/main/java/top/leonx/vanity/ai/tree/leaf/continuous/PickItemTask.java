@@ -22,26 +22,25 @@ public class PickItemTask<T extends OutsiderEntity> extends BehaviorTreeTask<T> 
         this.itemFinder = itemFinder;
     }
 
-    private List<ItemEntity> itemEntities;
+    //private List<ItemEntity> itemEntities;
+    private ItemEntity targetEntity;
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         Vec3d posVec = entity.getPositionVec();
-        itemEntities = entity.world.getEntitiesWithinAABB(EntityType.ITEM, new AxisAlignedBB(posVec.add(findRange.inverse()), posVec.add(findRange)), itemFinder);
+        List<ItemEntity> itemEntities = entity.world.getEntitiesWithinAABB(EntityType.ITEM, new AxisAlignedBB(posVec.add(findRange.inverse()), posVec.add(findRange)), itemFinder);
         if (itemEntities.size() <= 0) {
             submitResult(Result.FAIL);
+            return;
         }
+        Optional<ItemEntity> min = itemEntities.stream().min(Comparator.comparingDouble(entity::getDistanceSq));
+        targetEntity=min.get();
     }
 
     @Override
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
-        if(itemEntities==null) return;
-        Optional<ItemEntity> min = itemEntities.stream().min(Comparator.comparingDouble(entity::getDistanceSq));
-        if(min.isPresent())
-        {
-            entity.getNavigator().tryMoveToEntityLiving(min.get(),entity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
-        }else{
-            submitResult(Result.SUCCESS);
-        }
+        if(targetEntity==null) {submitResult(Result.FAIL); return;}
+        entity.getNavigator().tryMoveToEntityLiving(targetEntity,entity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+        //todo 如何判断是否捡到了呢
     }
 
     @Override

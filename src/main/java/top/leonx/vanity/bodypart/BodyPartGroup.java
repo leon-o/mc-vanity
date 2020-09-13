@@ -17,7 +17,7 @@ public class BodyPartGroup {
     public static final BodyPartGroup EXTRA_HAIR_GROUP = new BodyPartGroup(BodyPartCategory.HAIR, "extra_hair", () -> ModBodyParts.LONG_DOUBLE_PONYTAIL, 2);
     public static final BodyPartGroup EYE_GROUP        = new BodyPartGroup(BodyPartCategory.HAIR, "eye", () -> ModBodyParts.EYE_1, 1);
     public static final BodyPartGroup SKIN_GROUP       = new BodyPartGroup(BodyPartCategory.HAIR, "skin", () -> ModBodyParts.SKIN_FEMALE_1, 1);
-    public static final BodyPartGroup MOUTH            = new BodyPartGroup(BodyPartCategory.HAIR, "mouth", () -> ModBodyParts.MOUTH_DEBUG, 1);
+    public static final BodyPartGroup MOUTH            = new BodyPartGroup(BodyPartCategory.HAIR, "mouth", () -> ModBodyParts.MOUTH_1, 1);
 
     private final String                                            name;
     private final Supplier<IHasIcon>                                icon;

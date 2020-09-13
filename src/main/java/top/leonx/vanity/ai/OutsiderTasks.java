@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 public class OutsiderTasks {
     public static SequencesTask<OutsiderEntity> findFoodAndEat() {
         SequencesTask<OutsiderEntity> findFoodAndEatTask = new SequencesTask<>();
-
+        SelectorTask<OutsiderEntity> findFoodTask=new SelectorTask<>();
         PickItemTask<OutsiderEntity> pickFoodTask = new PickItemTask<>(t -> t.getItem().isFood());
 
         SequencesTask<OutsiderEntity> attackEntityForFood = new SequencesTask<>();
@@ -36,8 +36,10 @@ public class OutsiderTasks {
         attackEntityForFood.children.add(new AttackTargetTask(AIUtil::getClosestFoodProvider));
         attackEntityForFood.children.add(pickFoodTask);
 
-        findFoodAndEatTask.children.add(pickFoodTask);  //先尝试在地上寻找
-        findFoodAndEatTask.children.add(attackEntityForFood);   //如果没找到，击杀实体以获取食物s
+        findFoodTask.children.add(pickFoodTask); //先尝试在地上寻找
+        findFoodTask.children.add(attackEntityForFood);   //如果没找到，击杀实体以获取食物
+
+        findFoodAndEatTask.children.add(findFoodTask);  //以上述多种方式寻找食物
         findFoodAndEatTask.children.add(new EatFoodTask());     //从背包里拿出来吃掉
         return findFoodAndEatTask;
     }

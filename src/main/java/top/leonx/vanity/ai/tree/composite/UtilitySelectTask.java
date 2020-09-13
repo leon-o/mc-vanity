@@ -49,10 +49,9 @@ public class UtilitySelectTask<T extends LivingEntity> extends BehaviorTreeTask<
 
     @Override
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
-        if(currentTask!=null)
+        if(currentTask!=null) {
             currentTask.callForUpdate(world, entity, executionDuration);
-
-
+        }
         selectChildTask(world,entity,executionDuration);
     }
 
@@ -78,7 +77,7 @@ public class UtilitySelectTask<T extends LivingEntity> extends BehaviorTreeTask<
         for (BehaviorTreeTask<T> task : sorted) {
             if(task.canStart(worldIn,entityIn,executionDuration))
             {
-                if(currentTask!=task){
+                if(currentTask!=task || task.getResult()!=Result.RUNNING){
                     if(currentTask!=null)
                         currentTask.callForEnd(worldIn, entityIn, executionDuration);
                     task.callForStart(worldIn, entityIn, executionDuration);
