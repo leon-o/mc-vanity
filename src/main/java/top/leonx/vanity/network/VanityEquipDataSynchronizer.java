@@ -29,23 +29,23 @@ public class VanityEquipDataSynchronizer {
 
     public static void register() {
         if (FMLEnvironment.dist.isClient()) {
-            VaniyPacketHandler.registerMessage(0, UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerClient);
+            VanityPacketHandler.registerMessage(0, UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerClient);
         } else {
-            VaniyPacketHandler.registerMessage(0, UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerServer);
+            VanityPacketHandler.registerMessage(0, UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerServer);
         }
 
     }
 
     public static void UpdateDataToClient(ServerPlayerEntity playerEntity, BodyPartCapability.BodyPartData data, int targetId) {
-        VaniyPacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> playerEntity), new UpdateVanityEquipDataMsg(data, targetId));
+        VanityPacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> playerEntity), new UpdateVanityEquipDataMsg(data, targetId));
     }
 
     public static void UpdateDataToTracking(Entity entity, BodyPartCapability.BodyPartData data, int targetId) {
-        VaniyPacketHandler.CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), new UpdateVanityEquipDataMsg(data, targetId));
+        VanityPacketHandler.CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), new UpdateVanityEquipDataMsg(data, targetId));
     }
 
     public static void RequireServerToUpdate(BodyPartCapability.BodyPartData data, int targetId) {
-        VaniyPacketHandler.CHANNEL.sendToServer(new UpdateVanityEquipDataMsg(data, targetId));
+        VanityPacketHandler.CHANNEL.sendToServer(new UpdateVanityEquipDataMsg(data, targetId));
     }
 
     @OnlyIn(Dist.CLIENT)

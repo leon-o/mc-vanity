@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -99,11 +100,12 @@ public class CharacterState {
     public void setState(String key, float value) {
         root.putFloat(key, value);
     }
-    public UUID getFollowedEntity()
+    @Nullable
+    public UUID getFollowedEntityUUID()
     {
         return followedEntityUuid;
     }
-    public void setFollowedEntity(UUID uuid)
+    public void setFollowedEntity(@Nullable UUID uuid)
     {
         followedEntityUuid=uuid;
     }

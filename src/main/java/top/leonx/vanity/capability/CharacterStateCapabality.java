@@ -18,7 +18,7 @@ public class CharacterStateCapabality {
             CompoundNBT compoundNBT=new CompoundNBT();
             compoundNBT.put("root",instance.getRoot());
             compoundNBT.putBoolean("need_init",instance.isNeedInit());
-            return instance.getRoot();
+            return compoundNBT;
         }
 
         @Override

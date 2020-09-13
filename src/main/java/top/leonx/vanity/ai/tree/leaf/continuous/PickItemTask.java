@@ -34,6 +34,7 @@ public class PickItemTask<T extends OutsiderEntity> extends BehaviorTreeTask<T> 
 
     @Override
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
+        if(itemEntities==null) return;
         Optional<ItemEntity> min = itemEntities.stream().min(Comparator.comparingDouble(entity::getDistanceSq));
         if(min.isPresent())
         {

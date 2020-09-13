@@ -19,7 +19,7 @@ import top.leonx.vanity.util.PlayerSimulator;
 import top.leonx.vanity.init.*;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
-import top.leonx.vanity.network.VaniyPacketHandler;
+import top.leonx.vanity.network.VanityPacketHandler;
 import top.theillusivec4.curios.api.CuriosAPI;
 import top.theillusivec4.curios.api.imc.CurioIMCMessage;
 
@@ -35,7 +35,7 @@ public class ModEventSubscriber {
     public static void setup(final FMLCommonSetupEvent event) {
         ModBodyParts.register();
         ModCapabilityTypes.register();
-        VaniyPacketHandler.Init();
+        VanityPacketHandler.Init();
         VanityEquipDataSynchronizer.register();
         CharacterDataSynchronizer.register();
         PlayerSimulator.register();

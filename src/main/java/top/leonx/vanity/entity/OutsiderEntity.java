@@ -50,6 +50,7 @@ import top.leonx.vanity.util.PlayerSimulator;
 import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @SuppressWarnings({"NullableProblems", "UnusedReturnValue"})
 public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated {
@@ -83,6 +84,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         super(type, world);
         moveController = new OutsiderMovementController(this);
 
+    }
+
+    public UUID getFollowedPlayerUUID() {
+        return getCharacterState().getFollowedEntityUUID();
     }
 
     @Override
@@ -157,69 +162,69 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         boolean result = false;
         if (targetEntity.canBeAttackedWithItem()) {
             if (!targetEntity.hitByEntity(this)) {
-                float f = (float) this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
-                float f1;
+                float entityDamage = (float) this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+                float targetAttribute;
                 if (targetEntity instanceof LivingEntity) {
-                    f1 = EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), ((LivingEntity) targetEntity).getCreatureAttribute());
+                    targetAttribute = EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), ((LivingEntity) targetEntity).getCreatureAttribute());
                 } else {
-                    f1 = EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), CreatureAttribute.UNDEFINED);
+                    targetAttribute = EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), CreatureAttribute.UNDEFINED);
                 }
 
-                float f2 = this.getAttackCoolingPercentage(0.5F);
-                f = f * (0.2F + f2 * f2 * 0.8F);
-                f1 = f1 * f2;
+                float coolingPercentage = this.getAttackCoolingPercentage(0.5F);
+                entityDamage = entityDamage * (0.2F + coolingPercentage * coolingPercentage * 0.8F);
+                targetAttribute = targetAttribute * coolingPercentage;
                 this.resetAttackCooldown();
-                if (f > 0.0F || f1 > 0.0F) {
-                    boolean flag  = f2 > 0.9F;
+                if (entityDamage > 0.0F || targetAttribute > 0.0F) {
+                    boolean flag  = coolingPercentage > 0.9F;
                     boolean flag1 = false;
-                    int     i     = 0;
-                    i = i + EnchantmentHelper.getKnockbackModifier(this);
+                    int     knockBack     = 0;
+                    knockBack = knockBack + EnchantmentHelper.getKnockbackModifier(this);
                     if (this.isSprinting() && flag) {
                         this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, this.getSoundCategory(), 1.0F, 1.0F);
-                        ++i;
+                        ++knockBack;
                         flag1 = true;
                     }
 
-                    boolean isCriticalhit = flag && this.fallDistance > 0.0F && !this.onGround && !this.isOnLadder() && !this.isInWater() && !this.isPotionActive(
+                    boolean isCriticalHit = flag && this.fallDistance > 0.0F && !this.onGround && !this.isOnLadder() && !this.isInWater() && !this.isPotionActive(
                             Effects.BLINDNESS) && !this.isPassenger() && targetEntity instanceof LivingEntity;
-                    isCriticalhit = isCriticalhit && !this.isSprinting();
-                    float criticalhitResult = 1; //TODO Critical Hit
-                    if (isCriticalhit) {
-                        f *= criticalhitResult;
+                    isCriticalHit = isCriticalHit && !this.isSprinting();
+                    float criticalHitResult = 1; //TODO Critical Hit
+                    if (isCriticalHit) {
+                        entityDamage *= criticalHitResult;
                     }
 
-                    f = f + f1;
+                    entityDamage = entityDamage + targetAttribute;
                     boolean isSweep = false;
-                    double  d0      = this.distanceWalkedModified - this.prevDistanceWalkedModified;
-                    if (flag && !isCriticalhit && !flag1 && this.onGround && d0 < (double) this.getAIMoveSpeed()) {
+                    double  deltaDistanceWalked      = this.distanceWalkedModified - this.prevDistanceWalkedModified;
+                    if (flag && !isCriticalHit && !flag1 && this.onGround && deltaDistanceWalked < (double) this.getAIMoveSpeed()) {
                         ItemStack itemstack = this.getHeldItem(Hand.MAIN_HAND);
                         if (itemstack.getItem() instanceof SwordItem) {
                             isSweep = true;
                         }
                     }
 
-                    float   f4     = 0.0F;
+                    float   targetHealth     = 0.0F;
                     boolean isFire = false;
-                    int     j      = EnchantmentHelper.getFireAspectModifier(this);
+                    int     fireModifier      = EnchantmentHelper.getFireAspectModifier(this);
                     if (targetEntity instanceof LivingEntity) {
-                        f4 = ((LivingEntity) targetEntity).getHealth();
-                        if (j > 0 && !targetEntity.isBurning()) {
+                        targetHealth = ((LivingEntity) targetEntity).getHealth();
+                        if (fireModifier > 0 && !targetEntity.isBurning()) {
                             isFire = true;
                             targetEntity.setFire(1);
                         }
                     }
 
-                    Vec3d   vec3d           = targetEntity.getMotion();
-                    boolean isAttackSuccess = targetEntity.attackEntityFrom(DamageSource.causeMobDamage(this), f);
+                    Vec3d   targetMotion           = targetEntity.getMotion();
+                    boolean isAttackSuccess = targetEntity.attackEntityFrom(DamageSource.causeMobDamage(this), entityDamage);
                     result = isAttackSuccess;
                     if (isAttackSuccess) {
-                        if (i > 0) {
+                        if (knockBack > 0) {
                             if (targetEntity instanceof LivingEntity) {
-                                ((LivingEntity) targetEntity).knockBack(this, (float) i * 0.5F, MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F)),
+                                ((LivingEntity) targetEntity).knockBack(this, (float) knockBack * 0.5F, MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F)),
                                                                         -MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F)));
                             } else {
-                                targetEntity.addVelocity(-MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F)) * (float) i * 0.5F, 0.1D,
-                                                         MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F)) * (float) i * 0.5F);
+                                targetEntity.addVelocity(-MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F)) * (float) knockBack * 0.5F, 0.1D,
+                                                         MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F)) * (float) knockBack * 0.5F);
                             }
 
                             this.setMotion(this.getMotion().mul(0.6D, 1.0D, 0.6D));
@@ -227,7 +232,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                         }
 
                         if (isSweep) {
-                            float f3 = 1.0F + EnchantmentHelper.getSweepingDamageRatio(this) * f;
+                            float f3 = 1.0F + EnchantmentHelper.getSweepingDamageRatio(this) * entityDamage;
 
                             for (LivingEntity livingentity : this.world.getEntitiesWithinAABB(LivingEntity.class, targetEntity.getBoundingBox().grow(1.0D, 0.25D, 1.0D))) {
                                 if (livingentity != this && livingentity != targetEntity && !this.isOnSameTeam(
@@ -244,15 +249,15 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                         if (targetEntity instanceof ServerPlayerEntity && targetEntity.velocityChanged) {
                             ((ServerPlayerEntity) targetEntity).connection.sendPacket(new SEntityVelocityPacket(targetEntity));
                             targetEntity.velocityChanged = false;
-                            targetEntity.setMotion(vec3d);
+                            targetEntity.setMotion(targetMotion);
                         }
 
-                        if (isCriticalhit) {
+                        if (isCriticalHit) {
                             this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, this.getSoundCategory(), 1.0F, 1.0F);
                             this.onCriticalHit(targetEntity);
                         }
 
-                        if (!isCriticalhit && !isSweep) {
+                        if (!isCriticalHit && !isSweep) {
                             if (flag) {
                                 this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, this.getSoundCategory(), 1.0F, 1.0F);
                             } else {
@@ -260,7 +265,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                             }
                         }
 
-                        if (f1 > 0.0F) {
+                        if (targetAttribute > 0.0F) {
                             this.onEnchantmentCritical(targetEntity);
                         }
 
@@ -270,18 +275,18 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                         }
 
                         EnchantmentHelper.applyArthropodEnchantments(this, targetEntity);
-                        ItemStack itemstack1 = this.getHeldItemMainhand();
+                        ItemStack heldItemMainhand = this.getHeldItemMainhand();
                         Entity    entity     = targetEntity;
                         if (targetEntity instanceof EnderDragonPartEntity) {
                             entity = ((EnderDragonPartEntity) targetEntity).dragon;
                         }
 
-                        if (!this.world.isRemote && !itemstack1.isEmpty() && entity instanceof LivingEntity) {
-                            ItemStack copy = itemstack1.copy();
+                        if (!this.world.isRemote && !heldItemMainhand.isEmpty() && entity instanceof LivingEntity) {
+                            ItemStack copy = heldItemMainhand.copy();
 
                             if (targetEntity instanceof LivingEntity) {
-                                itemstack1.getItem().hitEntity(copy, (LivingEntity) targetEntity, this);
-                                if (itemstack1.isEmpty()) {
+                                heldItemMainhand.getItem().hitEntity(copy, (LivingEntity) targetEntity, this);
+                                if (heldItemMainhand.isEmpty()) {
                                     this.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
                                 }
                             }
@@ -289,9 +294,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                         }
 
                         if (targetEntity instanceof LivingEntity) {
-                            float f5 = f4 - ((LivingEntity) targetEntity).getHealth();
-                            if (j > 0) {
-                                targetEntity.setFire(j * 4);
+                            float f5 = targetHealth - ((LivingEntity) targetEntity).getHealth();
+                            if (fireModifier > 0) {
+                                targetEntity.setFire(fireModifier * 4);
                             }
 
                             if (this.world instanceof ServerWorld && f5 > 2.0F) {
@@ -503,7 +508,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         if (world.isRemote) return ActionResultType.PASS;
         ServerPlayerEntity fakePlayer = getFakePlayer();
         //noinspection SuspiciousMethodCalls
-        inventory.findAndHeld(Hand.MAIN_HAND, t->t.getItem() instanceof BlockItem &&blockItems.contains(t.getItem()), Comparator.comparingInt(t->t.getSecond().getCount()));
+        inventory.findAndHeld(Hand.MAIN_HAND, t->t.getItem() instanceof BlockItem &&blockItems.contains(t.getItem()), ItemStack::getCount);
 
         return placeHeldBlockOnLookAt();
     }
@@ -622,13 +627,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.inventory.tick();
         if (!this.world.isRemote) {
             this.foodStats.tick(this);
-            if (this.foodStats.needFood() && !isHandActive()) {
-                //noinspection ConstantConditions
-                if (this.inventory.findAndHeld(Hand.MAIN_HAND, ItemStack::isFood, Comparator.comparingDouble(a->a.getSecond().getItem().getFood().getHealing())  )) {
-                    setActiveHand(Hand.MAIN_HAND);
-                }
-
-            }
             tickCooldown();
         }
     }
@@ -722,17 +720,22 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         brain.updateActivity(this.world.getDayTime(), this.world.getGameTime());
     }
 
-    public ServerPlayerEntity getFollowedPlayer()
+    @Nullable
+    public PlayerEntity getFollowedPlayer()
     {
         if(world.isRemote)return null;
-        Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntity());
+        if(getCharacterState().getFollowedEntityUUID()==null) return null;
+
+        Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntityUUID());
+
         return entity instanceof ServerPlayerEntity?(ServerPlayerEntity)entity:null ;
     }
-    public void setFollowedPlayer(ServerPlayerEntity entity)
+    public void setFollowedPlayer(@Nullable ServerPlayerEntity entity)
     {
-        getCharacterState().setFollowedEntity(entity.getUniqueID());
+        getCharacterState().setFollowedEntity(entity==null?null:entity.getUniqueID());
     }
-    public CharacterState characterState;
+
+    private CharacterState characterState;
     public CharacterState getCharacterState()
     {
         if(characterState==null) {

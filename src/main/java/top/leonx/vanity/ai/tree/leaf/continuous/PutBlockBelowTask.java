@@ -5,11 +5,13 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.server.ServerWorld;
+import org.antlr.v4.runtime.misc.Triple;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.util.AIUtil;
@@ -21,9 +23,9 @@ public class PutBlockBelowTask<T extends OutsiderEntity> extends BehaviorTreeTas
 
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
-        boolean held= entity.inventory.findAndHeld(Hand.MAIN_HAND,t-> t.getItem() instanceof BlockItem,
-                                     Comparator.comparingDouble((Pair<Integer,ItemStack> t)->AIUtil.getItemValue(t.getSecond()))
-                                             .thenComparingDouble((Pair<Integer,ItemStack> t)->((BlockItem)t.getSecond().getItem()).getBlock().getHarvestLevel(AIUtil.DUMMY_BLOCK_STATE)).reversed());
+        boolean held= entity.inventory.findAndHeld(Hand.MAIN_HAND,(ItemStack t)-> t.getItem() instanceof BlockItem,
+                                     Comparator.comparingDouble((Triple<NonNullList<ItemStack>,Integer, ItemStack> t)->AIUtil.getItemValue(t.c))
+                                             .thenComparingDouble((Triple<NonNullList<ItemStack>,Integer, ItemStack> t)->((BlockItem)t.c.getItem()).getBlock().getHarvestLevel(AIUtil.DUMMY_BLOCK_STATE)).reversed());
         if(!held)
             submitResult(Result.FAIL);
     }

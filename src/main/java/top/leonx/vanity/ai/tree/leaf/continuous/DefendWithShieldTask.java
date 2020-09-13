@@ -25,7 +25,7 @@ public class DefendWithShieldTask extends BehaviorTreeTask<OutsiderEntity> {
         hurtBy.ifPresent(t->{
             entity.getLookController().setLookPositionWithEntity(t,20,20);
             if(entity.inventory.findAndHeld(Hand.OFF_HAND, i -> i.getItem().equals(Items.SHIELD),
-                                            Comparator.comparingDouble(p -> 1 - p.getSecond().getDamage() / (float) p.getSecond().getMaxDamage())))
+                                            p -> 1 - p.getDamage() / (float) p.getMaxDamage()))
                 entity.setActiveHand(Hand.OFF_HAND);
         });
     }

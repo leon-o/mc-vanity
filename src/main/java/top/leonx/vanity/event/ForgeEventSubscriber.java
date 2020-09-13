@@ -132,7 +132,7 @@ public class ForgeEventSubscriber {
             else if(percent>0.1)
                 state.setMOOD(CharacterState.MOOD.SURPRISED);
 
-            CharacterDataSynchronizer.UpdateDataToTracking(living,state,living.getEntityId());
+            CharacterDataSynchronizer.UpdateDataToTracking(living,state);
             if(living instanceof PlayerEntity)
                 CharacterDataSynchronizer.UpdateDataToClient((ServerPlayerEntity) living,state,living.getEntityId());
         }

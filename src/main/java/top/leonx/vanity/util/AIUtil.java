@@ -1,12 +1,18 @@
 package top.leonx.vanity.util;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -84,14 +90,19 @@ public class AIUtil {
 
     public static double entityDangerousAssessment(LivingEntity target, LivingEntity owner)
     {
-        return 0;
+        if(target==null || owner==null)return 0;
+        IAttributeInstance attribute = target.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+        if(attribute==null) return 0;
+        return sigmod(target.getDistance(owner), -0.4, -5) * attribute.getValue();
     }
     public static LivingEntity getMostDangerousEntityNear(OutsiderEntity entity)
     {
         Optional<List<LivingEntity>> visibleMobsOpt = entity.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
         if (visibleMobsOpt.isPresent()) {
             List<LivingEntity>     visibleMobs   = visibleMobsOpt.get();
-            Optional<LivingEntity> mostDangerous = visibleMobs.stream().max(Comparator.comparingDouble(mob -> AIUtil.entityDangerousAssessment(mob, entity)));
+            Optional<LivingEntity> mostDangerous =
+                    visibleMobs.stream().filter(t->!Objects.equals(t.getUniqueID(),entity.getFollowedPlayerUUID())).max(Comparator.comparingDouble(mob -> AIUtil.entityDangerousAssessment(mob,
+                                                                                                                                                                                           entity)));
             return mostDangerous.orElse(null);
         }
         return null;
@@ -107,5 +118,49 @@ public class AIUtil {
             return closestFoodProvider.orElse(null);
         }
         return null;
+    }
+    @SuppressWarnings("DuplicatedCode")
+    public static double getModifiedAttackDamage(double baseValue, LivingEntity targetEntity, ItemStack stack)
+    {
+        double oBaseValue=baseValue;
+        Multimap<String, AttributeModifier> attributeModifiers = stack.getItem().getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
+        Collection<AttributeModifier>       damageModifier = attributeModifiers.get(SharedMonsterAttributes.ATTACK_DAMAGE.getName());
+        for (AttributeModifier attributeModifier : damageModifier) {
+            AttributeModifier.Operation operation = attributeModifier.getOperation();
+            if(operation.equals(AttributeModifier.Operation.ADDITION))
+            {
+                baseValue+=attributeModifier.getAmount();
+            }else if(operation.equals(AttributeModifier.Operation.MULTIPLY_BASE))
+            {
+                baseValue+=oBaseValue*attributeModifier.getAmount();
+            }else {
+                baseValue*=attributeModifier.getAmount();
+            }
+        }
+        baseValue+=EnchantmentHelper.getModifierForCreature(stack, targetEntity.getCreatureAttribute());
+
+        return baseValue;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    public static double getModifiedAttackSpeed(double baseValue, ItemStack stack)
+    {
+        double oBaseValue=baseValue;
+        Multimap<String, AttributeModifier> attributeModifiers = stack.getItem().getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
+        Collection<AttributeModifier>       damageModifier = attributeModifiers.get(SharedMonsterAttributes.ATTACK_SPEED.getName());
+        for (AttributeModifier attributeModifier : damageModifier) {
+            AttributeModifier.Operation operation = attributeModifier.getOperation();
+            if(operation.equals(AttributeModifier.Operation.ADDITION))
+            {
+                baseValue+=attributeModifier.getAmount();
+            }else if(operation.equals(AttributeModifier.Operation.MULTIPLY_BASE))
+            {
+                baseValue+=oBaseValue*attributeModifier.getAmount();
+            }else {
+                baseValue*=attributeModifier.getAmount();
+            }
+        }
+
+        return baseValue;
     }
 }

@@ -5,6 +5,7 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.monster.MonsterEntity;
@@ -36,7 +37,7 @@ public class OutsiderTasks {
         attackEntityForFood.children.add(pickFoodTask);
 
         findFoodAndEatTask.children.add(pickFoodTask);  //先尝试在地上寻找
-        findFoodAndEatTask.children.add(attackEntityForFood);   //如果没找到，击杀实体以获取食物
+        findFoodAndEatTask.children.add(attackEntityForFood);   //如果没找到，击杀实体以获取食物s
         findFoodAndEatTask.children.add(new EatFoodTask());     //从背包里拿出来吃掉
         return findFoodAndEatTask;
     }
@@ -74,10 +75,10 @@ public class OutsiderTasks {
             Optional<List<LivingEntity>> visibleMobsOptional = e.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
             if (visibleMobsOptional.isPresent()) { //存在威胁者，效用值为1否则为0
                 List<LivingEntity> visibleMobs = visibleMobsOptional.get();
-                boolean hasMenace  = visibleMobs.stream().anyMatch(
-                        mob ->mob.getAttackingEntity()!=null && (Objects.equals(mob.getAttackingEntity(), e.getFollowedPlayer()) || Objects.equals(mob.getAttackingEntity(), e)));
+                boolean hasMenace  = visibleMobs.stream().filter(entity->entity instanceof MobEntity).map(entity->(MobEntity)entity).anyMatch(
+                        (MobEntity mob) -> mob.getAttackTarget()!=null && (Objects.equals(mob.getAttackTarget(), e.getFollowedPlayer()) || Objects.equals(mob.getAttackTarget(), e)));
 
-                return hasMenace ? 1d : 0d;
+                return hasMenace ? 0.5d : 0d;
             } else return 0d;
         }, battle());
 

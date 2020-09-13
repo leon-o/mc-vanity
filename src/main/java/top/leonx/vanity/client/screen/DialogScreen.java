@@ -12,6 +12,7 @@ import top.leonx.vanity.container.OutsiderContainer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class DialogScreen extends ContainerScreen<OutsiderContainer> {
     public static final ResourceLocation DIALOG_TEX = new ResourceLocation(VanityMod.MOD_ID, "textures/gui/dialog.png");
@@ -42,11 +43,22 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
         int dialogButtonWidth=48;
         int dialogButtonMargin=2;
         for (int i = 0; i < 5; i++) {
-            DialogButton dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 24,"follow me");
+            DialogButton dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 24,"",null);
             dialogButtons.add(dialogButton);
             this.addButton(dialogButton);
         }
-
+        dialogButtons.get(0).setMessage("FOLLOW ME");
+        dialogButtons.get(0).onPress=(s)->{
+            boolean followed =Objects.equals(container.outsider.getCharacterState().getFollowedEntityUUID(), container.getPlayer().getUniqueID());
+            if(followed)
+            {
+                container.requestOperation(OutsiderContainer.DISBAND);
+                s.setMessage("FOLLOW ME");
+            }else{
+                container.requestOperation(OutsiderContainer.FOLLOW_ME);
+                s.setMessage("DISBAND");
+            }
+        };
         relationShipProcessBar= new ProcessBar(infoPanelLeft+8,infoPanelTop+24,72,5);
         loveShipProcessBar= new ProcessBar(infoPanelLeft+8,infoPanelTop+32,72,5);
         loveShipProcessBar.type= ProcessBar.Type.PINK;

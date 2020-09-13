@@ -26,6 +26,7 @@ public class SequencesTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         runningPointer=0;
+        allSuccess=false;
         if(children.size()>0)
             runningTask=children.get(runningPointer);
     }

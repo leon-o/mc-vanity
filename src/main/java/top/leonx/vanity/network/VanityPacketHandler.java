@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class VaniyPacketHandler {
+public class VanityPacketHandler {
     public static SimpleChannel CHANNEL;
 
     public static void Init()

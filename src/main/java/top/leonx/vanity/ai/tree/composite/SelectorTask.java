@@ -22,10 +22,11 @@ public class SelectorTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
 
     int                 runningPointer=0;
     BehaviorTreeTask<T> runningTask;
-    boolean             anySuccess;
+    boolean             anySuccess=false;
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         runningPointer=0;
+        anySuccess=false;
         if(children.size()>0){
 
             runningTask=children.get(runningPointer);

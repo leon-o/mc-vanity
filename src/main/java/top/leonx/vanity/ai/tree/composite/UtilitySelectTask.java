@@ -60,6 +60,7 @@ public class UtilitySelectTask<T extends LivingEntity> extends BehaviorTreeTask<
     protected void onEnd(ServerWorld world, T entity, long executionDuration) {
         if(currentTask==null) return;
         currentTask.callForEnd(world,entity,executionDuration);
+        currentTask=null;
     }
 
 
@@ -77,8 +78,13 @@ public class UtilitySelectTask<T extends LivingEntity> extends BehaviorTreeTask<
         for (BehaviorTreeTask<T> task : sorted) {
             if(task.canStart(worldIn,entityIn,executionDuration))
             {
+                if(currentTask!=task){
+                    if(currentTask!=null)
+                        currentTask.callForEnd(worldIn, entityIn, executionDuration);
+                    task.callForStart(worldIn, entityIn, executionDuration);
+                }
+
                 currentTask=task;
-                currentTask.callForStart(worldIn, entityIn, executionDuration);
                 break;
             }
         }

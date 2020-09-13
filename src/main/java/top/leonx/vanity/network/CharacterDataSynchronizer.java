@@ -20,26 +20,26 @@ import java.util.function.Supplier;
 public class CharacterDataSynchronizer {
     public static void register() {
         if (FMLEnvironment.dist.isClient()) {
-            VaniyPacketHandler.registerMessage(1, CharacterStateMsg.class, CharacterStateMsg::encode,
-                                               CharacterStateMsg::decode,
-                                               CharacterDataSynchronizer::handlerClient);
+            VanityPacketHandler.registerMessage(1, CharacterStateMsg.class, CharacterStateMsg::encode,
+                                                CharacterStateMsg::decode,
+                                                CharacterDataSynchronizer::handlerClient);
         } else {
-            VaniyPacketHandler.registerMessage(1, CharacterStateMsg.class, CharacterStateMsg::encode,
-                                               CharacterStateMsg::decode, CharacterDataSynchronizer::handlerServer);
+            VanityPacketHandler.registerMessage(1, CharacterStateMsg.class, CharacterStateMsg::encode,
+                                                CharacterStateMsg::decode, CharacterDataSynchronizer::handlerServer);
         }
 
     }
 
     public static void UpdateDataToClient(ServerPlayerEntity playerEntity, CharacterState data, int targetId) {
-        VaniyPacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> playerEntity), new CharacterDataSynchronizer.CharacterStateMsg(data, targetId));
+        VanityPacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> playerEntity), new CharacterDataSynchronizer.CharacterStateMsg(data, targetId));
     }
 
-    public static void UpdateDataToTracking(Entity entity, CharacterState data, int targetId) {
-        VaniyPacketHandler.CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), new CharacterDataSynchronizer.CharacterStateMsg(data, targetId));
+    public static void UpdateDataToTracking(Entity entity, CharacterState data) {
+        VanityPacketHandler.CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), new CharacterDataSynchronizer.CharacterStateMsg(data, entity.getEntityId()));
     }
 
     public static void RequireServerToUpdate(CharacterState data, int targetId) {
-        VaniyPacketHandler.CHANNEL.sendToServer(new CharacterDataSynchronizer.CharacterStateMsg(data, targetId));
+        VanityPacketHandler.CHANNEL.sendToServer(new CharacterDataSynchronizer.CharacterStateMsg(data, targetId));
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -72,7 +72,7 @@ public class CharacterDataSynchronizer {
         if (entity instanceof LivingEntity) {
             CharacterState bodyPartData = entity.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(new CharacterState());
             bodyPartData.setRoot(msg.root);
-            if (serverside) UpdateDataToTracking(entity, bodyPartData, entity.getEntityId());
+            if (serverside) UpdateDataToTracking(entity, bodyPartData);
         }
     }
 

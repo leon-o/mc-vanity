@@ -16,7 +16,7 @@ public class EatFoodTask extends BehaviorTreeTask<OutsiderEntity> {
     @Override
     protected void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {
 
-        boolean isHeld = entity.inventory.findAndHeld(Hand.MAIN_HAND, ItemStack::isFood, Comparator.comparingDouble(t -> t.getSecond().getItem().getFood().getHealing()));
+        boolean isHeld = entity.inventory.findAndHeld(Hand.MAIN_HAND, ItemStack::isFood, t -> t.getItem().getFood().getHealing());
         if(isHeld)
         {
             eatingFood=entity.getHeldItem(Hand.MAIN_HAND);

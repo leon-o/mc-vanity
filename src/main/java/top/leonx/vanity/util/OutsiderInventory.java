@@ -25,11 +25,15 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.antlr.v4.runtime.misc.Triple;
+import org.apache.logging.log4j.util.PropertySource;
 import top.leonx.vanity.entity.OutsiderEntity;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 
 @SuppressWarnings("unused")
 public class OutsiderInventory implements IInventory, INameable {
@@ -263,25 +267,27 @@ public class OutsiderInventory implements IInventory, INameable {
         }
 
     }
+    public boolean findAndHeld(Hand hand, Predicate<ItemStack> predicate, ToDoubleFunction<ItemStack> stackToDoubleFunction) {
 
-    public boolean findAndHeld(Hand hand, Predicate<ItemStack> predicate, Comparator<Pair<Integer, ItemStack>> comparator) {
-        if (hand == Hand.MAIN_HAND && predicate.test(offHandInventory.get(0))) {
-            ItemStack itemstack = this.offHandInventory.get(0);
-            this.offHandInventory.set(0, this.mainInventory.get(mainHandSlotIndex));
-            this.mainInventory.set(mainHandSlotIndex, itemstack);
-        } else if (hand == Hand.MAIN_HAND && predicate.test(mainInventory.get(mainHandSlotIndex)) || hand == Hand.OFF_HAND && predicate.test(offHandInventory.get(0))) {
-            return true;
+        return findAndHeld(hand,predicate,Comparator.comparingDouble(t->stackToDoubleFunction.applyAsDouble(t.c)));
+    }
+    public boolean findAndHeld(Hand hand, Predicate<ItemStack> predicate, Comparator<Triple<NonNullList<ItemStack>,Integer, ItemStack>> comparator) {
+
+        List<Triple<NonNullList<ItemStack>,Integer, ItemStack>> matched = new ArrayList<>();
+        for (NonNullList<ItemStack> inventory : allInventories) {
+            for (int i = 0; i < inventory.size(); i++) {
+                if(predicate.test(inventory.get(i)))
+                    matched.add(new Triple<>(inventory,i,inventory.get(i)));
+            }
         }
-        List<Pair<Integer, ItemStack>> matched = new ArrayList<>();
-        for (int i = 0; i < mainInventory.size(); i++) {
-            if (predicate.test(mainInventory.get(i))) matched.add(new Pair<>(i, mainInventory.get(i)));
-        }
-        Optional<Pair<Integer, ItemStack>> max = matched.stream().max(comparator == null ? Comparator.comparingInt(Pair::getFirst) : comparator);
+
+        Optional<Triple<NonNullList<ItemStack>,Integer, ItemStack>> max = matched.stream().max(comparator);
         if (max.isPresent()) {
-            int index = max.get().getFirst();
-            if (hand == Hand.MAIN_HAND) pickItemInMainHand(index);
+            Triple<NonNullList<ItemStack>, Integer, ItemStack> triple = max.get();
+            int index = triple.b;
+            if (hand == Hand.MAIN_HAND) pickItemInMainHand(triple.a,index);
             else {
-                pickItemInOffHand(index);
+                pickItemInOffHand(triple.a,index);
             }
             return true;
         } else return false;
@@ -527,17 +533,17 @@ public class OutsiderInventory implements IInventory, INameable {
         ++this.timesChanged;
     }
 
-    public void pickItemInMainHand(int index) {
+    public void pickItemInMainHand(NonNullList<ItemStack> inventory,int index) {
         //this.mainHandSlotIndex = this.getBestHotbarSlot();
         ItemStack itemstack = this.mainInventory.get(this.mainHandSlotIndex);
-        this.mainInventory.set(this.mainHandSlotIndex, this.mainInventory.get(index));
-        this.mainInventory.set(index, itemstack);
+        this.mainInventory.set(this.mainHandSlotIndex, inventory.get(index));
+        inventory.set(index, itemstack);
     }
 
-    public void pickItemInOffHand(int index) {
+    public void pickItemInOffHand(NonNullList<ItemStack> inventory,int index) {
         ItemStack itemstack = this.offHandInventory.get(0);
-        this.offHandInventory.set(0, this.mainInventory.get(index));
-        this.mainInventory.set(index, itemstack);
+        this.offHandInventory.set(0, inventory.get(index));
+        inventory.set(index, itemstack);
     }
 
     public void placeItemBackInInventory(World worldIn, ItemStack stack) {
