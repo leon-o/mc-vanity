@@ -8,7 +8,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
-import net.minecraft.entity.monster.MonsterEntity;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
 import top.leonx.vanity.ai.tree.composite.SelectorTask;
 import top.leonx.vanity.ai.tree.composite.SequencesTask;
@@ -22,8 +21,6 @@ import top.leonx.vanity.util.AIUtil;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class OutsiderTasks {
     public static SequencesTask<OutsiderEntity> findFoodAndEat() {
@@ -121,12 +118,21 @@ public class OutsiderTasks {
     private static SynchronousTask<OutsiderEntity> selfProtection() {
         SynchronousTask<OutsiderEntity> synchronousTask = new SynchronousTask<>("Heal while running");
         synchronousTask.addChild(new EscapeFromTask<>());
+
         UtilitySelectTask<OutsiderEntity> healSelfTask      = new UtilitySelectTask<>("Heal Self");
-        SelectorTask<OutsiderEntity>      usePotionOrEatFood = new SelectorTask<>("Use Potion First"); //如果没有药水，就只能吃东西
-        usePotionOrEatFood.addChild(new UsePotionTask());
-        usePotionOrEatFood.addChild(increaseSatiety());
-        healSelfTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -15, -5), usePotionOrEatFood);
-        healSelfTask.addChild((w, e, t) -> 0.8 * AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), increaseSatiety());
+        SelectorTask<OutsiderEntity>      increaseSatiety = increaseSatiety();
+        UsePotionTask                     usePotionTask     = new UsePotionTask(e -> e);
+
+        SelectorTask<OutsiderEntity>      usePotionOrEatFood = new SelectorTask<>("Use Potion First"); //优先喝药
+        usePotionOrEatFood.addChild(usePotionTask);
+        usePotionOrEatFood.addChild(increaseSatiety);
+
+        SelectorTask<OutsiderEntity>      eatFoodOrUsePotion = new SelectorTask<>("Eat First"); //优先吃东西
+        eatFoodOrUsePotion.addChild(increaseSatiety);
+        eatFoodOrUsePotion.addChild(usePotionTask);
+
+        healSelfTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -15, -5), usePotionOrEatFood); //生命值不是特别少的时候优先吃东西
+        healSelfTask.addChild((w, e, t) -> e.getFoodStats().needFood()?0.8:0 * AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), eatFoodOrUsePotion); //生命值特别少的时候优先喝药
         synchronousTask.addChild(healSelfTask);
 
         return synchronousTask;

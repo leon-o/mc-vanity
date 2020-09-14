@@ -3,9 +3,7 @@ package top.leonx.vanity.ai.tree.composite;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
-import top.leonx.vanity.util.TernaryFunc;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SequencesTask<T extends LivingEntity> extends CompositeTask<T> {

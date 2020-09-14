@@ -51,9 +51,11 @@ import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @SuppressWarnings({"NullableProblems", "UnusedReturnValue"})
-public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated {
+public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated,IRangedAttackMob {
     private static final ImmutableList<MemoryModuleType<?>>                                  MEMORY_TYPES    = ImmutableList.of(MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.HOME,
                                                                                                                                 MemoryModuleType.JOB_SITE, MemoryModuleType.MEETING_POINT,
                                                                                                                                 MemoryModuleType.MOBS, MemoryModuleType.VISIBLE_MOBS,
@@ -84,6 +86,32 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         super(type, world);
         moveController = new OutsiderMovementController(this);
 
+    }
+    private Consumer<OutsiderEntity> onItemUseFinished;
+
+    public void useItemInMainHand(@Nullable Consumer<OutsiderEntity> onUseFinished)
+    {
+        setActiveHand(Hand.MAIN_HAND);
+        onItemUseFinished=onUseFinished;
+    }
+
+    @Override
+    public void stopActiveHand() {
+        super.stopActiveHand();
+        onItemUseFinished=null;
+    }
+
+    @Override
+    protected void onItemUseFinish() {
+        super.onItemUseFinish();
+        if(onItemUseFinished==null) return;
+        onItemUseFinished.accept(this);
+        onItemUseFinished=null;
+    }
+
+    @Override
+    public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
+        //todo 再说
     }
 
     public UUID getFollowedPlayerUUID() {
