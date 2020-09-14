@@ -26,18 +26,18 @@ public class OutsiderMovementController extends MovementController {
         if(!(this.mob instanceof OutsiderEntity)) return;
         OutsiderEntity entity=(OutsiderEntity)this.mob;
         if (this.action == MovementController.Action.STRAFE) {
-            float f  = entity.getFinalMoveSpeed();
-            float f1 = (float) this.speed * f;
+            float maxMoveSpeed  = entity.getFinalMoveSpeed();
+            float navigatorSpeed = (float) this.speed * maxMoveSpeed;
             float moveForwardF = this.moveForward;
             float moveStrafeF = this.moveStrafe;
-            float f4 = MathHelper.sqrt(moveForwardF * moveForwardF + moveStrafeF * moveStrafeF);
-            if (f4 < 1.0F) {
-                f4 = 1.0F;
+            float preMoveSpeed = MathHelper.sqrt(moveForwardF * moveForwardF + moveStrafeF * moveStrafeF);
+            if (preMoveSpeed < 1.0F) {
+                preMoveSpeed = 1.0F;
             }
 
-            f4 = f1 / f4;
-            moveForwardF = moveForwardF * f4;
-            moveStrafeF = moveStrafeF * f4;
+            preMoveSpeed = navigatorSpeed / preMoveSpeed;
+            moveForwardF = moveForwardF * preMoveSpeed;
+            moveStrafeF = moveStrafeF * preMoveSpeed;
             float         f5            = MathHelper.sin(this.mob.rotationYaw * ((float) Math.PI / 180F));
             float         f6            = MathHelper.cos(this.mob.rotationYaw * ((float) Math.PI / 180F));
             float         f7            = moveForwardF * f6 - moveStrafeF * f5;
@@ -48,10 +48,10 @@ public class OutsiderMovementController extends MovementController {
                                               MathHelper.floor(this.mob.getPosZ() + (double) f8)) != PathNodeType.WALKABLE) {
                 this.moveForward = 1.0F;
                 this.moveStrafe = 0.0F;
-                f1 = f;
+                navigatorSpeed = maxMoveSpeed;
             }
 
-            this.mob.setAIMoveSpeed(f1);
+            this.mob.setAIMoveSpeed(navigatorSpeed);
             this.mob.setMoveForward(this.moveForward);
             this.mob.setMoveStrafing(this.moveStrafe);
             this.action = MovementController.Action.WAIT;
@@ -92,7 +92,7 @@ public class OutsiderMovementController extends MovementController {
                 this.mob.setMoveForward((float) motion.z);
                 this.mob.setMoveVertical((float)motion.y);
             }else{
-                this.mob.rotationYaw = this.limitAngle(this.mob.rotationYaw, deltaAngle, 6.0F);
+                this.mob.rotationYaw = this.limitAngle(this.mob.rotationYaw, deltaAngle, 12.0F);
                 this.mob.setMoveForward(mob.getAIMoveSpeed());
             }
 

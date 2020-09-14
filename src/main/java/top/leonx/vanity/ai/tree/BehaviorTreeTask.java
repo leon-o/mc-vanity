@@ -7,26 +7,33 @@ import top.leonx.vanity.VanityMod;
 public abstract class BehaviorTreeTask<T extends LivingEntity> {
     //public TernaryFunc<ServerWorld,T,Long,Double> utilityScoreCalculator;
     private Result result;
-
     public Result getResult() {
         return result;
     }
-
+    public String getTaskName()
+    {
+        return this.getClass().getName();
+    }
     protected void submitResult(Result result) {
         this.result = result;
     }
 
     public void callForEnd(ServerWorld world, T entity,long executionDuration)
     {
-        if(getResult()== Result.RUNNING)
+        if(getResult()== Result.RUNNING)//If result wasn't set to Fail, we set it to SUCCESS.
             submitResult(Result.SUCCESS);
         onEnd(world, entity, executionDuration);
     }
     public void callForStart(ServerWorld world, T entity, long executionDuration)
     {
+        submitResult(null);//There is no result before task started.
+
         onStart(world,entity,executionDuration);
-        submitResult(Result.RUNNING);
-        System.out.println(" start "+this.toString());
+
+        if(getResult()==null)//If onStart didn't submit result(Fail or Success) we set it to RUNNING.
+            submitResult(Result.RUNNING);
+
+        System.out.println("start "+this.getTaskName());
     }
     public void callForUpdate(ServerWorld world, T entity, long executionDuration)
     {

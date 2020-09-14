@@ -39,7 +39,7 @@ public class PickItemTask<T extends OutsiderEntity> extends BehaviorTreeTask<T> 
     @Override
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
         if(targetEntity==null) {submitResult(Result.FAIL); return;}
-        entity.getNavigator().tryMoveToEntityLiving(targetEntity,entity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+        entity.getNavigator().tryMoveToEntityLiving(targetEntity,1);
         //todo 如何判断是否捡到了呢
     }
 

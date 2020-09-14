@@ -27,21 +27,21 @@ import java.util.stream.Stream;
 
 public class OutsiderTasks {
     public static SequencesTask<OutsiderEntity> findFoodAndEat() {
-        SequencesTask<OutsiderEntity> findFoodAndEatTask = new SequencesTask<>();
-        SelectorTask<OutsiderEntity> findFoodTask=new SelectorTask<>();
+        SequencesTask<OutsiderEntity> findFoodThenEatTask = new SequencesTask<>("Find Food Then Eat");
+        SelectorTask<OutsiderEntity> findFoodTask=new SelectorTask<>("Find Food");
         PickItemTask<OutsiderEntity> pickFoodTask = new PickItemTask<>(t -> t.getItem().isFood());
 
-        SequencesTask<OutsiderEntity> attackEntityForFood = new SequencesTask<>();
+        SequencesTask<OutsiderEntity> attackEntityForFood = new SequencesTask<>("Attack For Food");
         ///attackEntityForFood.children.add(new FindAttackTargetTask<>();
-        attackEntityForFood.children.add(new AttackTargetTask(AIUtil::getClosestFoodProvider));
-        attackEntityForFood.children.add(pickFoodTask);
+        attackEntityForFood.addChild(new AttackTargetTask(AIUtil::getClosestFoodProvider));
+        attackEntityForFood.addChild(pickFoodTask);
 
-        findFoodTask.children.add(pickFoodTask); //先尝试在地上寻找
-        findFoodTask.children.add(attackEntityForFood);   //如果没找到，击杀实体以获取食物
+        findFoodTask.addChild(pickFoodTask); //先尝试在地上寻找
+        findFoodTask.addChild(attackEntityForFood);   //如果没找到，击杀实体以获取食物
 
-        findFoodAndEatTask.children.add(findFoodTask);  //以上述多种方式寻找食物
-        findFoodAndEatTask.children.add(new EatFoodTask());     //从背包里拿出来吃掉
-        return findFoodAndEatTask;
+        findFoodThenEatTask.addChild(findFoodTask);  //以上述多种方式寻找食物
+        findFoodThenEatTask.addChild(new EatFoodTask());     //从背包里拿出来吃掉
+        return findFoodThenEatTask;
     }
 
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> idle(float p_220641_1_) {
@@ -52,9 +52,9 @@ public class OutsiderTasks {
     }
 
     public static SelectorTask<OutsiderEntity> increaseSatiety() {
-        SelectorTask<OutsiderEntity> feedSelfTask = new SelectorTask<>();
-        feedSelfTask.children.add(new EatFoodTask()); //从背包里找食物吃
-        feedSelfTask.children.add(findFoodAndEat()); //背包里没有就要去找
+        SelectorTask<OutsiderEntity> feedSelfTask = new SelectorTask<>("Feed Self");
+        feedSelfTask.addChild(new EatFoodTask()); //从背包里找食物吃
+        feedSelfTask.addChild(findFoodAndEat()); //背包里没有就要去找
 
         return feedSelfTask;
     }
@@ -66,7 +66,7 @@ public class OutsiderTasks {
     }
 
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> protectPlayer() {
-        UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>();
+        UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Protect Player");
 
         //闲置
         utilitySelectTask.addChild((w,e,t)->0.06,new IdleTask<>());
@@ -91,7 +91,7 @@ public class OutsiderTasks {
     }
 
     private static UtilitySelectTask<OutsiderEntity> battle() {
-        UtilitySelectTask<OutsiderEntity> battleTask = new UtilitySelectTask<>();
+        UtilitySelectTask<OutsiderEntity> battleTask = new UtilitySelectTask<>("Battle");
         battleTask.addChild((w, e, t) -> {
             if (e.getAttackTarget() == null) return 0d;
             return (double) (e.getHealth() / e.getMaxHealth()); //生命越多越勇
@@ -119,15 +119,15 @@ public class OutsiderTasks {
     }
 
     private static SynchronousTask<OutsiderEntity> selfProtection() {
-        SynchronousTask<OutsiderEntity> synchronousTask = new SynchronousTask<>();
-        synchronousTask.children.add(new EscapeFromTask<>());
-        UtilitySelectTask<OutsiderEntity> treatSelfTask      = new UtilitySelectTask<>();
-        SelectorTask<OutsiderEntity>      usePotionOrEatFood = new SelectorTask<>(); //如果没有药水，就只能吃东西
-        usePotionOrEatFood.children.add(new UsePotionTask());
-        usePotionOrEatFood.children.add(increaseSatiety());
-        treatSelfTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -15, -5), usePotionOrEatFood);
-        treatSelfTask.addChild((w, e, t) -> 0.8 * AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), increaseSatiety());
-        synchronousTask.children.add(treatSelfTask);
+        SynchronousTask<OutsiderEntity> synchronousTask = new SynchronousTask<>("Heal while running");
+        synchronousTask.addChild(new EscapeFromTask<>());
+        UtilitySelectTask<OutsiderEntity> healSelfTask      = new UtilitySelectTask<>("Heal Self");
+        SelectorTask<OutsiderEntity>      usePotionOrEatFood = new SelectorTask<>("Use Potion First"); //如果没有药水，就只能吃东西
+        usePotionOrEatFood.addChild(new UsePotionTask());
+        usePotionOrEatFood.addChild(increaseSatiety());
+        healSelfTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -15, -5), usePotionOrEatFood);
+        healSelfTask.addChild((w, e, t) -> 0.8 * AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), increaseSatiety());
+        synchronousTask.addChild(healSelfTask);
 
         return synchronousTask;
     }

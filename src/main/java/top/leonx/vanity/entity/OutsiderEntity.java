@@ -459,7 +459,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             }
 
             List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this, axisalignedbb);
-
             for (Entity entity : list) {
                 if (entity instanceof ItemEntity && entity.isAlive()) {
                     onCollideWithItemEntity((ItemEntity) entity);
@@ -470,6 +469,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     public void onCollideWithItemEntity(ItemEntity itemEntity) {
         if (!this.world.isRemote) {
+
+
             if (itemEntity.cannotPickup()) return;
             ItemStack itemstack = itemEntity.getItem();
             int       i         = itemstack.getCount();
@@ -477,14 +478,22 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
             ItemStack copy = itemstack.copy();
             if (!itemEntity.cannotPickup() && (itemEntity.getOwnerId() == null || itemEntity.lifespan - itemEntity.age <= 200 || itemEntity.getOwnerId().equals(
-                    this.getUniqueID())) && ( i <= 0 || this.inventory.getStorableItemStack(itemstack)!=-1 || inventory.addItemStackToInventory(itemstack))) {
-                copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
+                    this.getUniqueID())) && ( i <= 0 || inventory.isCanStore(itemstack))) {
 
-                onItemPickup(this, i);
-                if (itemstack.isEmpty()) {
+                Vec3d posVec = getPositionVec().add(0,1,0);
+                Vec3d itemPosVec = itemEntity.getPositionVec();
+                Vec3d vec = posVec.add(itemPosVec.inverse()).normalize().scale(0.2);
+                itemEntity.addVelocity(vec.x,vec.y,vec.z);
+
+                if(posVec.distanceTo(itemPosVec)<=0.4 && inventory.storeItemStack(itemstack))
+                {
+                    copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
                     onItemPickup(this, i);
-                    itemEntity.remove();
-                    itemstack.setCount(i);
+                    if (itemstack.isEmpty()) {
+                        onItemPickup(this, i);
+                        itemEntity.remove();
+                        itemstack.setCount(i);
+                    }
                 }
             }
 

@@ -10,6 +10,7 @@ public class Label implements IRenderable {
     Supplier<String> messageGetter;
     int color;
     int x,y;
+    int width,height;
     boolean center;
     public Label(Supplier<String> messageGetter, int color) {
         this.messageGetter = messageGetter;
@@ -24,12 +25,17 @@ public class Label implements IRenderable {
     }
     public Label(String message)
     {
-        this(()->message,0x808080);
+        this(()->message,0x202020);
     }
     public Label setXY(int x,int y)
     {
         this.x=x;
         this.y=y;
+        return this;
+    }
+    public Label setWH(int width,int height){
+        this.width=width;
+        this.height=height;
         return this;
     }
     public Label setCenter(boolean center)
@@ -42,7 +48,7 @@ public class Label implements IRenderable {
         FontRenderer fontRenderer = Minecraft.getInstance().fontRenderer;
         String       msg            = messageGetter.get();
         if(center)
-            fontRenderer.drawString(msg, this.x+fontRenderer.getStringWidth(msg)/2f, this.y, color);
+            fontRenderer.drawString(msg, this.x+(width-fontRenderer.getStringWidth(msg))/2f, this.y+(height-8)/2f, color);
         else
             fontRenderer.drawString(msg, this.x, this.y, color);
     }

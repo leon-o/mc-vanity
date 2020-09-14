@@ -1,7 +1,6 @@
 package top.leonx.vanity.util;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.BlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -26,12 +25,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.antlr.v4.runtime.misc.Triple;
-import org.apache.logging.log4j.util.PropertySource;
 import top.leonx.vanity.entity.OutsiderEntity;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
@@ -341,7 +338,6 @@ public class OutsiderInventory implements IInventory, INameable {
                 return i;
             }
         }
-
         return -1;
     }
 
@@ -415,7 +411,7 @@ public class OutsiderInventory implements IInventory, INameable {
      * Stores a stack in the entity's inventory. It first tries to place it in the selected slot in the entity's hotbar,
      * then the offhand slot, then any available/empty slot in the entity's inventory.
      */
-    public int getStorableItemStack(ItemStack itemStackIn) {
+    public int getStorableIndex(ItemStack itemStackIn) {
         if (this.canMergeStacks(this.getStackInSlot(this.mainHandSlotIndex), itemStackIn)) {
             return this.mainHandSlotIndex;
         } else if (this.canMergeStacks(this.getStackInSlot(40), itemStackIn)) {
@@ -549,7 +545,7 @@ public class OutsiderInventory implements IInventory, INameable {
     public void placeItemBackInInventory(World worldIn, ItemStack stack) {
         if (!worldIn.isRemote) {
             while (!stack.isEmpty()) {
-                int i = this.getStorableItemStack(stack);
+                int i = this.getStorableIndex(stack);
                 if (i == -1) {
                     i = this.getFirstEmptyStack();
                 }
@@ -640,10 +636,22 @@ public class OutsiderInventory implements IInventory, INameable {
 
     }
 
+    /**
+     * Merge itemStack if is mergeable or put it in first empty slot
+     * @param itemStack itemStack
+     * @return return true when success
+     */
     public boolean storeItemStack(ItemStack itemStack) {
-        return add(getStorableItemStack(itemStack), itemStack);
+        return add(getStorableIndex(itemStack), itemStack);
     }
-
+    public boolean isCanStore(ItemStack itemStack)
+    {
+        int storableIndex = getStorableIndex(itemStack);
+        if(storableIndex!=-1)
+            return true;
+        else
+            return getFirstEmptyStack()!=-1; //返回-1表示没有空的栏位
+    }
     /**
      * Decrement the number of animations remaining. Only called on client side. This is used to handle the animation of
      * receiving a block.
@@ -743,7 +751,7 @@ public class OutsiderInventory implements IInventory, INameable {
      * over items.
      */
     private int storePartialItemStack(ItemStack itemStackIn) {
-        int i = this.getStorableItemStack(itemStackIn);
+        int i = this.getStorableIndex(itemStackIn);
         if (i == -1) {
             i = this.getFirstEmptyStack();
         }

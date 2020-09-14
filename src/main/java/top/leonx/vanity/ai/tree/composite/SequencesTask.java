@@ -8,15 +8,15 @@ import top.leonx.vanity.util.TernaryFunc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SequencesTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
-    public List<BehaviorTreeTask<T>> children;
+public class SequencesTask<T extends LivingEntity> extends CompositeTask<T> {
     public boolean                   continueWhenFail=false;
-    public SequencesTask() {
-        children=new ArrayList<>();
+    public SequencesTask(String name) {
+        super(name);
     }
 
-    public SequencesTask(List<BehaviorTreeTask<T>> children) {
-        this.children = children;
+    public SequencesTask(String name,List<BehaviorTreeTask<T>> children) {
+        super(name);
+        getChildren().addAll( children);
     }
 
 
@@ -27,8 +27,8 @@ public class SequencesTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         runningPointer=0;
         allSuccess=false;
-        if(children.size()>0){
-            runningTask=children.get(runningPointer);
+        if(getChildren().size()>0){
+            runningTask=getChildren().get(runningPointer);
             runningTask.callForStart(world,entity,executionDuration);
         }
     }
@@ -40,7 +40,9 @@ public class SequencesTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
             return;
         }
         if(getResult()!=Result.RUNNING) return;
-        runningTask.callForUpdate(world,entity,executionDuration);
+
+        if(runningTask.getResult()==Result.RUNNING)
+            runningTask.callForUpdate(world,entity,executionDuration);
 
         if(runningTask.getResult()==Result.FAIL || runningTask.getResult()==Result.SUCCESS)
         {
@@ -53,9 +55,9 @@ public class SequencesTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
                 return;
             }
             runningPointer++;
-            if(runningPointer<children.size())
+            if(runningPointer<getChildren().size())
             {
-                runningTask = children.get(runningPointer);
+                runningTask = getChildren().get(runningPointer);
                 runningTask.callForStart(world,entity,executionDuration);
             }else{
                 submitResult(allSuccess?Result.SUCCESS:Result.FAIL);

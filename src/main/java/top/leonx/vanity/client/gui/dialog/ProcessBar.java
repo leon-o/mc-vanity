@@ -27,8 +27,8 @@ public class ProcessBar extends AbstractGui implements IRenderable {
         int texYStart=80;
         if(type==Type.PINK)
             texYStart+=10;
-        blit(x,y,128,texYStart,width,height,256*72/width,256*5/height);
-        blit(x, y, 128, texYStart+5, (int) (value/maxValue*width), height, 256*72/width, 256*5/height);
+        blit(x,y,128*width/72f,texYStart,width,height,256*width/72,256*height/5);
+        blit(x, y, 128*width/72f, texYStart+5, (int) (value/maxValue*width), height, 256*width/72, 256*height/5);
     }
 
     public enum Type{

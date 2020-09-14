@@ -4,18 +4,18 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class SelectorTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
-    public List<BehaviorTreeTask<T>> children;
+public class SelectorTask<T extends LivingEntity> extends CompositeTask<T> {
     public boolean                   continueWhenSuccess =false;
-    public SelectorTask() {
-        children=new ArrayList<>();
+    public SelectorTask(String name)
+    {
+        super(name);
     }
 
-    public SelectorTask(List<BehaviorTreeTask<T>> children) {
-        this.children = children;
+    public SelectorTask(String name,List<BehaviorTreeTask<T>> children) {
+        super(name);
+        getChildren().addAll(children);
     }
 
 
@@ -26,9 +26,9 @@ public class SelectorTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         runningPointer=0;
         anySuccess=false;
-        if(children.size()>0){
+        if(getChildren().size()>0){
 
-            runningTask=children.get(runningPointer);
+            runningTask=getChildren().get(runningPointer);
             runningTask.callForStart(world,entity,executionDuration);
         }
 
@@ -41,9 +41,11 @@ public class SelectorTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
             return;
         }
         if(getResult()!=Result.RUNNING) return;
-        runningTask.callForUpdate(world,entity,executionDuration);
 
-        if(runningTask.getResult()==Result.FAIL || runningTask.getResult()==Result.SUCCESS)
+        if(runningTask.getResult()==Result.RUNNING)
+            runningTask.callForUpdate(world,entity,executionDuration);
+
+        if(runningTask.getResult()!=Result.RUNNING)
         {
             runningTask.callForEnd(world,entity,executionDuration);
 
@@ -54,9 +56,9 @@ public class SelectorTask<T extends LivingEntity> extends BehaviorTreeTask<T> {
                 return;
             }
             runningPointer++;
-            if(runningPointer<children.size())
+            if(runningPointer<getChildren().size())
             {
-                runningTask = children.get(runningPointer);
+                runningTask = getChildren().get(runningPointer);
                 runningTask.callForStart(world,entity,executionDuration);
             }else{
                 submitResult(anySuccess ?Result.SUCCESS:Result.FAIL);
