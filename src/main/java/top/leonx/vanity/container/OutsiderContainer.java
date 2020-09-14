@@ -6,10 +6,13 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModContainerTypes;
@@ -17,6 +20,7 @@ import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -39,7 +43,20 @@ public class OutsiderContainer extends Container {
     });
 
     public static final Operation DISBAND=Operation.create(container-> container.outsider.setFollowedPlayer(null));
+    public static final Operation OPEN_INVENTORY=Operation.create(container->{
+        INamedContainerProvider provider = new INamedContainerProvider() {
+            @Override
+            public ITextComponent getDisplayName() {
+                return container.outsider.getDisplayName();
+            }
 
+            @Override
+            public Container createMenu(int id, @Nonnull PlayerInventory inventory,@Nonnull PlayerEntity player) {
+                return new OutsiderInventoryContainer(id,inventory,container.outsider);
+            }
+        };
+        NetworkHooks.openGui((ServerPlayerEntity) container.player, provider, t->t.writeInt(container.outsider.getEntityId()));
+    });
     public OutsiderContainer(int windowId, PlayerInventory inv, PacketBuffer data) {
         this(windowId,inv,readOutsiderFromBuffer(data));
     }
@@ -73,7 +90,7 @@ public class OutsiderContainer extends Container {
     }
 
     @Override
-    public boolean canInteractWith(PlayerEntity playerIn) {
+    public boolean canInteractWith(@Nonnull PlayerEntity playerIn) {
         return true;
     }
 

@@ -62,6 +62,10 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
                 s.setMessage("DISBAND");
             }
         };
+
+        dialogButtons.get(1).setMessage("INVENTORY");
+        dialogButtons.get(1).onPress=(s)-> container.requestOperation(OutsiderContainer.OPEN_INVENTORY);
+
         addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+4,infoPanelTop+4));
         addLabel(new Label("Relationship").setXY(infoPanelLeft+4,infoPanelTop+24));
         relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5);

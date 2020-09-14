@@ -37,7 +37,7 @@ public class OutsiderInventory implements IInventory, INameable {
     public final  NonNullList<ItemStack>       mainInventory     = NonNullList.withSize(36, ItemStack.EMPTY);
     public final  NonNullList<ItemStack>       armorInventory    = NonNullList.withSize(4, ItemStack.EMPTY);
     public final  NonNullList<ItemStack>       offHandInventory  = NonNullList.withSize(1, ItemStack.EMPTY);
-    public final  int                          mainHandSlotIndex = 1;
+    public final  int                          mainHandSlotIndex = 0;
     public final  OutsiderEntity               entity;
     private final List<NonNullList<ItemStack>> allInventories    = ImmutableList.of(this.mainInventory, this.armorInventory, this.offHandInventory);
     private       ItemStack                    itemStack         = ItemStack.EMPTY;

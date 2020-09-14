@@ -1,5 +1,6 @@
 package top.leonx.vanity.client.gui.dialog;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.ToggleWidget;
@@ -12,7 +13,8 @@ public class DialogButton extends ToggleWidget {
 
     public IPressable onPress;
     private int color=0X333333;
-
+    private final float widthInTex=48;
+    private final float heightInTex=32;
     //String msg;
     public DialogButton(int xIn, int yIn, int widthIn, int heightIn,String msg,IPressable onPress) {
         super(xIn, yIn, widthIn, heightIn, false);
@@ -30,10 +32,25 @@ public class DialogButton extends ToggleWidget {
 
     @Override
     public void renderButton(int mouseX, int mouseY, float partialTicks) {
-        super.renderButton(mouseX, mouseY, partialTicks);
-        FontRenderer fontRenderer = Minecraft.getInstance().fontRenderer;
+        Minecraft minecraft = Minecraft.getInstance();
+        minecraft.getTextureManager().bindTexture(this.resourceLocation);
+        RenderSystem.disableDepthTest();
+        int i = this.xTexStart;
+        int j = this.yTexStart;
+        if (this.stateTriggered) {
+            i += this.xDiffTex;
+        }
+
+        if (this.isHovered()) {
+            j += this.yDiffTex;
+        }
+        float scaleFactorW=width/widthInTex;
+        float scaleFactorH=height/heightInTex;
+        blit(this.x, this.y, (int) (i*scaleFactorW), (int) (j * scaleFactorH), this.width, this.height,(int)(256*scaleFactorW),(int) (256*scaleFactorH));
+
+        RenderSystem.enableDepthTest();
+        FontRenderer fontRenderer = minecraft.fontRenderer;
         fontRenderer.drawString(getMessage(),this.x+(width-fontRenderer.getStringWidth(getMessage()))/2f,this.y + (this.height - 8) / 2f,color);
-        //this.drawCenteredString(fontRenderer, getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, color);
     }
 
     @Override

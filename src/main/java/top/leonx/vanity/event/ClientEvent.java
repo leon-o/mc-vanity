@@ -20,6 +20,7 @@ import top.leonx.vanity.client.ModBodyPartRenderers;
 import top.leonx.vanity.client.layer.BodyPartLayer;
 import top.leonx.vanity.client.renderer.entity.OutsiderRenderer;
 import top.leonx.vanity.client.screen.DialogScreen;
+import top.leonx.vanity.client.screen.OutsiderInventoryScreen;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModContainerTypes;
@@ -34,6 +35,7 @@ public class ClientEvent{
     {
         ScreenManager.registerFactory(ModContainerTypes.VANITY_MIRROR_CONTAINER, VanityMirrorScreen::new);
         ScreenManager.registerFactory(ModContainerTypes.OUTSIDER, DialogScreen::new);
+        ScreenManager.registerFactory(ModContainerTypes.OUTSIDER_INVENTORY, OutsiderInventoryScreen::new);
 
         ModBodyPartRenderers.register();
 
