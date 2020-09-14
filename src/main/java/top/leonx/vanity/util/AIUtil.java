@@ -8,6 +8,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
@@ -93,7 +94,13 @@ public class AIUtil {
         if(target==null || owner==null)return 0;
         IAttributeInstance attribute = target.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
         if(attribute==null) return 0;
-        return sigmod(target.getDistance(owner), -0.4, -5) * attribute.getValue();
+
+        float dangerous=0;
+
+        if(target.getRevengeTarget()==owner || (target instanceof MobEntity && ((MobEntity)target).getAttackTarget()==owner))
+            dangerous=1;
+
+        return dangerous*sigmod(target.getDistance(owner), -0.4, -5) * attribute.getValue();
     }
     public static LivingEntity getMostDangerousEntityNear(OutsiderEntity entity)
     {
