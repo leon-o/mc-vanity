@@ -43,23 +43,23 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
         dialogButtons.clear();
 
         int dialogButtonStartX= dialogPanelLeft +4;
-        int dialogButtonWidth=48;
+        int dialogButtonWidth=64;
         int dialogButtonMargin=2;
-        for (int i = 0; i < 5; i++) {
-            DialogButton dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 24,"",null);
+        for (int i = 0; i < 4; i++) {
+            DialogButton dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 32,"",null);
             dialogButtons.add(dialogButton);
             this.addButton(dialogButton);
         }
-        dialogButtons.get(0).setMessage("FOLLOW ME");
+        dialogButtons.get(0).setMessage(Objects.equals(container.outsider.getFollowedPlayerUUID(), container.getPlayer().getUniqueID())?"Disband":"Follow me");
         dialogButtons.get(0).onPress=(s)->{
-            boolean followed =Objects.equals(container.outsider.getCharacterState().getFollowedEntityUUID(), container.getPlayer().getUniqueID());
+            boolean followed =Objects.equals(container.outsider.getFollowedPlayerUUID(), container.getPlayer().getUniqueID());
             if(followed)
             {
                 container.requestOperation(OutsiderContainer.DISBAND);
-                s.setMessage("FOLLOW ME");
+                s.setMessage("Follow me");
             }else{
                 container.requestOperation(OutsiderContainer.FOLLOW_ME);
-                s.setMessage("DISBAND");
+                s.setMessage("Disband");
             }
         };
 
@@ -68,9 +68,9 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
 
         addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+4,infoPanelTop+4));
         addLabel(new Label("Relationship").setXY(infoPanelLeft+4,infoPanelTop+24));
-        relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5);
+        relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5).setMaxValue(30f);
         addLabel(new Label("Love").setXY(infoPanelLeft+4,infoPanelTop+40));
-        loveShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+48,68,5);
+        loveShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+48,68,5).setMaxValue(30f);
         loveShipProcessBar.type= ProcessBar.Type.PINK;
     }
     private void addLabel(Label label)
@@ -88,12 +88,18 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
         super.render(mouseX, mouseY, partialTicks);
-        relationShipProcessBar.value=container.outsider.getCharacterState().getRelationWith(container.getPlayer().getUniqueID());
         relationShipProcessBar.render(mouseX,mouseY,partialTicks);
-        loveShipProcessBar.value=container.outsider.getCharacterState().getLoveWith(container.getPlayer().getUniqueID());
         loveShipProcessBar.render(mouseX,mouseY,partialTicks);
         for (Label label : labels) {
             label.render(mouseX,mouseY,partialTicks);
         }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        relationShipProcessBar.value=container.outsider.getCharacterState().getRelationWith(container.getPlayer().getUniqueID());
+        loveShipProcessBar.value=container.outsider.getCharacterState().getLoveWith(container.getPlayer().getUniqueID());
+
     }
 }

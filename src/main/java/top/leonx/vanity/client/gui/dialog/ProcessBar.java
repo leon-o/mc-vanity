@@ -20,7 +20,11 @@ public class ProcessBar extends AbstractGui implements IRenderable {
         this.width = width;
         this.height = height;
     }
-
+    public ProcessBar setMaxValue(double maxValue)
+    {
+        this.maxValue=maxValue;
+        return this;
+    }
     @Override
     public void render(int mouseX, int mouseY, float partialTick) {
         Minecraft.getInstance().getTextureManager().bindTexture(DIALOG_TEX);

@@ -36,23 +36,23 @@ import net.minecraft.util.math.*;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkHooks;
+import top.leonx.vanity.ai.OutsiderTasks;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.container.OutsiderContainer;
-import top.leonx.vanity.ai.OutsiderTasks;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
+import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.util.GeneralFoodStats;
 import top.leonx.vanity.util.OutsiderInventory;
 import top.leonx.vanity.util.PlayerSimPathNavigator;
 import top.leonx.vanity.util.PlayerSimulator;
 
 import javax.annotation.Nullable;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @SuppressWarnings({"NullableProblems", "UnusedReturnValue"})
 public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated,IRangedAttackMob {
@@ -73,9 +73,11 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                                                                                                                                 MemoryModuleType.LAST_SLEPT, MemoryModuleType.field_226332_A_,
                                                                                                                                 MemoryModuleType.LAST_WORKED_AT_POI,
                                                                                                                                 MemoryModuleType.GOLEM_LAST_SEEN_TIME);
+
     private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES    = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
                                                                                                                                 SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED,
                                                                                                                                 SensorType.HURT_BY, SensorType.GOLEM_LAST_SEEN);
+
     public final         OutsiderInventory                                                   inventory       = new OutsiderInventory(this);
     private final        GeneralFoodStats<OutsiderEntity>                                    foodStats       = new GeneralFoodStats<>();
     private final        PlayerAbilities                                                     abilities       = new PlayerAbilities();
@@ -114,8 +116,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         //todo 再说
     }
 
+    @Nullable
     public UUID getFollowedPlayerUUID() {
-        return getCharacterState().getFollowedEntityUUID();
+        return followedPlayer==null?null:followedPlayer.getUniqueID();
     }
 
     @Override
@@ -517,6 +520,14 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 {
                     copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
                     onItemPickup(this, i);
+                    UUID throwerId = itemEntity.getThrowerId();
+                    if(throwerId!=null) {
+                        //Entity entity = ((ServerWorld) world).getEntityByUuid(throwerId);
+                        getCharacterState().promoteRelationWith(throwerId,1);
+                        CharacterDataSynchronizer.UpdateDataToTracking(this,getCharacterState());
+                    }
+
+
                     if (itemstack.isEmpty()) {
                         onItemPickup(this, i);
                         itemEntity.remove();
@@ -595,6 +606,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         foodStats.read(compound);
         abilities.read(compound);
         ListNBT listnbt = compound.getList("Inventory", 10);
+        UUID    followed = compound.getUniqueId("followed");
+        if(!world.isRemote() && followed.getLeastSignificantBits()!=0 && followed.getMostSignificantBits()!=0)
+            followedPlayer= (ServerPlayerEntity) ((ServerWorld)world).getEntityByUuid(followed);
         this.inventory.read(listnbt);
     }
 
@@ -679,6 +693,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         foodStats.write(compound);
         abilities.write(compound);
         compound.put("Inventory", this.inventory.write(new ListNBT()));
+        compound.putUniqueId("followed",followedPlayer==null?new UUID(0,0):followedPlayer.getUniqueID());
     }
 
     @Override
@@ -756,20 +771,22 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         brain.switchTo(Activity.CORE);
         brain.updateActivity(this.world.getDayTime(), this.world.getGameTime());
     }
-
+    private ServerPlayerEntity followedPlayer;
     @Nullable
     public PlayerEntity getFollowedPlayer()
     {
         if(world.isRemote)return null;
-        if(getCharacterState().getFollowedEntityUUID()==null) return null;
 
-        Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntityUUID());
+        return followedPlayer;
+        //if(getCharacterState().getFollowedEntityUUID()==null) return null;
 
-        return entity instanceof ServerPlayerEntity?(ServerPlayerEntity)entity:null ;
+        //Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntityUUID());
+
+        //return entity instanceof ServerPlayerEntity?(ServerPlayerEntity)entity:null ;
     }
     public void setFollowedPlayer(@Nullable ServerPlayerEntity entity)
     {
-        getCharacterState().setFollowedEntity(entity==null?null:entity.getUniqueID());
+        followedPlayer=entity;
     }
 
     private CharacterState characterState;

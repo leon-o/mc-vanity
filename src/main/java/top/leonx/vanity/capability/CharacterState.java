@@ -22,6 +22,10 @@ public class CharacterState {
         return genderStr.length() > 0 && genderStr.equals("male") ? Gender.MALE : Gender.FEMALE;
     }
 
+    public void promoteRelationWith(UUID uuid, int i) {
+        setRelationWith(uuid,getRelationWith(uuid)+i);
+    }
+
     public void setGender(Gender gender) {
         root.putString("gender", gender.toString());
     }
@@ -53,7 +57,7 @@ public class CharacterState {
     public CompoundNBT getRoot() {
         writeRelationMap();
         writeLoveMap();
-        root.putUniqueId("followed_entity",followedEntityUuid==null?new UUID(0,0):followedEntityUuid);
+        //root.putUniqueId("followed_entity",followedEntityUuid==null?new UUID(0,0):followedEntityUuid);
         return root;
     }
 
@@ -62,9 +66,9 @@ public class CharacterState {
         ComputeMOOD();
         readRelationMap();
         readLoveMap();
-        followedEntityUuid=root.getUniqueId("followed_entity");
-        if(followedEntityUuid.getMostSignificantBits()==0 && followedEntityUuid.getLeastSignificantBits()==0)
-            followedEntityUuid=null;
+        //followedEntityUuid=root.getUniqueId("followed_entity");
+//        if(followedEntityUuid.getMostSignificantBits()==0 && followedEntityUuid.getLeastSignificantBits()==0)
+//            followedEntityUuid=null;
 
     }
 
@@ -100,15 +104,15 @@ public class CharacterState {
     public void setState(String key, float value) {
         root.putFloat(key, value);
     }
-    @Nullable
-    public UUID getFollowedEntityUUID()
-    {
-        return followedEntityUuid;
-    }
-    public void setFollowedEntity(@Nullable UUID uuid)
-    {
-        followedEntityUuid=uuid;
-    }
+//    @Nullable
+//    public UUID getFollowedEntityUUID()
+//    {
+//        return followedEntityUuid;
+//    }
+//    public void setFollowedEntity(@Nullable UUID uuid)
+//    {
+//        followedEntityUuid=uuid;
+//    }
     private void ComputeMOOD() {
         currentMood = MOOD.NORMAL;
         CompoundNBT moodNbt = root.getCompound(Keys.MOOD);
@@ -150,24 +154,23 @@ public class CharacterState {
     }
 
     private void writeLoveMap() {
+        root.put(Keys.Love, convertMapToListNbt(loveMap));
+    }
+    private void writeRelationMap() {
+        root.put(Keys.Relation, convertMapToListNbt(relationMap));
+    }
+    private ListNBT convertMapToListNbt(Map<UUID,Float> map) {
         ListNBT list = new ListNBT();
-        for (Map.Entry<UUID, Float> entry : relationMap.entrySet()) {
+        for (Map.Entry<UUID, Float> entry : map.entrySet()) {
             CompoundNBT entryNbt = new CompoundNBT();
             entryNbt.putUniqueId("id", entry.getKey());
             entryNbt.putFloat("value", entry.getValue());
+            list.add(entryNbt);
         }
-        root.put(Keys.Love, list);
+        return list;
     }
 
-    private void writeRelationMap() {
-        ListNBT list = new ListNBT();
-        for (Map.Entry<UUID, Float> entry : relationMap.entrySet()) {
-            CompoundNBT entryNbt = new CompoundNBT();
-            entryNbt.putUniqueId("id", entry.getKey());
-            entryNbt.putFloat("value", entry.getValue());
-        }
-        root.put(Keys.Relation, list);
-    }
+
 
     public enum Gender {
         MALE, FEMALE,

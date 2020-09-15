@@ -38,6 +38,7 @@ public class AIUtil {
     public static final Comparator<ItemStack> COMPARE_VALUE=Comparator.comparingInt(AIUtil::getItemValue);
     public static final Comparator<ItemStack> COMPARE_HARDNESS=Comparator.comparingDouble(t->((BlockItem) t.getItem()).getBlock().getHarvestLevel(DUMMY_BLOCK_STATE));
 
+
     @SuppressWarnings("deprecation")
     public static int getItemValue(ItemStack itemStack) {
         Material material = ((BlockItem) itemStack.getItem()).getBlock().getMaterial(DUMMY_BLOCK_STATE);
@@ -108,8 +109,7 @@ public class AIUtil {
         if (visibleMobsOpt.isPresent()) {
             List<LivingEntity>     visibleMobs   = visibleMobsOpt.get();
             Optional<LivingEntity> mostDangerous =
-                    visibleMobs.stream().filter(t->!Objects.equals(t.getUniqueID(),entity.getFollowedPlayerUUID())).max(Comparator.comparingDouble(mob -> AIUtil.entityDangerousAssessment(mob,
-                                                                                                                                                                                           entity)));
+                    visibleMobs.stream().filter(t->!Objects.equals(t.getUniqueID(),entity.getFollowedPlayerUUID())).max(Comparator.comparingDouble(mob -> AIUtil.entityDangerousAssessment(mob,entity)));
             return mostDangerous.orElse(null);
         }
         return null;
