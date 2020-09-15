@@ -34,7 +34,7 @@ public class OutsiderTasks {
         attackEntityForFood.addChild(pickFoodTask);
 
         findFoodTask.addChild(pickFoodTask); //先尝试在地上寻找
-        findFoodTask.addChild(attackEntityForFood);   //如果没找到，击杀实体以获取食物
+        findFoodTask.addChild(attackEntityForFood);   //如果没找到，击杀实体以获取食
 
         findFoodThenEatTask.addChild(findFoodTask);  //以上述多种方式寻找食物
         findFoodThenEatTask.addChild(new EatFoodTask());     //从背包里拿出来吃掉

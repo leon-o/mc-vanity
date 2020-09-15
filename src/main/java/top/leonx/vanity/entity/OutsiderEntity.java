@@ -34,9 +34,9 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.ai.OutsiderTasks;
 import top.leonx.vanity.capability.CharacterState;
@@ -54,34 +54,31 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-@SuppressWarnings({"NullableProblems", "UnusedReturnValue"})
-public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated,IRangedAttackMob {
-    private static final ImmutableList<MemoryModuleType<?>>                                  MEMORY_TYPES    = ImmutableList.of(MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.HOME,
-                                                                                                                                MemoryModuleType.JOB_SITE, MemoryModuleType.MEETING_POINT,
-                                                                                                                                MemoryModuleType.MOBS, MemoryModuleType.VISIBLE_MOBS,
-                                                                                                                                MemoryModuleType.VISIBLE_VILLAGER_BABIES,
-                                                                                                                                MemoryModuleType.NEAREST_PLAYERS,
-                                                                                                                                MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.WALK_TARGET,
-                                                                                                                                MemoryModuleType.LOOK_TARGET, MemoryModuleType.INTERACTION_TARGET,
-                                                                                                                                MemoryModuleType.BREED_TARGET, MemoryModuleType.PATH,
-                                                                                                                                MemoryModuleType.INTERACTABLE_DOORS, MemoryModuleType.field_225462_q,
-                                                                                                                                MemoryModuleType.NEAREST_BED, MemoryModuleType.HURT_BY,
-                                                                                                                                MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE,
-                                                                                                                                MemoryModuleType.SECONDARY_JOB_SITE, MemoryModuleType.HIDING_PLACE,
-                                                                                                                                MemoryModuleType.HEARD_BELL_TIME,
-                                                                                                                                MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE,
-                                                                                                                                MemoryModuleType.LAST_SLEPT, MemoryModuleType.field_226332_A_,
-                                                                                                                                MemoryModuleType.LAST_WORKED_AT_POI,
-                                                                                                                                MemoryModuleType.GOLEM_LAST_SEEN_TIME);
+@SuppressWarnings({"UnusedReturnValue"})
+public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated, IRangedAttackMob {
+    private static final ImmutableList<MemoryModuleType<?>> MEMORY_TYPES = ImmutableList.of(MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.HOME, MemoryModuleType.JOB_SITE,
+                                                                                            MemoryModuleType.MEETING_POINT, MemoryModuleType.MOBS, MemoryModuleType.VISIBLE_MOBS,
+                                                                                            MemoryModuleType.VISIBLE_VILLAGER_BABIES, MemoryModuleType.NEAREST_PLAYERS,
+                                                                                            MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.WALK_TARGET, MemoryModuleType.LOOK_TARGET,
+                                                                                            MemoryModuleType.INTERACTION_TARGET, MemoryModuleType.BREED_TARGET, MemoryModuleType.PATH,
+                                                                                            MemoryModuleType.INTERACTABLE_DOORS, MemoryModuleType.field_225462_q, MemoryModuleType.NEAREST_BED,
+                                                                                            MemoryModuleType.HURT_BY, MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE,
+                                                                                            MemoryModuleType.SECONDARY_JOB_SITE, MemoryModuleType.HIDING_PLACE, MemoryModuleType.HEARD_BELL_TIME,
+                                                                                            MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.LAST_SLEPT,
+                                                                                            MemoryModuleType.field_226332_A_, MemoryModuleType.LAST_WORKED_AT_POI,
+                                                                                            MemoryModuleType.GOLEM_LAST_SEEN_TIME);
 
-    private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES    = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
-                                                                                                                                SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED,
-                                                                                                                                SensorType.HURT_BY, SensorType.GOLEM_LAST_SEEN);
+    private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
+                                                                                                                             SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
+                                                                                                                             SensorType.GOLEM_LAST_SEEN);
 
-    public final         OutsiderInventory                                                   inventory       = new OutsiderInventory(this);
-    private final        GeneralFoodStats<OutsiderEntity>                                    foodStats       = new GeneralFoodStats<>();
-    private final        PlayerAbilities                                                     abilities       = new PlayerAbilities();
-    private final        CooldownTracker                                                     cooldownTracker = new CooldownTracker();
+    public final  OutsiderInventory                inventory       = new OutsiderInventory(this);
+    private final GeneralFoodStats<OutsiderEntity> foodStats       = new GeneralFoodStats<>();
+    private final PlayerAbilities                  abilities       = new PlayerAbilities();
+    private final CooldownTracker    cooldownTracker = new CooldownTracker();
+    private Consumer<OutsiderEntity> itemUseFinishedConsumer;
+    private ServerPlayerEntity       followedPlayer;
+    private CharacterState characterState;
 
     //public final  OutsiderContainer container;
     public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
@@ -89,53 +86,22 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         moveController = new OutsiderMovementController(this);
 
     }
-    private Consumer<OutsiderEntity> onItemUseFinished;
 
-    public void useItemInMainHand(@Nullable Consumer<OutsiderEntity> onUseFinished)
-    {
-        setActiveHand(Hand.MAIN_HAND);
-        onItemUseFinished=onUseFinished;
-    }
-
-    @Override
-    public void stopActiveHand() {
-        super.stopActiveHand();
-        onItemUseFinished=null;
-    }
-
-    @Override
-    protected void onItemUseFinish() {
-        super.onItemUseFinish();
-        if(onItemUseFinished==null) return;
-        onItemUseFinished.accept(this);
-        onItemUseFinished=null;
-    }
-
-    @Override
-    public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
-        //todo 再说
-    }
-
-    @Nullable
-    public UUID getFollowedPlayerUUID() {
-        return followedPlayer==null?null:followedPlayer.getUniqueID();
-    }
-
-    @Override
-    protected PathNavigator createNavigator(World worldIn) {
-        return new PlayerSimPathNavigator(this,worldIn);
-    }
-
+    /**
+     * Add the exhaustion of food Stats
+     */
     @Override
     public void addExhaustion(float exhaustion) {
         if (!this.abilities.disableDamage) {
             if (!this.world.isRemote) {
                 this.foodStats.addExhaustion(exhaustion);
             }
-
         }
     }
 
+    /**
+     * Add exhaustion of food status.
+     */
     public void addMovementStat(double x, double y, double z) {
         if (!this.isPassenger()) {
             double twiceSum = x * x + y * y + z * z;
@@ -188,6 +154,11 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         }
     }
 
+    /**
+     * Attack an entity as mob(Copy from player entity)
+     * @param targetEntity target
+     * @return whether the attack was successful
+     */
     public boolean attackEntityAsMob(Entity targetEntity) {
         swingArm(Hand.MAIN_HAND);
         boolean result = false;
@@ -206,9 +177,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 targetAttribute = targetAttribute * coolingPercentage;
                 this.resetAttackCooldown();
                 if (entityDamage > 0.0F || targetAttribute > 0.0F) {
-                    boolean flag  = coolingPercentage > 0.9F;
-                    boolean flag1 = false;
-                    int     knockBack     = 0;
+                    boolean flag      = coolingPercentage > 0.9F;
+                    boolean flag1     = false;
+                    int     knockBack = 0;
                     knockBack = knockBack + EnchantmentHelper.getKnockbackModifier(this);
                     if (this.isSprinting() && flag) {
                         this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, this.getSoundCategory(), 1.0F, 1.0F);
@@ -225,8 +196,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                     }
 
                     entityDamage = entityDamage + targetAttribute;
-                    boolean isSweep = false;
-                    double  deltaDistanceWalked      = this.distanceWalkedModified - this.prevDistanceWalkedModified;
+                    boolean isSweep             = false;
+                    double  deltaDistanceWalked = this.distanceWalkedModified - this.prevDistanceWalkedModified;
                     if (flag && !isCriticalHit && !flag1 && this.onGround && deltaDistanceWalked < (double) this.getAIMoveSpeed()) {
                         ItemStack itemstack = this.getHeldItem(Hand.MAIN_HAND);
                         if (itemstack.getItem() instanceof SwordItem) {
@@ -234,9 +205,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                         }
                     }
 
-                    float   targetHealth     = 0.0F;
-                    boolean isFire = false;
-                    int     fireModifier      = EnchantmentHelper.getFireAspectModifier(this);
+                    float   targetHealth = 0.0F;
+                    boolean isFire       = false;
+                    int     fireModifier = EnchantmentHelper.getFireAspectModifier(this);
                     if (targetEntity instanceof LivingEntity) {
                         targetHealth = ((LivingEntity) targetEntity).getHealth();
                         if (fireModifier > 0 && !targetEntity.isBurning()) {
@@ -245,7 +216,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                         }
                     }
 
-                    Vec3d   targetMotion           = targetEntity.getMotion();
+                    Vec3d   targetMotion    = targetEntity.getMotion();
                     boolean isAttackSuccess = targetEntity.attackEntityFrom(DamageSource.causeMobDamage(this), entityDamage);
                     result = isAttackSuccess;
                     if (isAttackSuccess) {
@@ -307,7 +278,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
                         EnchantmentHelper.applyArthropodEnchantments(this, targetEntity);
                         ItemStack heldItemMainhand = this.getHeldItemMainhand();
-                        Entity    entity     = targetEntity;
+                        Entity    entity           = targetEntity;
                         if (targetEntity instanceof EnderDragonPartEntity) {
                             entity = ((EnderDragonPartEntity) targetEntity).dragon;
                         }
@@ -352,6 +323,15 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return result;
     }
 
+    @Override
+    public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
+        //todo 再说
+    }
+
+    /**
+     * Attack something this entity look at.
+     * @return is successful
+     */
     public boolean attackLootAt() {
         double maxDist       = getBlockReachDistance();
         Vec3d  startVec      = getEyePosition(1f);
@@ -376,6 +356,24 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     @Override
     public AgeableEntity createChild(AgeableEntity ageable) {
         return new OutsiderEntity(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE, this.world);
+    }
+
+    /**
+     * Called when the shield is broken
+     * @param cri is critical hit
+     */
+    public void disableShield(boolean cri) {
+        float f = 0.25F + (float) EnchantmentHelper.getEfficiencyModifier(this) * 0.05F;
+        if (cri) {
+            f += 0.75F;
+        }
+
+        if (this.rand.nextFloat() < f) {
+            this.cooldownTracker.setCooldown(this.getActiveItemStack().getItem(), 100);
+            this.resetActiveHand();
+            this.world.setEntityState(this, (byte) 30);
+        }
+
     }
 
     @Nullable
@@ -428,6 +426,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return MathHelper.clamp(((float) this.ticksSinceLastSwing + partialTicks) / this.getAttackCooldownPeriod(), 0.0F, 1.0F);
     }
 
+    /**
+     * get the farthest distance the entity can touch
+     */
     public float getBlockReachDistance() {
         float attrib = (float) getAttribute(PlayerEntity.REACH_DISTANCE).getValue();
         return attrib - 0.5F;
@@ -439,17 +440,55 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return (Brain<OutsiderEntity>) super.getBrain();
     }
 
+    /**
+     * Get the character state of this entity.
+     * @return character state
+     */
+    public CharacterState getCharacterState() {
+        if (characterState == null) {
+            characterState = getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(new CharacterState());
+        }
+        return characterState;
+    }
+
+    //get fake player for block placing or breaking.
     public ServerPlayerEntity getFakePlayer() {
         if (world.isRemote) return null;
         return PlayerSimulator.getFakePlayer((ServerWorld) world).get();
     }
 
+
+    /**
+     *
+     * @return the entity final speed
+     */
     public float getFinalMoveSpeed() {
         double baseSpeed = getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
         if (isSprinting()) baseSpeed *= 1.5;
         else if (isSneaking()) baseSpeed *= 0.3;
 
         return (float) (3.3 * baseSpeed) * getSpeedFactor();
+    }
+
+    @Nullable
+    public PlayerEntity getFollowedPlayer() {
+        if (world.isRemote) return null;
+
+        return followedPlayer;
+        //if(getCharacterState().getFollowedEntityUUID()==null) return null;
+
+        //Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntityUUID());
+
+        //return entity instanceof ServerPlayerEntity?(ServerPlayerEntity)entity:null ;
+    }
+
+    public void setFollowedPlayer(@Nullable ServerPlayerEntity entity) {
+        followedPlayer = entity;
+    }
+
+    @Nullable
+    public UUID getFollowedPlayerUUID() {
+        return followedPlayer == null ? null : followedPlayer.getUniqueID();
     }
 
     @Override
@@ -481,6 +520,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public void livingTick() {
         super.livingTick();
         this.updateArmSwingProgress();
+
+        //Pick up item near.
         if (this.getHealth() > 0.0F && !this.isSpectator()) {
             AxisAlignedBB axisalignedbb;
             if (this.isPassenger() && (this.getRidingEntity() != null && this.getRidingEntity().isAlive())) {
@@ -498,6 +539,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         }
     }
 
+    /**
+     * Call when entity collied with item entity.
+     * Entity will pick up item.
+     */
     public void onCollideWithItemEntity(ItemEntity itemEntity) {
         if (!this.world.isRemote) {
 
@@ -509,22 +554,21 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
             ItemStack copy = itemstack.copy();
             if (!itemEntity.cannotPickup() && (itemEntity.getOwnerId() == null || itemEntity.lifespan - itemEntity.age <= 200 || itemEntity.getOwnerId().equals(
-                    this.getUniqueID())) && ( i <= 0 || inventory.isCanStore(itemstack))) {
+                    this.getUniqueID())) && (i <= 0 || inventory.isCanStore(itemstack))) {
 
-                Vec3d posVec = getPositionVec().add(0,1,0);
+                Vec3d posVec     = getPositionVec().add(0, 1, 0);
                 Vec3d itemPosVec = itemEntity.getPositionVec();
-                Vec3d vec = posVec.add(itemPosVec.inverse()).normalize().scale(0.2);
-                itemEntity.addVelocity(vec.x,vec.y,vec.z);
+                Vec3d vec        = posVec.add(itemPosVec.inverse()).normalize().scale(0.2);
+                itemEntity.addVelocity(vec.x, vec.y, vec.z);
 
-                if(posVec.distanceTo(itemPosVec)<=0.4 && inventory.storeItemStack(itemstack))
-                {
+                if (posVec.distanceTo(itemPosVec) <= 0.4 && inventory.storeItemStack(itemstack)) {
                     copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
                     onItemPickup(this, i);
                     UUID throwerId = itemEntity.getThrowerId();
-                    if(throwerId!=null) {
+                    if (throwerId != null) {
                         //Entity entity = ((ServerWorld) world).getEntityByUuid(throwerId);
-                        getCharacterState().promoteRelationWith(throwerId,1);
-                        CharacterDataSynchronizer.UpdateDataToTracking(this,getCharacterState());
+                        getCharacterState().promoteRelationWith(throwerId, 1);
+                        CharacterDataSynchronizer.UpdateDataToTracking(this, getCharacterState());
                     }
 
 
@@ -556,43 +600,43 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         if (world.isRemote) return ActionResultType.PASS;
         ServerPlayerEntity fakePlayer = getFakePlayer();
         //noinspection SuspiciousMethodCalls
-        inventory.findAndHeld(Hand.MAIN_HAND, t->t.getItem() instanceof BlockItem &&blockItems.contains(t.getItem()), ItemStack::getCount);
+        inventory.findAndHeld(Hand.MAIN_HAND, t -> t.getItem() instanceof BlockItem && blockItems.contains(t.getItem()), ItemStack::getCount);
 
         return placeHeldBlockOnLookAt();
     }
-    public ActionResultType placeHeldBlockOnLookAt()
-    {
+
+    public ActionResultType placeHeldBlockOnLookAt() {
         if (world.isRemote) return ActionResultType.PASS;
         ItemStack stack = getHeldItemMainhand();
-        if(!(stack.getItem() instanceof BlockItem)) return ActionResultType.FAIL;
+        if (!(stack.getItem() instanceof BlockItem)) return ActionResultType.FAIL;
         ServerPlayerEntity fakePlayer = getFakePlayer();
         fakePlayer.setHeldItem(Hand.MAIN_HAND, stack);
 
-        Vec3d eyePos = getEyePosition(1F);
-        Vec3d lookVec=getLookVec();
-        Vec3d endPos = eyePos.add(lookVec.scale(getBlockReachDistance()));
+        Vec3d eyePos  = getEyePosition(1F);
+        Vec3d lookVec = getLookVec();
+        Vec3d endPos  = eyePos.add(lookVec.scale(getBlockReachDistance()));
 
-        RayTraceContext rayTraceContext=new RayTraceContext(eyePos, endPos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE,this);
-        BlockRayTraceResult rayTraceResult = world.rayTraceBlocks(rayTraceContext);
+        RayTraceContext     rayTraceContext = new RayTraceContext(eyePos, endPos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, this);
+        BlockRayTraceResult rayTraceResult  = world.rayTraceBlocks(rayTraceContext);
         return fakePlayer.interactionManager.func_219441_a(fakePlayer, world, stack, Hand.MAIN_HAND, rayTraceResult);
     }
+
     @Override
     public boolean processInteract(PlayerEntity player, Hand hand) {
 
-        if(!world.isRemote)
-        {
+        if (!world.isRemote) {
             INamedContainerProvider provider = new INamedContainerProvider() {
+                @Override
+                public Container createMenu(int id, PlayerInventory inventory, PlayerEntity player) {
+                    return new OutsiderContainer(id, inventory, OutsiderEntity.this);
+                }
+
                 @Override
                 public ITextComponent getDisplayName() {
                     return OutsiderEntity.this.getDisplayName();
                 }
-
-                @Override
-                public Container createMenu(int id, PlayerInventory inventory, PlayerEntity player) {
-                    return new OutsiderContainer(id,inventory,OutsiderEntity.this);
-                }
             };
-            NetworkHooks.openGui((ServerPlayerEntity) player,provider,t->t.writeInt(this.getEntityId()));
+            NetworkHooks.openGui((ServerPlayerEntity) player, provider, t -> t.writeInt(this.getEntityId()));
             this.lookController.setLookPosition(player.getEyePosition(1F));
             return true;
         }
@@ -605,10 +649,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         super.readAdditional(compound);
         foodStats.read(compound);
         abilities.read(compound);
-        ListNBT listnbt = compound.getList("Inventory", 10);
+        ListNBT listnbt  = compound.getList("Inventory", 10);
         UUID    followed = compound.getUniqueId("followed");
-        if(!world.isRemote() && followed.getLeastSignificantBits()!=0 && followed.getMostSignificantBits()!=0)
-            followedPlayer= (ServerPlayerEntity) ((ServerWorld)world).getEntityByUuid(followed);
+        if (!world.isRemote() && followed.getLeastSignificantBits() != 0 && followed.getMostSignificantBits() != 0)
+            followedPlayer = (ServerPlayerEntity) ((ServerWorld) world).getEntityByUuid(followed);
         this.inventory.read(listnbt);
     }
 
@@ -624,6 +668,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.initBrain(this.getBrain());
     }
 
+    @Deprecated
     @Override
     public void setAIMoveSpeed(float speedIn) {
         float moveForward = this.moveForward;
@@ -655,12 +700,14 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         }
     }
 
+    @Deprecated
     @Override
     public void setMoveForward(float amount) {
         super.setMoveForward(amount);
         addMovementStat(0, 0, amount);
     }
 
+    @Deprecated
     @Override
     public void setMoveVertical(float amount) {
         super.setMoveVertical(amount);
@@ -670,6 +717,13 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     @Override
     public boolean shouldHeal() {
         return this.getHealth() > 0.0F && this.getHealth() < this.getMaxHealth();
+    }
+
+    @Deprecated
+    @Override
+    public void stopActiveHand() {
+        super.stopActiveHand();
+        itemUseFinishedConsumer = null;
     }
 
     @Override
@@ -687,13 +741,41 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.cooldownTracker.tick();
     }
 
+    /**
+     * Use the item in main hand.
+     * @param onUseFinished the consumer will be called in {@link OutsiderEntity#onItemUseFinish()} when item use finished.
+     */
+    public void useItemInMainHand(@Nullable Consumer<OutsiderEntity> onUseFinished) {
+        setActiveHand(Hand.MAIN_HAND);
+        itemUseFinishedConsumer = onUseFinished;
+    }
+
+//    @Override
+//    public boolean attackEntityFrom(DamageSource source, float amount) {
+//        return super.attackEntityFrom(source, amount);
+//    }
+
     @Override
     public void writeAdditional(CompoundNBT compound) {
         super.writeAdditional(compound);
         foodStats.write(compound);
         abilities.write(compound);
         compound.put("Inventory", this.inventory.write(new ListNBT()));
-        compound.putUniqueId("followed",followedPlayer==null?new UUID(0,0):followedPlayer.getUniqueID());
+        compound.putUniqueId("followed", followedPlayer == null ? new UUID(0, 0) : followedPlayer.getUniqueID());
+    }
+
+    //////
+
+    // SHIELD
+
+    //////
+
+    protected void blockUsingShield(LivingEntity entityIn) {
+        super.blockUsingShield(entityIn);
+        if (entityIn.getHeldItemMainhand().canDisableShield(this.activeItemStack, this, entityIn)) {
+            this.disableShield(true);
+        }
+
     }
 
     @Override
@@ -704,47 +786,19 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     @Override
+    protected PathNavigator createNavigator(World worldIn) {
+        return new PlayerSimPathNavigator(this, worldIn);
+    }
+
+    @Override
     protected void damageEntity(DamageSource damageSrc, float damageAmount) {
         super.damageEntity(damageSrc, damageAmount);
         this.addExhaustion(damageSrc.getHungerDamage());
     }
 
-//    @Override
-//    public boolean attackEntityFrom(DamageSource source, float amount) {
-//        return super.attackEntityFrom(source, amount);
-//    }
-
-    protected void blockUsingShield(LivingEntity entityIn) {
-        super.blockUsingShield(entityIn);
-        if (entityIn.getHeldItemMainhand().canDisableShield(this.activeItemStack, this, entityIn)) {
-            this.disableShield(true);
-        }
-
-    }
-
-    //////
-
-    // SHIELD
-
-    //////
-
-    public void disableShield(boolean cri) {
-        float f = 0.25F + (float)EnchantmentHelper.getEfficiencyModifier(this) * 0.05F;
-        if (cri) {
-            f += 0.75F;
-        }
-
-        if (this.rand.nextFloat() < f) {
-            this.cooldownTracker.setCooldown(this.getActiveItemStack().getItem(), 100);
-            this.resetActiveHand();
-            this.world.setEntityState(this, (byte)30);
-        }
-
-    }
-
     protected void damageShield(float damage) {
         if (damage >= 3.0F && this.activeItemStack.isShield(this)) {
-            int i = 1 + MathHelper.floor(damage);
+            int  i    = 1 + MathHelper.floor(damage);
             Hand hand = this.getActiveHand();
             this.activeItemStack.damageItem(i, this, (entity) -> entity.sendBreakAnimation(hand));
             if (this.activeItemStack.isEmpty()) {
@@ -760,6 +814,12 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         }
 
     }
+
+    @Override
+    protected void dropInventory() {
+        if (!world.getGameRules().getBoolean(GameRules.KEEP_INVENTORY)) inventory.dropAllItems();
+    }
+
     private void initBrain(Brain<OutsiderEntity> brain) {
         //float f = getFinalMoveSpeed();
         brain.registerActivity(Activity.CORE, OutsiderTasks.protectPlayer());
@@ -771,32 +831,20 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         brain.switchTo(Activity.CORE);
         brain.updateActivity(this.world.getDayTime(), this.world.getGameTime());
     }
-    private ServerPlayerEntity followedPlayer;
-    @Nullable
-    public PlayerEntity getFollowedPlayer()
-    {
-        if(world.isRemote)return null;
 
-        return followedPlayer;
-        //if(getCharacterState().getFollowedEntityUUID()==null) return null;
-
-        //Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntityUUID());
-
-        //return entity instanceof ServerPlayerEntity?(ServerPlayerEntity)entity:null ;
-    }
-    public void setFollowedPlayer(@Nullable ServerPlayerEntity entity)
-    {
-        followedPlayer=entity;
+    /**
+     * Called when item use finished.
+     * If the onItemUseFinished isn't null, it will be called.
+     * {@link OutsiderEntity#useItemInMainHand}
+     */
+    @Override
+    protected void onItemUseFinish() {
+        super.onItemUseFinish();
+        if (itemUseFinishedConsumer == null) return;
+        itemUseFinishedConsumer.accept(this);
+        itemUseFinishedConsumer = null;
     }
 
-    private CharacterState characterState;
-    public CharacterState getCharacterState()
-    {
-        if(characterState==null) {
-            characterState=getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(new CharacterState());
-        }
-        return characterState;
-    }
     @Override
     protected void registerAttributes() {
         super.registerAttributes();

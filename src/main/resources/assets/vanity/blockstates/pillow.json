@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "vanity:block/pillow" },
+        "facing=south": { "model": "vanity:block/pillow", "y": 180 },
+        "facing=west":  { "model": "vanity:block/pillow", "y": 270 },
+        "facing=east":  { "model": "vanity:block/pillow", "y": 90 }
+    }
+}
