@@ -7,6 +7,7 @@ import top.leonx.vanity.VanityMod;
 public abstract class BehaviorTreeTask<T extends LivingEntity> {
     //public TernaryFunc<ServerWorld,T,Long,Double> utilityScoreCalculator;
     private Result result;
+    private int delayTicks;
     public Result getResult() {
         return result;
     }
@@ -37,7 +38,14 @@ public abstract class BehaviorTreeTask<T extends LivingEntity> {
     }
     public void callForUpdate(ServerWorld world, T entity, long executionDuration)
     {
-        onUpdate(world, entity, executionDuration);
+        if(delayTicks==0)
+            onUpdate(world, entity, executionDuration);
+        else
+            delayTicks--;
+    }
+    protected void delay(int tick)
+    {
+        delayTicks=tick;
     }
     public boolean canStart(ServerWorld world, T entity,long executionDuration)
     {
