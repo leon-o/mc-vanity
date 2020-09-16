@@ -137,6 +137,7 @@ public class OutsiderInteractionManager {
      * Attempts to harvest a block
      */
     public boolean tryHarvestBlock(BlockPos pos) {
+        entity.getFakePlayer().setHeldItem(Hand.MAIN_HAND,entity.getHeldItemMainhand());
         BlockState blockstate = this.world.getBlockState(pos);
         int exp = net.minecraftforge.common.ForgeHooks.onBlockBreakEvent(world, GameType.SURVIVAL, entity.getFakePlayer(), pos);
         if (exp == -1) {
