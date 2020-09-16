@@ -8,6 +8,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
 import top.leonx.vanity.ai.tree.composite.SelectorTask;
 import top.leonx.vanity.ai.tree.composite.SequencesTask;
@@ -141,7 +143,7 @@ public class OutsiderTasks {
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> debug()
     {
         BehaviorTreeRootTask<OutsiderEntity> rootTask=new BehaviorTreeRootTask<>();
-        rootTask.child=new SleepTask<>();
+        rootTask.child=new CraftItemTask(t->new ItemStack(Items.OAK_PLANKS),false);
         return ImmutableList.of(new Pair<>(1, rootTask));
     }
 }

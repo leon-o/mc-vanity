@@ -8,6 +8,7 @@ import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
+import net.minecraft.village.PointOfInterestType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
@@ -88,5 +89,15 @@ public class ModEventSubscriber {
     {
         IForgeRegistry<SensorType<?>> registry = event.getRegistry();
         registry.registerAll(ModSensorTypes.ALL_SENSOR_TYPES);
+    }
+
+    @SubscribeEvent
+    public static void onPointOfInterestTypeRegistry(final RegistryEvent.Register<PointOfInterestType> event)
+    {
+        IForgeRegistry<PointOfInterestType> registry = event.getRegistry();
+        registry.registerAll(ModPointOfInterest.ALL_INTEREST_TYPE);
+        for (PointOfInterestType type : ModPointOfInterest.ALL_INTEREST_TYPE) {
+            PointOfInterestType.registerBlockStates(type); //NOTICE THIS
+        }
     }
 }

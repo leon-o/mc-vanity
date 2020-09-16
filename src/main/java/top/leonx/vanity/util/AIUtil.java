@@ -13,11 +13,13 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.ICraftingRecipe;
+import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.DamageSource;
@@ -79,10 +81,14 @@ public class AIUtil {
         return loottable.generate(ctx);
     }
 
-    public List<IRecipe<?>> getItemRecipe(ServerWorld world,ItemStack itemStack)
+    public static List<ICraftingRecipe> getItemCraftingRecipe(ServerWorld world, ItemStack itemStack)
     {
         RecipeManager manager = world.getServer().getRecipeManager();
-        return manager.getRecipes().stream().filter(t -> t.getRecipeOutput().equals(itemStack)).collect(Collectors.toList());
+        return manager.getRecipes().stream().filter(
+                t->t.getRecipeOutput().getItem().equals(itemStack.getItem()) && t instanceof ICraftingRecipe
+        ).map(t->(ICraftingRecipe)t).collect(Collectors.toList());
+        //return manager.getRecipes(IRecipeType.CRAFTING,craftingInventory,world).stream().filter(t->t.getRecipeOutput().equals(itemStack)).collect(Collectors.toList());
+        //return manager.getRecipes().stream().filter(t -> t.getRecipeOutput().equals(itemStack)).collect(Collectors.toList());
     }
 
     public static double sigmod(double x,double scale,double bias)

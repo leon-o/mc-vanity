@@ -31,6 +31,7 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class OutsiderInventory implements IInventory, INameable {
@@ -564,7 +565,29 @@ public class OutsiderInventory implements IInventory, INameable {
 
         }
     }
+    public void removeIf(Predicate<ItemStack> predicate)
+    {
+        this.allInventories.stream().flatMap(Collection::stream).filter(predicate).forEach(t->t.setCount(0));
+    }
 
+    public boolean shrinkItemStack(Predicate<ItemStack> predicate,int totalCount)
+    {
+        int remaining=totalCount;
+        List<ItemStack> itemStacks = this.allInventories.stream().flatMap(Collection::stream).filter(predicate).collect(Collectors.toList());
+        for (ItemStack stack : itemStacks) {
+            int shrinkCount=Math.min(stack.getCount(),remaining);
+            stack.shrink(shrinkCount);
+            remaining-=shrinkCount;
+            if(remaining==0)
+                break;
+        }
+        return remaining==0; //remaining equals 0 means itemStacks in inventory are enough.
+    }
+
+    public boolean shrinkItemStack(ItemStack itemStack,int totalCount)
+    {
+        return shrinkItemStack(itemStack::equals,totalCount);
+    }
     /**
      * Reads from the given tag list and fills the slots in the inventory with the correct items.
      */

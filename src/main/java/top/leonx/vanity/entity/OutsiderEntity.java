@@ -18,8 +18,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
+import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
@@ -74,7 +76,13 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                                                                                                                              SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
                                                                                                                              SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR);
 
-    public final  OutsiderInventory                inventory       = new OutsiderInventory(this);
+    public final OutsiderInventory inventory   = new OutsiderInventory(this);
+    public final CraftingInventory craftingInventory = new CraftingInventory(new Container(null, -1) {
+        public boolean canInteractWith(PlayerEntity playerIn) {
+            return false;
+        }
+    }, 2, 2);
+
     private final GeneralFoodStats<OutsiderEntity> foodStats       = new GeneralFoodStats<>();
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
     private final CooldownTracker                  cooldownTracker = new CooldownTracker();

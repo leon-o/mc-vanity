@@ -5,6 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.server.ServerWorld;
@@ -33,9 +34,11 @@ public class SleepTask<T extends MobEntity> extends BehaviorTreeTask<T> {
         }
         if (!entity.isSleeping()) {
             Vec3d bedPosVec = new Vec3d(bedPos);
-            entity.getNavigator().tryMoveToXYZ(bedPosVec.x, bedPosVec.y, bedPosVec.z, AIUtil.sigmod(entity.getDistanceSq(bedPosVec),2,+4));
+            entity.getNavigator().tryMoveToXYZ(bedPosVec.x, bedPosVec.y, bedPosVec.z, AIUtil.sigmod(entity.getDistanceSq(bedPosVec),1,+4));
+            entity.getLookController().setLookPosition(bedPosVec);
             if (entity.getDistanceSq(bedPosVec) <= 3.2) {
                 entity.getNavigator().clearPath();
+                entity.swingArm(Hand.MAIN_HAND);
                 entity.startSleeping(bedPos);
             }
         }else
