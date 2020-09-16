@@ -3,6 +3,7 @@ package top.leonx.vanity.entity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.Dynamic;
+import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.brain.Brain;
@@ -31,6 +32,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.*;
@@ -82,6 +84,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             return false;
         }
     }, 2, 2);
+    public final OutsiderInteractionManager interactionManager=new OutsiderInteractionManager(this);
 
     private final GeneralFoodStats<OutsiderEntity> foodStats       = new GeneralFoodStats<>();
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
@@ -465,6 +468,48 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return characterState;
     }
 
+    public float getDigSpeed(BlockState state, @Nullable BlockPos pos) {
+        float speed = getHeldItemMainhand().getDestroySpeed(state);
+        if (speed > 1.0F) {
+            int i = EnchantmentHelper.getEfficiencyModifier(this);
+            ItemStack itemstack = this.getHeldItemMainhand();
+            if (i > 0 && !itemstack.isEmpty()) {
+                speed += (float)(i * i + 1);
+            }
+        }
+
+        if (EffectUtils.hasMiningSpeedup(this)) {
+            speed *= 1.0F + (float)(EffectUtils.getMiningSpeedup(this) + 1) * 0.2F;
+        }
+
+        if (this.isPotionActive(Effects.MINING_FATIGUE)) {
+            float multiplyFac;
+            switch(this.getActivePotionEffect(Effects.MINING_FATIGUE).getAmplifier()) {
+                case 0:
+                    multiplyFac = 0.3F;
+                    break;
+                case 1:
+                    multiplyFac = 0.09F;
+                    break;
+                case 2:
+                    multiplyFac = 0.0027F;
+                    break;
+                case 3:
+                default:
+                    multiplyFac = 8.1E-4F;
+            }
+            speed *= multiplyFac;
+        }
+
+        if (this.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(this))
+            speed /= 5.0F;
+
+        if (!this.onGround)
+            speed /= 5.0F;
+
+        return speed;
+    }
+
     //get fake player for block placing or breaking.
     public ServerPlayerEntity getFakePlayer() {
         if (world.isRemote) return null;
@@ -733,7 +778,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return this.getHealth() > 0.0F && this.getHealth() < this.getMaxHealth();
     }
 
-    @Deprecated
     @Override
     public void stopActiveHand() {
         super.stopActiveHand();
@@ -744,6 +788,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public void tick() {
         super.tick();
         this.inventory.tick();
+        this.interactionManager.tick();
         if (!this.world.isRemote) {
             this.foodStats.tick(this);
             tickCooldown();
