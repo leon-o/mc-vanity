@@ -137,4 +137,11 @@ public class OutsiderTasks {
 
         return synchronousTask;
     }
+
+    public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> debug()
+    {
+        BehaviorTreeRootTask<OutsiderEntity> rootTask=new BehaviorTreeRootTask<>();
+        rootTask.child=new SleepTask<>();
+        return ImmutableList.of(new Pair<>(1, rootTask));
+    }
 }

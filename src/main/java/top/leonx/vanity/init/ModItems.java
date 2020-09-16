@@ -3,6 +3,7 @@ package top.leonx.vanity.init;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import top.leonx.vanity.item.PillowItem;
 
 @SuppressWarnings("ConstantConditions")
 public class ModItems {
@@ -15,7 +16,7 @@ public class ModItems {
 //    public static final Item FRINGE_2=new FringeHair(new Item.Properties().group(ItemGroup.MISC),"fringe_2").setRegistryName("fringe_2");
     public static final Item VANITY_MIRROR=
             new BlockItem(ModBlocks.VANITY_MIRROR, new Item.Properties().group(ItemGroup.DECORATIONS)).setRegistryName(ModBlocks.VANITY_MIRROR.getRegistryName());
-    public static final Item PILLOW_BLOCk=new BlockItem(ModBlocks.PILLOW,new Item.Properties().group(ItemGroup.DECORATIONS)).setRegistryName(ModBlocks.PILLOW.getRegistryName());
+    public static final Item PILLOW_BLOCk=new PillowItem().setRegistryName(ModBlocks.PILLOW.getRegistryName());
 
     public static final Item[] ITEMS={
 //            PONYTAIL,

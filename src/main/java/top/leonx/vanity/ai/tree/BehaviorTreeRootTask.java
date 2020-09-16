@@ -9,12 +9,12 @@ public class BehaviorTreeRootTask<T extends LivingEntity> extends Task<T> {
     public BehaviorTreeTask<T> child;
 
     public BehaviorTreeRootTask(BehaviorTreeTask<T> child) {
-        super(ImmutableMap.of());
+        this();
         this.child = child;
     }
 
     public BehaviorTreeRootTask() {
-        super(ImmutableMap.of());
+        super(ImmutableMap.of(),Integer.MAX_VALUE);
     }
 
     long startedTime;
@@ -43,5 +43,10 @@ public class BehaviorTreeRootTask<T extends LivingEntity> extends Task<T> {
     @Override
     protected boolean shouldExecute(ServerWorld worldIn, T owner) {
         return child!=null;
+    }
+
+    @Override
+    protected boolean isTimedOut(long gameTime) {
+        return child!=null && child.getResult()!= BehaviorTreeTask.Result.RUNNING;
     }
 }

@@ -43,6 +43,8 @@ import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.container.OutsiderContainer;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
+import top.leonx.vanity.init.ModSensorTypes;
+import top.leonx.vanity.item.PillowItem;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.util.GeneralFoodStats;
 import top.leonx.vanity.util.OutsiderInventory;
@@ -70,15 +72,15 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
                                                                                                                              SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
-                                                                                                                             SensorType.GOLEM_LAST_SEEN);
+                                                                                                                             SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR);
 
     public final  OutsiderInventory                inventory       = new OutsiderInventory(this);
     private final GeneralFoodStats<OutsiderEntity> foodStats       = new GeneralFoodStats<>();
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
-    private final CooldownTracker    cooldownTracker = new CooldownTracker();
-    private Consumer<OutsiderEntity> itemUseFinishedConsumer;
-    private ServerPlayerEntity       followedPlayer;
-    private CharacterState characterState;
+    private final CooldownTracker                  cooldownTracker = new CooldownTracker();
+    private       Consumer<OutsiderEntity>         itemUseFinishedConsumer;
+    private       ServerPlayerEntity               followedPlayer;
+    private       CharacterState                   characterState;
 
     //public final  OutsiderContainer container;
     public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
@@ -155,7 +157,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     /**
-     * Attack an entity as mob(Copy from player entity)
+     * Attack an entity as mob (Copy from player entity)
+     *
      * @param targetEntity target
      * @return whether the attack was successful
      */
@@ -330,6 +333,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     /**
      * Attack something this entity look at.
+     *
      * @return is successful
      */
     public boolean attackLootAt() {
@@ -360,6 +364,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     /**
      * Called when the shield is broken
+     *
      * @param cri is critical hit
      */
     public void disableShield(boolean cri) {
@@ -442,6 +447,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     /**
      * Get the character state of this entity.
+     *
      * @return character state
      */
     public CharacterState getCharacterState() {
@@ -459,10 +465,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
 
     /**
-     *
      * @return the entity final speed
      */
-    public float getFinalMoveSpeed() {
+    public float getFinalMaxMoveSpeed() {
         double baseSpeed = getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
         if (isSprinting()) baseSpeed *= 1.5;
         else if (isSneaking()) baseSpeed *= 0.3;
@@ -623,8 +628,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     @Override
     public boolean processInteract(PlayerEntity player, Hand hand) {
-
-        if (!world.isRemote) {
+        boolean successful = super.processInteract(player, hand);
+        successful|=player.getHeldItemMainhand().interactWithEntity(player,this,Hand.MAIN_HAND);
+        if (!world.isRemote && !successful) {
             INamedContainerProvider provider = new INamedContainerProvider() {
                 @Override
                 public Container createMenu(int id, PlayerInventory inventory, PlayerEntity player) {
@@ -641,7 +647,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             return true;
         }
 
-        return super.processInteract(player, hand);
+        return successful;
     }
 
     @Override
@@ -743,6 +749,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     /**
      * Use the item in main hand.
+     *
      * @param onUseFinished the consumer will be called in {@link OutsiderEntity#onItemUseFinish()} when item use finished.
      */
     public void useItemInMainHand(@Nullable Consumer<OutsiderEntity> onUseFinished) {
@@ -822,7 +829,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     private void initBrain(Brain<OutsiderEntity> brain) {
         //float f = getFinalMoveSpeed();
-        brain.registerActivity(Activity.CORE, OutsiderTasks.protectPlayer());
+        brain.registerActivity(Activity.CORE, OutsiderTasks.debug());
         //brain.registerActivity(Activity.IDLE, ImmutableList.of(Pair.of(2, new FirstShuffledTask<>(ImmutableList.of(Pair.of(new WalkToTargetTask(200), 1), Pair.of(new FindWalkTargetTask(), 1))))));
 
 

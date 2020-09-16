@@ -26,7 +26,7 @@ public class OutsiderMovementController extends MovementController {
         if(!(this.mob instanceof OutsiderEntity)) return;
         OutsiderEntity entity=(OutsiderEntity)this.mob;
         if (this.action == MovementController.Action.STRAFE) {
-            float maxMoveSpeed  = entity.getFinalMoveSpeed();
+            float maxMoveSpeed  = entity.getFinalMaxMoveSpeed();
             float navigatorSpeed = (float) this.speed * maxMoveSpeed;
             float moveForwardF = this.moveForward;
             float moveStrafeF = this.moveStrafe;
@@ -67,7 +67,7 @@ public class OutsiderMovementController extends MovementController {
                 this.mob.setMoveStrafing(0.0F);
                 return;
             }
-            this.mob.setAIMoveSpeed(entity.getFinalMoveSpeed());
+            this.mob.setAIMoveSpeed((float) (entity.getFinalMaxMoveSpeed()*speed));
 
             float deltaAngle = (float) (MathHelper.atan2(deltaZ, deltaX) * (double) (180F / (float) Math.PI)) - 90.0F;
             boolean isLooking = this.mob.getLookController().getIsLooking();
@@ -112,7 +112,7 @@ public class OutsiderMovementController extends MovementController {
 //                    //((OutsiderEntity)this.mob).placeBlock(new BlockPos(this.mob).west());
 //                }
         } else if (this.action == MovementController.Action.JUMPING) {
-            this.mob.setAIMoveSpeed(entity.getFinalMoveSpeed());
+            this.mob.setAIMoveSpeed(entity.getFinalMaxMoveSpeed());
             if (this.mob.onGround) {
                 this.action = MovementController.Action.WAIT;
             }

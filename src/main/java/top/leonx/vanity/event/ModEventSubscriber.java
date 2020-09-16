@@ -2,6 +2,7 @@ package top.leonx.vanity.event;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
@@ -65,7 +66,9 @@ public class ModEventSubscriber {
     public static void onTileEntityRegistry(final RegistryEvent.Register<TileEntityType<?>> event)
     {
         IForgeRegistry<TileEntityType<?>> registry = event.getRegistry();
-        registry.registerAll(ModTileEntityTypes.VANITY_MIRROR_TILE_ENTITY_TILE_ENTITY_TYPE.setRegistryName(ModBlocks.VANITY_MIRROR.getRegistryName()));
+        registry.register(ModTileEntityTypes.VANITY_MIRROR_TILE_ENTITY_TILE_ENTITY_TYPE.setRegistryName(ModBlocks.VANITY_MIRROR.getRegistryName()));
+        registry.register(ModTileEntityTypes.PILLOW_TILE_ENTITY.setRegistryName(ModBlocks.PILLOW.getRegistryName()));
+
     }
     @SubscribeEvent
     public static void onContainerRegistry(final RegistryEvent.Register<ContainerType<?>> event)
@@ -80,5 +83,10 @@ public class ModEventSubscriber {
         IForgeRegistry<EntityType<?>> registry = event.getRegistry();
         registry.register(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE);
     }
-
+    @SubscribeEvent
+    public static void onSenserTypeRegistry(final RegistryEvent.Register<SensorType<?>> event)
+    {
+        IForgeRegistry<SensorType<?>> registry = event.getRegistry();
+        registry.registerAll(ModSensorTypes.ALL_SENSOR_TYPES);
+    }
 }
