@@ -51,17 +51,16 @@ public class OutsiderInventory implements IInventory, INameable {
     /**
      * Get the size of the entity hotbar inventory
      */
-    public static int getHotbarSize() {
-        return 9;
-    }
+//    public static int getHotbarSize() {
+//        return 9;
+//    }
 
-    public static boolean isHotbar(int index) {
-        return index >= 0 && index < 9;
-    }
-
-    public void accountStacks(RecipeItemHelper p_201571_1_) {
+//    public static boolean isHotbar(int index) {
+//        return index >= 0 && index < 9;
+//    }
+    public void accountStacks(RecipeItemHelper recipeItemHelper) {
         for (ItemStack itemstack : this.mainInventory) {
-            p_201571_1_.accountPlainStack(itemstack);
+            recipeItemHelper.accountPlainStack(itemstack);
         }
 
     }
@@ -249,6 +248,25 @@ public class OutsiderInventory implements IInventory, INameable {
         }
 
     }
+    public void deleteStackIf(Predicate<ItemStack> predicate) {
+        this.allInventories.stream().flatMap(Collection::stream).filter(predicate).forEach(t -> t.setCount(0));
+    }
+
+    public boolean decrStackSize(Predicate<ItemStack> predicate, int totalCount) {
+        int             remaining  = totalCount;
+        List<ItemStack> itemStacks = this.allInventories.stream().flatMap(Collection::stream).filter(predicate).collect(Collectors.toList());
+        for (ItemStack stack : itemStacks) {
+            int shrinkCount = Math.min(stack.getCount(), remaining);
+            stack.shrink(shrinkCount);
+            remaining -= shrinkCount;
+            if (remaining == 0) break;
+        }
+        return remaining == 0; //remaining equals 0 means itemStacks in inventory are enough.
+    }
+
+    public boolean decrStackSize(ItemStack itemStack, int totalCount) {
+        return decrStackSize(itemStack::equals, totalCount);
+    }
 
     /**
      * Drop all armor and main inventory items.
@@ -265,27 +283,28 @@ public class OutsiderInventory implements IInventory, INameable {
         }
 
     }
+
     public boolean findAndHeld(Hand hand, Predicate<ItemStack> predicate, ToDoubleFunction<ItemStack> stackToDoubleFunction) {
 
-        return findAndHeld(hand,predicate,Comparator.comparingDouble(t->stackToDoubleFunction.applyAsDouble(t.c)));
+        return findAndHeld(hand, predicate, Comparator.comparingDouble(t -> stackToDoubleFunction.applyAsDouble(t.c)));
     }
-    public boolean findAndHeld(Hand hand, Predicate<ItemStack> predicate, Comparator<Triple<NonNullList<ItemStack>,Integer, ItemStack>> comparator) {
 
-        List<Triple<NonNullList<ItemStack>,Integer, ItemStack>> matched = new ArrayList<>();
+    public boolean findAndHeld(Hand hand, Predicate<ItemStack> predicate, Comparator<Triple<NonNullList<ItemStack>, Integer, ItemStack>> comparator) {
+
+        List<Triple<NonNullList<ItemStack>, Integer, ItemStack>> matched = new ArrayList<>();
         for (NonNullList<ItemStack> inventory : allInventories) {
             for (int i = 0; i < inventory.size(); i++) {
-                if(predicate.test(inventory.get(i)))
-                    matched.add(new Triple<>(inventory,i,inventory.get(i)));
+                if (predicate.test(inventory.get(i))) matched.add(new Triple<>(inventory, i, inventory.get(i)));
             }
         }
 
-        Optional<Triple<NonNullList<ItemStack>,Integer, ItemStack>> max = matched.stream().max(comparator);
+        Optional<Triple<NonNullList<ItemStack>, Integer, ItemStack>> max = matched.stream().max(comparator);
         if (max.isPresent()) {
             Triple<NonNullList<ItemStack>, Integer, ItemStack> triple = max.get();
-            int index = triple.b;
-            if (hand == Hand.MAIN_HAND) pickItemInMainHand(triple.a,index);
+            int                                                index  = triple.b;
+            if (hand == Hand.MAIN_HAND) pickItemInMainHand(triple.a, index);
             else {
-                pickItemInOffHand(triple.a,index);
+                pickItemInOffHand(triple.a, index);
             }
             return true;
         } else return false;
@@ -360,7 +379,7 @@ public class OutsiderInventory implements IInventory, INameable {
      * Returns the item stack currently held by the entity.
      */
     public ItemStack getMainHandSlotIndex() {
-        return isHotbar(this.mainHandSlotIndex) ? this.mainInventory.get(this.mainHandSlotIndex) : ItemStack.EMPTY;
+        return this.mainInventory.get(this.mainHandSlotIndex);
     }
 
     @Nonnull
@@ -530,14 +549,14 @@ public class OutsiderInventory implements IInventory, INameable {
         ++this.timesChanged;
     }
 
-    public void pickItemInMainHand(NonNullList<ItemStack> inventory,int index) {
+    public void pickItemInMainHand(NonNullList<ItemStack> inventory, int index) {
         //this.mainHandSlotIndex = this.getBestHotbarSlot();
         ItemStack itemstack = this.mainInventory.get(this.mainHandSlotIndex);
         this.mainInventory.set(this.mainHandSlotIndex, inventory.get(index));
         inventory.set(index, itemstack);
     }
 
-    public void pickItemInOffHand(NonNullList<ItemStack> inventory,int index) {
+    public void pickItemInOffHand(NonNullList<ItemStack> inventory, int index) {
         ItemStack itemstack = this.offHandInventory.get(0);
         this.offHandInventory.set(0, inventory.get(index));
         inventory.set(index, itemstack);
@@ -565,29 +584,9 @@ public class OutsiderInventory implements IInventory, INameable {
 
         }
     }
-    public void removeIf(Predicate<ItemStack> predicate)
-    {
-        this.allInventories.stream().flatMap(Collection::stream).filter(predicate).forEach(t->t.setCount(0));
-    }
 
-    public boolean shrinkItemStack(Predicate<ItemStack> predicate,int totalCount)
-    {
-        int remaining=totalCount;
-        List<ItemStack> itemStacks = this.allInventories.stream().flatMap(Collection::stream).filter(predicate).collect(Collectors.toList());
-        for (ItemStack stack : itemStacks) {
-            int shrinkCount=Math.min(stack.getCount(),remaining);
-            stack.shrink(shrinkCount);
-            remaining-=shrinkCount;
-            if(remaining==0)
-                break;
-        }
-        return remaining==0; //remaining equals 0 means itemStacks in inventory are enough.
-    }
 
-    public boolean shrinkItemStack(ItemStack itemStack,int totalCount)
-    {
-        return shrinkItemStack(itemStack::equals,totalCount);
-    }
+
     /**
      * Reads from the given tag list and fills the slots in the inventory with the correct items.
      */
@@ -641,7 +640,7 @@ public class OutsiderInventory implements IInventory, INameable {
     /**
      * Sets the given item stack to the specified slot in the inventory (can be crafting or armor sections).
      */
-    public void setInventorySlotContents(int index,@Nonnull ItemStack stack) {
+    public void setInventorySlotContents(int index, @Nonnull ItemStack stack) {
         NonNullList<ItemStack> nonnulllist = null;
 
         for (NonNullList<ItemStack> nonNullList : this.allInventories) {
@@ -661,20 +660,20 @@ public class OutsiderInventory implements IInventory, INameable {
 
     /**
      * Merge itemStack if is mergeable or put it in first empty slot
+     *
      * @param itemStack itemStack
      * @return return true when success
      */
     public boolean storeItemStack(ItemStack itemStack) {
         return add(getStorableIndex(itemStack), itemStack);
     }
-    public boolean isCanStore(ItemStack itemStack)
-    {
+
+    public boolean isCanStore(ItemStack itemStack) {
         int storableIndex = getStorableIndex(itemStack);
-        if(storableIndex!=-1)
-            return true;
-        else
-            return getFirstEmptyStack()!=-1; //返回-1表示没有空的栏位
+        if (storableIndex != -1) return true;
+        else return getFirstEmptyStack() != -1; //返回-1表示没有空的栏位
     }
+
     /**
      * Decrement the number of animations remaining. Only called on client side. This is used to handle the animation of
      * receiving a block.

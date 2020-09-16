@@ -2,22 +2,23 @@ package top.leonx.vanity.ai.tree.leaf.continuous;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ICraftingRecipe;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.RecipeItemHelper;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.server.ServerWorld;
-import org.apache.logging.log4j.util.PropertySource;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModPointOfInterest;
 import top.leonx.vanity.util.AIUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CraftItemTask extends BehaviorTreeTask<OutsiderEntity> {
     Function<OutsiderEntity, ItemStack> itemGetter;
@@ -25,16 +26,28 @@ public class CraftItemTask extends BehaviorTreeTask<OutsiderEntity> {
     public CraftItemTask(Function<OutsiderEntity, ItemStack> itemGetter,boolean full) {
         this.itemGetter = itemGetter;this.full=full;
     }
-    private boolean full;
-    private boolean needCraftTable;
+    private static final RecipeItemHelper recipeItemHelper =new RecipeItemHelper();
+    private final        boolean          full;
+    private              boolean          needCraftTable;
     private BlockPos closestCraftTable;
     private List<ICraftingRecipe> matchedRecipes;
     private ItemStack requestItemStack;
     @Override
     protected void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+        recipeItemHelper.clear();
+        entity.inventory.accountStacks(recipeItemHelper);
+
         requestItemStack  = itemGetter.apply(entity);
         List<ICraftingRecipe> itemRecipe = AIUtil.getItemCraftingRecipe(world, requestItemStack);
-        matchedRecipes = itemRecipe.stream().filter(t -> t.getIngredients().stream().allMatch(entity.inventory::hasItemStack)).collect(Collectors.toList());
+        int maxCraftable = itemRecipe.stream().map(t->recipeItemHelper.getBiggestCraftableStack(t,null)).max(Integer::compareTo).orElse(0);
+
+        if(full && maxCraftable< requestItemStack.getCount())
+        {
+            submitResult(Result.FAIL);
+            return;
+        }
+        matchedRecipes = itemRecipe.stream().filter(t->recipeItemHelper.canCraft(t,null)).collect(Collectors.toList());
+        //matchedRecipes = itemRecipe.stream().filter(t -> t.getIngredients().stream().allMatch(entity.inventory::hasItemStack)).collect(Collectors.toList());
 
         if(matchedRecipes.size()==0)
         {
@@ -90,7 +103,7 @@ public class CraftItemTask extends BehaviorTreeTask<OutsiderEntity> {
             ItemStack copy = itemStack.copy();
             copy.setCount(1);
             consumedItemTmp.add(copy);
-            return entity.inventory.shrinkItemStack(itemStack, 1);
+            return entity.inventory.decrStackSize(itemStack, 1);
         }))
         {
             requestItemStack.shrink(recipeOutput.getCount());
@@ -101,7 +114,6 @@ public class CraftItemTask extends BehaviorTreeTask<OutsiderEntity> {
             }
         }else{
             consumedItemTmp.forEach(entity.inventory::storeItemStack); //if fail, return items.
-
             submitResult(Result.FAIL);
         }
     }
