@@ -143,7 +143,7 @@ public class OutsiderTasks {
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> debug()
     {
         BehaviorTreeRootTask<OutsiderEntity> rootTask=new BehaviorTreeRootTask<>();
-        rootTask.child=new CraftItemTask(t->new ItemStack(Items.OAK_PLANKS),false);
+        rootTask.child=new CraftItemTask(t->new ItemStack(Items.OAK_STAIRS),false);
         return ImmutableList.of(new Pair<>(1, rootTask));
     }
 }
