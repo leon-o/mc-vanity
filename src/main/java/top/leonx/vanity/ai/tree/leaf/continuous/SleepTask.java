@@ -16,11 +16,11 @@ import java.util.Optional;
 
 public class SleepTask<T extends MobEntity> extends BehaviorTreeTask<T> {
     BlockPos bedPos;
-
+    boolean halt;
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         Optional<BlockPos> bedPositionOpt = entity.getBrain().getMemory(MemoryModuleType.NEAREST_BED);
-
+        halt=false;
         if (bedPositionOpt.isPresent()) bedPos = bedPositionOpt.get();
         else submitResult(Result.FAIL);
     }
@@ -37,9 +37,17 @@ public class SleepTask<T extends MobEntity> extends BehaviorTreeTask<T> {
             entity.getNavigator().tryMoveToXYZ(bedPosVec.x, bedPosVec.y, bedPosVec.z, AIUtil.sigmod(entity.getDistanceSq(bedPosVec),1,+4));
             entity.getLookController().setLookPosition(bedPosVec);
             if (entity.getDistanceSq(bedPosVec) <= 3.2) {
+
                 entity.getNavigator().clearPath();
-                entity.swingArm(Hand.MAIN_HAND);
-                entity.startSleeping(bedPos);
+
+                if(!halt) //wait for 10 ticks
+                {
+                    delay(10);
+                    halt=true;
+                }else{
+                    entity.swingArm(Hand.MAIN_HAND);
+                    entity.startSleeping(bedPos);
+                }
             }
         }else
         {

@@ -11,17 +11,18 @@ import java.util.Comparator;
 public class EatFoodTask extends BehaviorTreeTask<OutsiderEntity> {
 
 
-    ItemStack eatingFood;
-    int countOnStartUse;
+//    ItemStack eatingFood;
+//    int countOnStartUse;
     @Override
     protected void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {
 
-        boolean isHeld = entity.inventory.findAndHeld(Hand.MAIN_HAND, ItemStack::isFood, t -> t.getItem().getFood().getHealing());
+        @SuppressWarnings("ConstantConditions") boolean isHeld = entity.inventory.findAndHeld(Hand.MAIN_HAND, ItemStack::isFood, t -> t.getItem().getFood().getHealing());
         if(isHeld)
         {
-            eatingFood=entity.getHeldItem(Hand.MAIN_HAND);
-            countOnStartUse=eatingFood.getCount();
-            entity.setActiveHand(Hand.MAIN_HAND);
+//            eatingFood=entity.getHeldItem(Hand.MAIN_HAND);
+//            countOnStartUse=eatingFood.getCount();
+//            entity.setActiveHand(Hand.MAIN_HAND);
+            entity.interactionManager.useItemInMainHand(e-> submitResult(Result.SUCCESS));
             return;
         }
 
@@ -30,17 +31,17 @@ public class EatFoodTask extends BehaviorTreeTask<OutsiderEntity> {
 
     @Override
     protected void onUpdate(ServerWorld world, OutsiderEntity entity, long executionDuration) {
-        if(!entity.isHandActive())
-        {
-            if(eatingFood!=null && (eatingFood.isEmpty() || eatingFood.getCount()<countOnStartUse))
-                submitResult(Result.SUCCESS);
-            else
-                submitResult(Result.FAIL);
-        }
+//        if(!entity.isHandActive())
+//        {
+//            if(eatingFood!=null && (eatingFood.isEmpty() || eatingFood.getCount()<countOnStartUse))
+//                submitResult(Result.SUCCESS);
+//            else
+//                submitResult(Result.FAIL);
+//        }
     }
 
     @Override
     protected void onEnd(ServerWorld world, OutsiderEntity entity, long executionDuration) {
-        entity.stopActiveHand();
+        entity.interactionManager.stopUseItem();
     }
 }

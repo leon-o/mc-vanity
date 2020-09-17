@@ -1,12 +1,20 @@
 package top.leonx.vanity.entity;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.block.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.projectile.ProjectileHelper;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.*;
 import net.minecraft.world.GameType;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ToolType;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +22,6 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 
 public class OutsiderInteractionManager {
@@ -29,7 +36,9 @@ public class OutsiderInteractionManager {
     private               BlockPos           delayedDestroyPos = BlockPos.ZERO;
     private int initialBlockDamage;
     private int durabilityRemainingOnBlock = -1;
-    private OutsiderEntity entity;
+    private OutsiderEntity           entity;
+    private Consumer<OutsiderEntity> itemUseFinishedConsumer;
+
     public OutsiderInteractionManager(OutsiderEntity entity) {
         this.entity=entity;
         if(entity.world.isRemote) return;
@@ -49,6 +58,7 @@ public class OutsiderInteractionManager {
         destoryStartedTick=this.ticks;
         isDestroyingBlock=true;
         this.onDestroyFinished=onDestroyFinished;
+        //noinspection deprecation
         entity.setActiveHand(Hand.MAIN_HAND);
 
         return true;
@@ -60,6 +70,7 @@ public class OutsiderInteractionManager {
         this.isDestroyingBlock = false;
         this.onDestroyFinished=null;
         if(entity.getActiveHand()==Hand.MAIN_HAND)
+            //noinspection deprecation
             entity.stopActiveHand();
     }
     private void processDestroyBlock()
@@ -183,5 +194,114 @@ public class OutsiderInteractionManager {
         if (removed)
             state.getBlock().onPlayerDestroy(this.world, pos, state);
         return removed;
+    }
+
+    @SuppressWarnings("unused")
+    public ActionResultType placeBlock(ImmutableList<BlockItem> blockItems) {
+        if (world.isRemote) return ActionResultType.PASS;
+        //ServerPlayerEntity fakePlayer = getFakePlayer();
+
+        //noinspection SuspiciousMethodCalls
+        entity.inventory.findAndHeld(Hand.MAIN_HAND, t -> t.getItem() instanceof BlockItem && blockItems.contains(t.getItem()), ItemStack::getCount);
+
+        return placeHeldBlockOnLookAt();
+    }
+
+    public ActionResultType placeHeldBlockOnLookAt() {
+        if (world.isRemote) return ActionResultType.PASS;
+        ItemStack stack = entity.getHeldItemMainhand();
+        if (!(stack.getItem() instanceof BlockItem)) return ActionResultType.FAIL;
+        //ServerPlayerEntity fakePlayer = entity.getFakePlayer();
+        //fakePlayer.setHeldItem(Hand.MAIN_HAND, stack);
+
+        Vec3d eyePos  = entity.getEyePosition(1F);
+        Vec3d lookVec = entity.getLookVec();
+        Vec3d endPos  = eyePos.add(lookVec.scale(entity.getBlockReachDistance()));
+
+        RayTraceContext     rayTraceContext = new RayTraceContext(eyePos, endPos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, entity);
+        BlockRayTraceResult rayTraceResult  = world.rayTraceBlocks(rayTraceContext);
+        return processPlaceBlock(world,stack,Hand.MAIN_HAND,rayTraceResult);//fakePlayer.interactionManager.func_219441_a(fakePlayer, world, stack, Hand.MAIN_HAND, rayTraceResult);
+    }
+
+
+    public ActionResultType processPlaceBlock(World worldIn, ItemStack stackIn, Hand handIn, BlockRayTraceResult blockRaytraceResultIn) {
+        BlockPos blockpos = blockRaytraceResultIn.getPos();
+        BlockState blockstate = worldIn.getBlockState(blockpos);
+        entity.getFakePlayer().setHeldItem(handIn,stackIn);
+        net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event = net.minecraftforge.common.ForgeHooks.onRightClickBlock(entity.getFakePlayer(), handIn, blockpos,
+                                                                                                                                                  blockRaytraceResultIn.getFace());
+        if (event.isCanceled()) return event.getCancellationResult();
+            ItemUseContext itemusecontext = new ItemUseContext(entity.getFakePlayer(), handIn, blockRaytraceResultIn);
+            if (event.getUseItem() != net.minecraftforge.eventbus.api.Event.Result.DENY) {
+                ActionResultType result = stackIn.onItemUseFirst(itemusecontext);
+                if (result != ActionResultType.PASS) return result;
+            }
+            boolean isHeldItem = !entity.getHeldItemMainhand().isEmpty() || !entity.getHeldItemOffhand().isEmpty();
+            boolean heldShift =
+                    (entity.isSecondaryUseActive() && isHeldItem) && !(entity.getHeldItemMainhand().doesSneakBypassUse(worldIn, blockpos, entity.getFakePlayer()) && entity.getHeldItemOffhand().doesSneakBypassUse(worldIn, blockpos, entity.getFakePlayer()));
+            if (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !heldShift) {
+                ActionResultType actionresulttype = blockstate.onBlockActivated(worldIn, entity.getFakePlayer(), handIn, blockRaytraceResultIn);
+                if (actionresulttype.isSuccessOrConsume()) {
+                    return actionresulttype;
+                }
+            }
+
+            if (!stackIn.isEmpty() && !entity.getCooldownTracker().hasCooldown(stackIn.getItem())) {
+                if (event.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.DENY)
+                    return ActionResultType.PASS;
+                return stackIn.onItemUse(itemusecontext);
+            } else {
+                return ActionResultType.PASS;
+            }
+
+    }
+
+    /**
+     * Use the item in main hand.
+     * @param onUseFinished the consumer will be called in {@link OutsiderEntity#onItemUseFinish()} when item use finished.
+     */
+    public void useItemInMainHand(@Nullable Consumer<OutsiderEntity> onUseFinished) {
+        //noinspection deprecation
+        entity.setActiveHand(Hand.MAIN_HAND);
+        itemUseFinishedConsumer = onUseFinished;
+    }
+
+
+    public void stopUseItem()
+    {
+        //noinspection deprecation
+        entity.stopActiveHand();
+        itemUseFinishedConsumer=null;
+    }
+    /**
+     * Called when item use finished.
+     * If the onItemUseFinished isn't null, it will be called.
+     * Called from {@link OutsiderInteractionManager#useItemInMainHand}
+     */
+    public void itemUseFinished()
+    {
+        if (itemUseFinishedConsumer == null) return;
+        itemUseFinishedConsumer.accept(entity);
+        itemUseFinishedConsumer=null;
+    }
+
+    /**
+     * Attack something this entity look at.
+     * Create EntityRayTraceResult and then call {@link OutsiderEntity#attackEntityAsMob(Entity)}
+     * @return is successful
+     */
+    public boolean attackLootAt() {
+        double maxDist       = entity.getBlockReachDistance();
+        Vec3d  startVec      = entity.getEyePosition(1f);
+        Vec3d  lookDirection = entity.getLook(1F);
+        Vec3d  endVec        = startVec.add(lookDirection.scale(maxDist));
+        EntityRayTraceResult traceResult = ProjectileHelper.rayTraceEntities(world, entity, startVec, endVec, entity.getBoundingBox().expand(lookDirection.scale(maxDist)).expand(1, 1, 1),
+                                                                             (e) -> e instanceof LivingEntity && entity.canAttack((LivingEntity) e), maxDist * maxDist);
+        if (traceResult != null) {
+            LivingEntity entity = (LivingEntity) traceResult.getEntity();
+            return entity.attackEntityAsMob(entity);
+        }
+
+        return false;
     }
 }

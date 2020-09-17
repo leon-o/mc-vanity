@@ -18,13 +18,10 @@ import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.entity.projectile.ProjectileHelper;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
@@ -36,7 +33,10 @@ import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.*;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -48,7 +48,6 @@ import top.leonx.vanity.container.OutsiderContainer;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
-import top.leonx.vanity.item.PillowItem;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.util.GeneralFoodStats;
 import top.leonx.vanity.util.OutsiderInventory;
@@ -79,17 +78,12 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                                                                                                                              SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR);
 
     public final OutsiderInventory inventory   = new OutsiderInventory(this);
-    public final CraftingInventory craftingInventory = new CraftingInventory(new Container(null, -1) {
-        public boolean canInteractWith(PlayerEntity playerIn) {
-            return false;
-        }
-    }, 2, 2);
+
     public final OutsiderInteractionManager interactionManager=new OutsiderInteractionManager(this);
 
     private final GeneralFoodStats<OutsiderEntity> foodStats       = new GeneralFoodStats<>();
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
     private final CooldownTracker                  cooldownTracker = new CooldownTracker();
-    private       Consumer<OutsiderEntity>         itemUseFinishedConsumer;
     private       ServerPlayerEntity               followedPlayer;
     private       CharacterState                   characterState;
 
@@ -342,26 +336,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         //todo 再说
     }
 
-    /**
-     * Attack something this entity look at.
-     *
-     * @return is successful
-     */
-    public boolean attackLootAt() {
-        double maxDist       = getBlockReachDistance();
-        Vec3d  startVec      = getEyePosition(1f);
-        Vec3d  lookDirection = getLook(1F);
-        Vec3d  endVec        = startVec.add(lookDirection.scale(maxDist));
-        EntityRayTraceResult traceResult = ProjectileHelper.rayTraceEntities(world, this, startVec, endVec, this.getBoundingBox().expand(lookDirection.scale(maxDist)).expand(1, 1, 1),
-                                                                             (entity) -> entity instanceof LivingEntity && canAttack((LivingEntity) entity), maxDist * maxDist);
-        if (traceResult != null) {
-            LivingEntity entity = (LivingEntity) traceResult.getEntity();
-            attackEntityAsMob(entity);
-        }
-
-        return false;
-    }
-
     @Override
     public boolean canAttack(LivingEntity target) {
         return super.canAttack(target) && getDistance(target) <= getBlockReachDistance();
@@ -484,6 +458,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
         if (this.isPotionActive(Effects.MINING_FATIGUE)) {
             float multiplyFac;
+            //noinspection ConstantConditions
             switch(this.getActivePotionEffect(Effects.MINING_FATIGUE).getAmplifier()) {
                 case 0:
                     multiplyFac = 0.3F;
@@ -653,31 +628,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return super.onFoodEaten(world, stack);
     }
 
-    @SuppressWarnings("unused")
-    public ActionResultType placeBlock(ImmutableList<BlockItem> blockItems) {
-        if (world.isRemote) return ActionResultType.PASS;
-        ServerPlayerEntity fakePlayer = getFakePlayer();
-        //noinspection SuspiciousMethodCalls
-        inventory.findAndHeld(Hand.MAIN_HAND, t -> t.getItem() instanceof BlockItem && blockItems.contains(t.getItem()), ItemStack::getCount);
 
-        return placeHeldBlockOnLookAt();
-    }
-
-    public ActionResultType placeHeldBlockOnLookAt() {
-        if (world.isRemote) return ActionResultType.PASS;
-        ItemStack stack = getHeldItemMainhand();
-        if (!(stack.getItem() instanceof BlockItem)) return ActionResultType.FAIL;
-        ServerPlayerEntity fakePlayer = getFakePlayer();
-        fakePlayer.setHeldItem(Hand.MAIN_HAND, stack);
-
-        Vec3d eyePos  = getEyePosition(1F);
-        Vec3d lookVec = getLookVec();
-        Vec3d endPos  = eyePos.add(lookVec.scale(getBlockReachDistance()));
-
-        RayTraceContext     rayTraceContext = new RayTraceContext(eyePos, endPos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, this);
-        BlockRayTraceResult rayTraceResult  = world.rayTraceBlocks(rayTraceContext);
-        return fakePlayer.interactionManager.func_219441_a(fakePlayer, world, stack, Hand.MAIN_HAND, rayTraceResult);
-    }
 
     @Override
     public boolean processInteract(PlayerEntity player, Hand hand) {
@@ -778,11 +729,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return this.getHealth() > 0.0F && this.getHealth() < this.getMaxHealth();
     }
 
-    @Override
-    public void stopActiveHand() {
-        super.stopActiveHand();
-        itemUseFinishedConsumer = null;
-    }
 
     @Override
     public void tick() {
@@ -800,17 +746,33 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.cooldownTracker.tick();
     }
 
-    /**
-     * Use the item in main hand.
-     *
-     * @param onUseFinished the consumer will be called in {@link OutsiderEntity#onItemUseFinish()} when item use finished.
-     */
-    public void useItemInMainHand(@Nullable Consumer<OutsiderEntity> onUseFinished) {
-        setActiveHand(Hand.MAIN_HAND);
-        itemUseFinishedConsumer = onUseFinished;
+    public CooldownTracker getCooldownTracker() {
+        return cooldownTracker;
     }
 
-//    @Override
+    public boolean isSecondaryUseActive() {
+        return this.isSneaking();
+    }
+
+    /**
+     * Use {@link OutsiderInteractionManager#useItemInMainHand(Consumer)} instead.
+     */
+    @Deprecated
+    @Override
+    public void setActiveHand(Hand hand) {
+        super.setActiveHand(hand);
+    }
+
+    /**
+     * Use {@link OutsiderInteractionManager#stopUseItem()} instead.
+     */
+    @Deprecated
+    @Override
+    public void stopActiveHand() {
+        super.stopActiveHand();
+    }
+
+    //    @Override
 //    public boolean attackEntityFrom(DamageSource source, float amount) {
 //        return super.attackEntityFrom(source, amount);
 //    }
@@ -895,14 +857,12 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     /**
      * Called when item use finished.
      * If the onItemUseFinished isn't null, it will be called.
-     * {@link OutsiderEntity#useItemInMainHand}
+     * {@link OutsiderInteractionManager#useItemInMainHand}
      */
     @Override
     protected void onItemUseFinish() {
         super.onItemUseFinish();
-        if (itemUseFinishedConsumer == null) return;
-        itemUseFinishedConsumer.accept(this);
-        itemUseFinishedConsumer = null;
+        interactionManager.itemUseFinished();
     }
 
     @Override
