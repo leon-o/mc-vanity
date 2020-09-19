@@ -17,27 +17,21 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ToolType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 public class OutsiderInteractionManager {
-    private static final Logger             field_225418_c    = LogManager.getLogger();
     public                ServerWorld        world;
     //private               GameType           gameType          = GameType.NOT_SET;
     private               boolean  isDestroyingBlock;
-    private               int      destoryStartedTick;
+    private               int      destroyStartedTick;
     private               BlockPos destroyPos        = BlockPos.ZERO;
     private               int                ticks;
-    private               boolean            receivedFinishDiggingPacket;
-    private               BlockPos           delayedDestroyPos = BlockPos.ZERO;
-    private int initialBlockDamage;
-    private int durabilityRemainingOnBlock = -1;
-    private OutsiderEntity           entity;
-    private Consumer<OutsiderEntity> itemUseFinishedConsumer;
+    private       int                      durabilityRemainingOnBlock = -1;
+    private final OutsiderEntity           entity;
+    private       Consumer<OutsiderEntity> itemUseFinishedConsumer;
 
     public OutsiderInteractionManager(OutsiderEntity entity) {
         this.entity=entity;
@@ -55,7 +49,7 @@ public class OutsiderInteractionManager {
     {
         if(world.getBlockState(pos).isAir(world, destroyPos)) return false;
         destroyPos=pos;
-        destoryStartedTick=this.ticks;
+        destroyStartedTick =this.ticks;
         isDestroyingBlock=true;
         this.onDestroyFinished=onDestroyFinished;
         //noinspection deprecation
@@ -77,7 +71,7 @@ public class OutsiderInteractionManager {
     {
         if(isDestroyingBlock)
         {
-            int duration = this.ticks - destoryStartedTick;
+            int duration = this.ticks - destroyStartedTick;
             BlockState blockState=world.getBlockState(destroyPos);
             float blockHardness = getEntityRelativeBlockHardness(blockState, world, destroyPos);
 
