@@ -44,7 +44,7 @@ public class PutBlockBelowTask<T extends OutsiderEntity> extends BehaviorTreeTas
         BlockPos blockPosBlow = blockRayTraceResult.getPos();
         if(entity.getPosY()-blockPosBlow.getY()>2 && entity.rotationPitch<85)
         {
-            entity.placeHeldBlockOnLookAt();
+            entity.interactionManager.placeHeldBlockOnLookAt();
         }
 
     }

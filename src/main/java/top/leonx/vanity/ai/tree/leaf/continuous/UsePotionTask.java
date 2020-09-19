@@ -66,7 +66,7 @@ public class UsePotionTask extends BehaviorTreeTask<OutsiderEntity> {
                 targetPos = entity.getPositionVec();
             }else{
                 if(!entity.isHandActive())
-                    entity.useItemInMainHand(e->{
+                    entity.interactionManager.useItemInMainHand(e->{
                         List<EffectInstance> potions = PotionUtils.getEffectsFromStack(heldPotion);
                         for (EffectInstance potion : potions) {
                             e.addPotionEffect(potion);

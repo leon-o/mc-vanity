@@ -18,6 +18,26 @@ import java.util.Map;
 @OnlyIn(Dist.CLIENT)
 public abstract class BodyPartRenderer {
 
+    /**
+     *
+     * @param livingEntity
+     * @param entityModel
+     * @param attributes adjustable attributes for render
+     * @param characterState
+     * @param color
+     * @param matrixStackIn
+     * @param bufferIn
+     * @param packedLightIn
+     * @param packedOverlayIn
+     * @param limbSwing
+     * @param limbSwingAmount
+     * @param partialTicks
+     * @param ageInTicks
+     * @param netHeadYaw
+     * @param headPitch
+     * @param <T>
+     * @param <M>
+     */
     public abstract <T extends LivingEntity, M extends EntityModel<T> & IHasHead> void render(LivingEntity livingEntity, M entityModel, Map<String, Float> attributes, CharacterState characterState, Color color, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, int packedOverlayIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch);
 
     public void renderFirstPerson(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn,

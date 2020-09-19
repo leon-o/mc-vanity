@@ -16,7 +16,7 @@ public class PlaceBlockTask extends BehaviorTreeTask<OutsiderEntity> {
             submitResult(Result.FAIL);
             return;
         }
-        ActionResultType actionResult = entity.placeBlock(blockItems);
+        ActionResultType actionResult = entity.interactionManager.placeBlock(blockItems);
         submitResult(actionResult.isSuccess()?Result.SUCCESS:Result.FAIL);
     }
 

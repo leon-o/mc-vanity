@@ -92,7 +92,7 @@ public class OutsiderInteractionManager {
                 finishDestroyBlock();
                 return;
             }
-
+            entity.swingArm(Hand.MAIN_HAND);
             int destroyProcess= (int) (hardnessMulDuration*10);
             if(destroyProcess!=durabilityRemainingOnBlock) {
                 world.sendBlockBreakProgress(entity.getEntityId(), destroyPos, destroyProcess);

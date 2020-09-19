@@ -4,23 +4,24 @@ import net.minecraft.util.ResourceLocation;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.bodypart.BodyPartRegistry;
 import top.leonx.vanity.client.models.*;
-import top.leonx.vanity.client.renderer.bodypart.EyeBodyPartRender;
-import top.leonx.vanity.client.renderer.bodypart.HairBodyPartRenderer;
-import top.leonx.vanity.client.renderer.bodypart.MouthBodyPartRenderer;
-import top.leonx.vanity.client.renderer.bodypart.SkinBodyPartRenderer;
+import top.leonx.vanity.client.renderer.bodypart.*;
 import top.leonx.vanity.init.ModBodyParts;
+
+import java.io.IOException;
 
 public class ModBodyPartRenderers {
     private static ResourceLocation getHairLocation(String name)
     {
-        return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/model/hair/%s.png", name));
+        return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/hair/%s.png", name));
     }
     private static ResourceLocation getEyeLocation(String name)
     {
-        return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/model/eye/%s.png", name));
+        return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/eye/%s.png", name));
     }
-    private static ResourceLocation getSkinLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/model/skin/%s.png", name));}
-    private static ResourceLocation getMouthLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/model/mouth/%s.png", name));}
+    private static ResourceLocation getSkinLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/skin/%s.png", name));}
+    private static ResourceLocation getMouthLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/mouth/%s.png", name));}
+    private static ResourceLocation getDressLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/dress/%s.png", name));}
+
     public static void register()
     {
         BodyPartRendererRegistry.register(ModBodyParts.FRINGE_1, new HairBodyPartRenderer(new BaseHairModel(), getHairLocation(ModBodyParts.FRINGE_1.getRegistryName())));
@@ -41,6 +42,11 @@ public class ModBodyPartRenderers {
 
         //BodyPartRendererRegistry.register(ModBodyParts.MOUTH_DEBUG,new MouthBodyPartRenderer(getMouthLocation(ModBodyParts.MOUTH_DEBUG.getRegistryName())));
         BodyPartRendererRegistry.register(ModBodyParts.MOUTH_1,new MouthBodyPartRenderer(getMouthLocation(ModBodyParts.MOUTH_1.getRegistryName())));
-
+        try {
+            BodyPartRendererRegistry.register(ModBodyParts.DRESS_DEBUG,new DressBodyPartRenderer(new DressObjModel(new ResourceLocation(VanityMod.MOD_ID, "models/bodypart/dress.obj"),false) ,
+                                                                                                 getDressLocation(ModBodyParts.DRESS_DEBUG.getRegistryName())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

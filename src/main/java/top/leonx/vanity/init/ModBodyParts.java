@@ -2,6 +2,7 @@ package top.leonx.vanity.init;
 
 import top.leonx.vanity.bodypart.AbstractBodyPart;
 import top.leonx.vanity.bodypart.BodyPartRegistry;
+import top.leonx.vanity.bodypart.DressBodyPart;
 import top.leonx.vanity.bodypart.eye.EyeBodyPart;
 import top.leonx.vanity.bodypart.hair.BaseHairBodyPart;
 import top.leonx.vanity.bodypart.hair.ExtraHairBodyPart;
@@ -29,11 +30,13 @@ public class ModBodyParts {
 //    public static final AbstractBodyPart   MOUTH_DEBUG = new MouthBodyPart().setRegistryName("mouth_debug");
     public static final AbstractBodyPart   MOUTH_1=new MouthBodyPart().setRegistryName("mouth_1");
 
+    public static final AbstractBodyPart DRESS_DEBUG=new DressBodyPart().setRegistryName("dress_debug");
 
     public static final AbstractBodyPart[] ITEMS         = {
             FRINGE_1, FRINGE_2, PONYTAIL, LONG_HAIR, DOUBLE_PONYTAIL, LONG_DOUBLE_PONYTAIL, MOHICAN,FRINGE_3, FRINGE_4,
             EYE_1,EYE_2,EYE_3, SKIN_FEMALE_1,
-            /*MOUTH_DEBUG,*/MOUTH_1
+            /*MOUTH_DEBUG,*/MOUTH_1,
+            DRESS_DEBUG
     };
 
     public static void register() {
