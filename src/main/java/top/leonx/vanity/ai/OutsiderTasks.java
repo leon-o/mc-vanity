@@ -8,9 +8,10 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
+import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.ai.tree.composite.SelectorTask;
 import top.leonx.vanity.ai.tree.composite.SequencesTask;
 import top.leonx.vanity.ai.tree.composite.SynchronousTask;
@@ -25,8 +26,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class OutsiderTasks {
-    public static SequencesTask<OutsiderEntity> findFoodAndEat() {
-        SequencesTask<OutsiderEntity> findFoodThenEatTask = new SequencesTask<>("Find Food Then Eat");
+    public static final BehaviorTreeTask<OutsiderEntity> EAT_FOOD_TASK =new EatFoodTask();
+    public static final BehaviorTreeTask<OutsiderEntity> FIND_FOOD = findFood();
+    public static final BehaviorTreeTask<OutsiderEntity> FEED_SELF=increaseSatiety();
+
+    public static BehaviorTreeTask<OutsiderEntity> findFood()
+    {
         SelectorTask<OutsiderEntity> findFoodTask=new SelectorTask<>("Find Food");
         PickItemTask<OutsiderEntity> pickFoodTask = new PickItemTask<>(t -> t.getItem().isFood());
 
@@ -38,11 +43,8 @@ public class OutsiderTasks {
         findFoodTask.addChild(pickFoodTask); //先尝试在地上寻找
         findFoodTask.addChild(attackEntityForFood);   //如果没找到，击杀实体以获取食
 
-        findFoodThenEatTask.addChild(findFoodTask);  //以上述多种方式寻找食物
-        findFoodThenEatTask.addChild(new EatFoodTask());     //从背包里拿出来吃掉
-        return findFoodThenEatTask;
+        return findFoodTask;
     }
-
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> idle(float p_220641_1_) {
         return ImmutableList.of(Pair.of(2, new FirstShuffledTask<>(
                 ImmutableList.of(Pair.of(InteractWithEntityTask.func_220445_a(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE, 8, MemoryModuleType.INTERACTION_TARGET, p_220641_1_, 2), 2),
@@ -52,8 +54,13 @@ public class OutsiderTasks {
 
     public static SelectorTask<OutsiderEntity> increaseSatiety() {
         SelectorTask<OutsiderEntity> feedSelfTask = new SelectorTask<>("Feed Self");
-        feedSelfTask.addChild(new EatFoodTask()); //从背包里找食物吃
-        feedSelfTask.addChild(findFoodAndEat()); //背包里没有就要去找
+        feedSelfTask.addChild(EAT_FOOD_TASK); //从背包里找食物吃
+
+        SequencesTask<OutsiderEntity> findFoodThenEatTask = new SequencesTask<>("Find Food Then Eat");
+        findFoodThenEatTask.addChild(FIND_FOOD);
+        findFoodThenEatTask.addChild(EAT_FOOD_TASK);
+
+        feedSelfTask.addChild(findFoodThenEatTask); //背包里没有就要去找
 
         return feedSelfTask;
     }
@@ -74,7 +81,7 @@ public class OutsiderTasks {
         //战斗
         utilitySelectTask.addChild((w, e, t) -> {
             Optional<List<LivingEntity>> visibleMobsOptional = e.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
-            if (visibleMobsOptional.isPresent()) { //存在威胁者，效用值为1否则为0
+            if (visibleMobsOptional.isPresent()) { //存在威胁者，效用值为0.5否则为0
                 List<LivingEntity> visibleMobs = visibleMobsOptional.get();
                 boolean hasMenace  = visibleMobs.stream().filter(entity->entity instanceof MobEntity).map(entity->(MobEntity)entity).anyMatch(
                         (MobEntity mob) -> mob.getAttackTarget()!=null && (Objects.equals(mob.getAttackTarget(), e.getFollowedPlayer()) || Objects.equals(mob.getAttackTarget(), e)));
@@ -83,8 +90,25 @@ public class OutsiderTasks {
             } else return 0d;
         }, battle());
 
+        //当不在战斗状态，并且饿了，就吃点东西
+        utilitySelectTask.addChild((ServerWorld w, OutsiderEntity e, Long t)->{
+            if(e.getFoodStats().needFood())
+                return 0.4d;
+            else
+                return 0d;
+        },FEED_SELF);
+
         //自我保护
         utilitySelectTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), selfProtection());
+
+        return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
+    }
+
+    public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> daily()
+    {
+        UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Daily Life");
+
+        utilitySelectTask.addChild((w,e,t)->0.06,new IdleTask<>());
 
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
