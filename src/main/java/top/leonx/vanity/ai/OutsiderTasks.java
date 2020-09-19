@@ -8,6 +8,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
@@ -24,6 +25,7 @@ import top.leonx.vanity.util.AIUtil;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class OutsiderTasks {
     public static final BehaviorTreeTask<OutsiderEntity> EAT_FOOD_TASK =new EatFoodTask();
@@ -106,13 +108,28 @@ public class OutsiderTasks {
 
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> daily()
     {
+        //日常生活就是，吃饭、睡觉、打怪、发呆。
         UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Daily Life");
 
         utilitySelectTask.addChild((w,e,t)->0.06,new IdleTask<>());
 
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
+    public static BehaviorTreeTask<OutsiderEntity> killEntityForItem(Predicate<ItemStack> predicate)
+    {
+        SelectorTask<OutsiderEntity> killForItemTask=new SelectorTask<>("Kill Entity For Item");
+        PickItemTask<OutsiderEntity> pickItemTask = new PickItemTask<>(t->predicate.test(t.getItem()));
 
+        SequencesTask<OutsiderEntity> attackEntityForItem = new SequencesTask<>("Attack For Item");
+        ///attackEntityForItem.children.add(new FindAttackTargetTask<>();
+        attackEntityForItem.addChild(new AttackTargetTask(t->AIUtil.getClosestItemProvider(t,predicate)));
+        attackEntityForItem.addChild(pickItemTask);
+
+        killForItemTask.addChild(pickItemTask); //先尝试在地上寻找
+        killForItemTask.addChild(attackEntityForItem);   //如果没找到，击杀实体以获取
+
+        return killForItemTask;
+    }
     private static UtilitySelectTask<OutsiderEntity> battle() {
         UtilitySelectTask<OutsiderEntity> battleTask = new UtilitySelectTask<>("Battle");
         battleTask.addChild((w, e, t) -> {

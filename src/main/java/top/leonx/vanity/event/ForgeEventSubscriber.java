@@ -7,6 +7,7 @@ import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -81,6 +82,8 @@ public class ForgeEventSubscriber {
         Entity       target = evt.getTarget();
         PlayerEntity player = evt.getPlayer();
         if (player instanceof ServerPlayerEntity && target instanceof LivingEntity) {
+            BlockPos     pos       = ((ServerPlayerEntity) player).getServerWorld().findNearestStructure("test", player.getPosition(), 100, false);
+            System.out.println(pos);
             LivingEntity livingBase = (LivingEntity) target;
             if (BodyPartUtil.hasBodyPart(livingBase)) {
                 BodyPartCapability.BodyPartData bodyPartData = livingBase.getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY);

@@ -1,6 +1,7 @@
 package top.leonx.vanity.event;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.inventory.container.ContainerType;
@@ -8,13 +9,27 @@ import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.village.PointOfInterestType;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.gen.GenerationStage;
+import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.feature.IFeatureConfig;
+import net.minecraft.world.gen.feature.NoFeatureConfig;
+import net.minecraft.world.gen.feature.structure.IStructurePieceType;
+import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.gen.placement.IPlacementConfig;
+import net.minecraft.world.gen.placement.NoPlacementConfig;
+import net.minecraft.world.gen.placement.Placement;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.util.PlayerSimulator;
@@ -22,6 +37,7 @@ import top.leonx.vanity.init.*;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
+import top.leonx.vanity.worldgen.TestStructure;
 import top.theillusivec4.curios.api.CuriosAPI;
 import top.theillusivec4.curios.api.imc.CurioIMCMessage;
 
@@ -41,14 +57,17 @@ public class ModEventSubscriber {
         VanityEquipDataSynchronizer.register();
         CharacterDataSynchronizer.register();
         PlayerSimulator.register();
+
+        ForgeRegistries.BIOMES.forEach(biome -> {
+            //Feature<NoFeatureConfig> feature = ModFeatures.TEST;
+//            ConfiguredFeature<?, ? extends Structure<>> configuredFeature = feature
+//                    .withConfiguration(NoFeatureConfig.NO_FEATURE_CONFIG)
+//                    .withPlacement(Placement.NOPE.configure(IPlacementConfig.NO_PLACEMENT_CONFIG));
+            biome.addFeature(GenerationStage.Decoration.SURFACE_STRUCTURES,
+                             ModFeatures.TEST.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG).withPlacement(Placement.NOPE.configure(IPlacementConfig.NO_PLACEMENT_CONFIG)));
+            biome.addStructure(ModFeatures.TEST.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
+        });
     }
-
-
-//    @OnlyIn(Dist.CLIENT)
-//    @SubscribeEvent
-//    public static void itemColors(ColorHandlerEvent.Item event) {
-//        event.getItemColors().register(new HairItemTinter(),ModItems.ITEMS);
-//    }
 
     @SubscribeEvent
     public static void onItemRegistry(final RegistryEvent.Register<Item> event)
@@ -83,6 +102,8 @@ public class ModEventSubscriber {
     {
         IForgeRegistry<EntityType<?>> registry = event.getRegistry();
         registry.register(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE);
+
+        //Biome.BIOMES.forEach(t->t.getSpawns(EntityClassification.CREATURE).add(new Biome.SpawnListEntry(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE,8,2,3)));
     }
     @SubscribeEvent
     public static void onSenserTypeRegistry(final RegistryEvent.Register<SensorType<?>> event)
@@ -100,4 +121,16 @@ public class ModEventSubscriber {
             PointOfInterestType.registerBlockStates(type); //NOTICE THIS
         }
     }
+
+    @SubscribeEvent
+    public static void onFeatureRegistry(final RegistryEvent.Register<Feature<?>> event)
+    {
+        event.getRegistry().registerAll(ModFeatures.FEATURES);
+    }
+
+//    @SubscribeEvent
+//    public static void onStructurePiecesRegistry(final RegistryEvent.Register<IStructurePieceType> event)
+//    {
+//        event.getRegistry().registerAll(ModFeatures.FEATURES);
+//    }
 }
