@@ -32,6 +32,7 @@ import net.minecraft.world.storage.loot.LootTable;
 import top.leonx.vanity.entity.OutsiderEntity;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AIUtil {
@@ -100,6 +101,7 @@ public class AIUtil {
     {
         if(target==null || owner==null)return 0;
         IAttributeInstance attribute = target.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+        //noinspection ConstantConditions
         if(attribute==null) return 0;
 
         float dangerous=0;
@@ -123,15 +125,21 @@ public class AIUtil {
 
     public static LivingEntity getClosestFoodProvider(OutsiderEntity entity)
     {
+        return getClosestItemProvider(entity, ItemStack::isFood);
+    }
+
+    public static LivingEntity getClosestItemProvider(OutsiderEntity entity, Predicate<ItemStack> predicate)
+    {
         Optional<List<LivingEntity>> visibleMobsOpt = entity.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
         if (visibleMobsOpt.isPresent())
         {
-            Optional<LivingEntity> closestFoodProvider = visibleMobsOpt.get().stream().filter(mob -> AIUtil.getLivingEntityDrops(mob).stream().anyMatch(ItemStack::isFood)).min(
+            Optional<LivingEntity> closestFoodProvider = visibleMobsOpt.get().stream().filter(mob -> AIUtil.getLivingEntityDrops(mob).stream().anyMatch(predicate)).min(
                     Comparator.comparingDouble(mob -> mob.getDistanceSq(entity)));
             return closestFoodProvider.orElse(null);
         }
         return null;
     }
+
     @SuppressWarnings("DuplicatedCode")
     public static double getModifiedAttackDamage(double baseValue, LivingEntity targetEntity, ItemStack stack)
     {
