@@ -25,7 +25,7 @@ public class MoveToEntityTask<T extends MobEntity> extends BehaviorTreeTask<T> {
         if(targetEntity==null || !targetEntity.isAlive())
             submitResult(Result.FAIL);
 
-        entity.getNavigator().tryMoveToEntityLiving(targetEntity,entity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+        entity.getNavigator().tryMoveToEntityLiving(targetEntity,1f);
 
         if(entity.getDistanceSq(targetEntity)<2)
             submitResult(Result.SUCCESS);
