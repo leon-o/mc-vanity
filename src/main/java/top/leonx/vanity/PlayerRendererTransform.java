@@ -1,4 +1,4 @@
-package top.leonx.vanity.transform;
+package top.leonx.vanity;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
