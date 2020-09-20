@@ -604,13 +604,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
                     copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
                     onItemPickup(this, i);
-                    UUID throwerId = itemEntity.getThrowerId();
-                    if (throwerId != null) {
-                        //Entity entity = ((ServerWorld) world).getEntityByUuid(throwerId);
-                        getCharacterState().promoteRelationWith(throwerId, 1);
-                        CharacterDataSynchronizer.UpdateDataToTracking(this, getCharacterState());
-                    }
-
 
                     if (itemstack.isEmpty()) {
                         onItemPickup(this, i);

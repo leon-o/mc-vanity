@@ -26,14 +26,14 @@ public class OutsiderEvent extends Event {
     @Cancelable
     public static class PickItemEvent extends OutsiderEvent {
         private final ItemStack itemStack;
-        private final UUID      itemOwner;
-        private final UUID    itemThrower;
+        private final UUID      ownerId;
+        private final UUID    throwerId;
 
         public PickItemEvent(OutsiderEntity entity, ItemStack itemStack, UUID itemOwner, UUID itemThrower) {
             super(entity);
             this.itemStack = itemStack;
-            this.itemOwner = itemOwner;
-            this.itemThrower = itemThrower;
+            this.ownerId = itemOwner;
+            this.throwerId = itemThrower;
         }
 
         public ItemStack getItemStack() {
@@ -41,11 +41,11 @@ public class OutsiderEvent extends Event {
         }
 
         public UUID getItemOwner() {
-            return itemOwner;
+            return ownerId;
         }
 
-        public UUID getItemThrower() {
-            return itemThrower;
+        public UUID getThrowerId() {
+            return throwerId;
         }
     }
 }
