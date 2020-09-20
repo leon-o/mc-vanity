@@ -13,26 +13,7 @@ var InsnList = Java.type('org.objectweb.asm.tree.InsnList');
 function transformSetModelVisibilities(method)
 {
     var insnList=new InsnList();
-    var methodNode=new MethodInsnNode(Opcodes.INVOKESTATIC,"top/leonx/vanity/transform/PlayerRendererTransform","fakeSetModelVisibilities","(Lnet/minecraft/client/renderer/entity/model/PlayerModel;)V",false);
-    insnList.add(new VarInsnNode(Opcodes.ALOAD,2));
-    insnList.add(methodNode);
-
-    var iterator = method.instructions.iterator();
-    while (iterator.hasNext())
-    {
-        var insnNode=iterator.next();
-        if(insnNode.getOpcode()===Opcodes.RETURN)
-        {
-            method.instructions.insertBefore(insnNode,insnList);
-            break;
-        }
-    }
-    return method;
-}
-function transformRenderRightArm(method)
-{
-    var insnList=new InsnList();
-    var methodNode=new MethodInsnNode(Opcodes.INVOKESTATIC,"top/leonx/vanity/transform/PlayerRendererTransform","fakeSetModelVisibilities","(Lnet/minecraft/client/renderer/entity/model/PlayerModel;)V",false);
+    var methodNode=new MethodInsnNode(Opcodes.INVOKESTATIC,"top/leonx/vanity/PlayerRendererTransform","fakeSetModelVisibilities","(Lnet/minecraft/client/renderer/entity/model/PlayerModel;)V",false);
     insnList.add(new VarInsnNode(Opcodes.ALOAD,2));
     insnList.add(methodNode);
 
@@ -56,7 +37,7 @@ function transformRenderRightArm(method)
     insnList.add(new VarInsnNode(Opcodes.ALOAD,2));
     insnList.add(new VarInsnNode(Opcodes.ILOAD,3));
     insnList.add(new VarInsnNode(Opcodes.ALOAD,4));
-    insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC,"top/leonx/vanity/transform/PlayerRendererTransform","renderRightArm","(Lnet/minecraft/client/renderer/entity/PlayerRenderer;Lcom/mojang/blaze3d/matrix/MatrixStack;Lnet/minecraft/client/renderer/IRenderTypeBuffer;ILnet/minecraft/client/entity/player/AbstractClientPlayerEntity;)V",false));
+    insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC,"top/leonx/vanity/PlayerRendererTransform","renderRightArm","(Lnet/minecraft/client/renderer/entity/PlayerRenderer;Lcom/mojang/blaze3d/matrix/MatrixStack;Lnet/minecraft/client/renderer/IRenderTypeBuffer;ILnet/minecraft/client/entity/player/AbstractClientPlayerEntity;)V",false));
     insnList.add(new InsnNode(Opcodes.RETURN));
     method.instructions.clear();
     method.instructions.add(insnList);
@@ -70,7 +51,7 @@ function transformRenderLeftArm(method)
     insnList.add(new VarInsnNode(Opcodes.ALOAD,2));
     insnList.add(new VarInsnNode(Opcodes.ILOAD,3));
     insnList.add(new VarInsnNode(Opcodes.ALOAD,4));
-    insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC,"top/leonx/vanity/transform/PlayerRendererTransform","renderLeftArm","(Lnet/minecraft/client/renderer/entity/PlayerRenderer;Lcom/mojang/blaze3d/matrix/MatrixStack;Lnet/minecraft/client/renderer/IRenderTypeBuffer;ILnet/minecraft/client/entity/player/AbstractClientPlayerEntity;)V",false));
+    insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC,"top/leonx/vanity/PlayerRendererTransform","renderLeftArm","(Lnet/minecraft/client/renderer/entity/PlayerRenderer;Lcom/mojang/blaze3d/matrix/MatrixStack;Lnet/minecraft/client/renderer/IRenderTypeBuffer;ILnet/minecraft/client/entity/player/AbstractClientPlayerEntity;)V",false));
     insnList.add(new InsnNode(Opcodes.RETURN));
     method.instructions.clear();
     method.instructions.add(insnList);
