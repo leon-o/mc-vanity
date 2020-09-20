@@ -1,9 +1,11 @@
 package top.leonx.vanity.ai.tree.composite;
 
+import com.google.common.collect.HashMultimap;
 import javafx.util.Pair;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.server.ServerWorld;
+import org.antlr.v4.runtime.misc.MultiMap;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.util.BinaryFunc;
 import top.leonx.vanity.util.TernaryFunc;
@@ -15,9 +17,9 @@ import java.util.stream.Collectors;
 public class UtilitySelectTask<T extends LivingEntity> extends CompositeTask<T> {
     public static final UtilityScoreDecoration.NoneDecoration NONE =new UtilityScoreDecoration.NoneDecoration();
     //private final   int                                   decayDuration;
-    public final Map<BehaviorTreeTask<T>, TernaryFunc<ServerWorld, T, Long, Double>> utilityCalculatorMap = new HashMap<>();
-    public final Map<BehaviorTreeTask<T>,UtilityScoreDecoration> utilityScoreDecorationMap=new HashMap<>();
-    private final TernaryFunc<ServerWorld, T, Long, Double>                           DUMMY_FUNC           = (s, e, l) -> 0d;
+    public final  Map<BehaviorTreeTask<T>, TernaryFunc<ServerWorld, T, Long, Double>> utilityCalculatorMap      = new HashMap<>();
+    public final  HashMultimap<BehaviorTreeTask<T>,UtilityScoreDecoration>                utilityScoreDecorationMap =HashMultimap.create();
+    private final TernaryFunc<ServerWorld, T, Long, Double>                           DUMMY_FUNC                = (s, e, l) -> 0d;
     public        BehaviorTreeTask<T>                                                 currentTask;
 
     public UtilitySelectTask(String name) {
@@ -47,10 +49,10 @@ public class UtilitySelectTask<T extends LivingEntity> extends CompositeTask<T> 
     public void addChild(TernaryFunc<ServerWorld, T, Long, Double> utilityCalculator, BehaviorTreeTask<T> task) {
         addChild(utilityCalculator,task,new UtilityScoreDecoration.InertiaDecoration(0.2));
     }
-    public void addChild(TernaryFunc<ServerWorld, T, Long, Double> utilityCalculator, BehaviorTreeTask<T> task,UtilityScoreDecoration decoration) {
+    public void addChild(TernaryFunc<ServerWorld, T, Long, Double> utilityCalculator, BehaviorTreeTask<T> task,UtilityScoreDecoration ...decoration) {
         addChild(task);
         utilityCalculatorMap.put(task, utilityCalculator);
-        utilityScoreDecorationMap.put(task,decoration);
+        utilityScoreDecorationMap.putAll(task, Arrays.asList(decoration));
     }
     @Override
     protected void onEnd(ServerWorld world, T entity, long executionDuration) {
@@ -69,13 +71,18 @@ public class UtilitySelectTask<T extends LivingEntity> extends CompositeTask<T> 
         if (currentTask != null) {
             currentTask.callForUpdate(world, entity, executionDuration);
         }
+        for (Map.Entry<BehaviorTreeTask<T>, UtilityScoreDecoration> entry : utilityScoreDecorationMap.entries()) {
+            entry.getValue().tick();
+        }
         selectChildTask(world, entity, executionDuration);
     }
 
     private void selectChildTask(ServerWorld worldIn, T entityIn, long executionDuration) {
-        List<BehaviorTreeTask<T>> sorted = getChildren().stream().sorted(Comparator.comparingDouble((t) -> {
+        List<BehaviorTreeTask<T>> sorted = getChildren().stream().sorted(Comparator.comparingDouble((BehaviorTreeTask<T> t) -> {
             Double utilityScore = utilityCalculatorMap.getOrDefault(t, DUMMY_FUNC).compute(worldIn, entityIn, executionDuration);
-            utilityScore = utilityScoreDecorationMap.getOrDefault(t,NONE).decorate(utilityScore,this);
+            for (UtilityScoreDecoration decoration : utilityScoreDecorationMap.get(t)) {
+                utilityScore=decoration.decorate(utilityScore,this);
+            }
 //            if (Objects.equals(currentTask, t)) utilityScore += inertiaUtilityIncrement.compute((double) executionDuration, (double) decayDuration);
             return utilityScore;
         }).reversed()).collect(Collectors.toList());
