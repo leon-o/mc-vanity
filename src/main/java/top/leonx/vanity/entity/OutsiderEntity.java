@@ -75,7 +75,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
                                                                                                                              SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
-                                                                                                                             SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR);
+                                                                                                                             SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR,
+                                                                                                                             SensorType.VILLAGER_HOSTILES);
 
     public final OutsiderInventory inventory   = new OutsiderInventory(this);
 

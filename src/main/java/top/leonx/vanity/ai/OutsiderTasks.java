@@ -9,7 +9,6 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
@@ -31,6 +30,9 @@ public class OutsiderTasks {
     public static final BehaviorTreeTask<OutsiderEntity> EAT_FOOD_TASK =new EatFoodTask();
     public static final BehaviorTreeTask<OutsiderEntity> FIND_FOOD = findFood();
     public static final BehaviorTreeTask<OutsiderEntity> FEED_SELF=increaseSatiety();
+    public static final BehaviorTreeTask<OutsiderEntity> BATTLE=battle();
+    public static final BehaviorTreeTask<OutsiderEntity> IDLE=new IdleTask<>();
+    public static final BehaviorTreeTask<OutsiderEntity> SELF_PROTECTION=selfProtection();
 
     public static BehaviorTreeTask<OutsiderEntity> findFood()
     {
@@ -39,7 +41,7 @@ public class OutsiderTasks {
 
         SequencesTask<OutsiderEntity> attackEntityForFood = new SequencesTask<>("Attack For Food");
         ///attackEntityForFood.children.add(new FindAttackTargetTask<>();
-        attackEntityForFood.addChild(new AttackTargetTask(AIUtil::getClosestFoodProvider));
+        attackEntityForFood.addChild(new AttackTargetTask(AIUtil::getNearestFoodProvider));
         attackEntityForFood.addChild(pickFoodTask);
 
         findFoodTask.addChild(pickFoodTask); //先尝试在地上寻找
@@ -77,7 +79,7 @@ public class OutsiderTasks {
         UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Protect Player");
 
         //闲置
-        utilitySelectTask.addChild((w,e,t)->0.06,new IdleTask<>());
+        utilitySelectTask.addChild((w,e,t)->0.06,IDLE);
         //跟随玩家
         utilitySelectTask.addChild((w, e, t) ->e.getFollowedPlayer()==null?0:AIUtil.sigmod(e.getDistance(e.getFollowedPlayer()), 0.4, 5), new FollowEntityTask(OutsiderEntity::getFollowedPlayer));
         //战斗
@@ -90,7 +92,7 @@ public class OutsiderTasks {
 
                 return hasMenace ? 0.5d : 0d;
             } else return 0d;
-        }, battle());
+        }, BATTLE);
 
         //当不在战斗状态，并且饿了，就吃点东西
         utilitySelectTask.addChild((ServerWorld w, OutsiderEntity e, Long t)->{
@@ -111,7 +113,29 @@ public class OutsiderTasks {
         //日常生活就是，吃饭、睡觉、打怪、发呆。
         UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Daily Life");
 
-        utilitySelectTask.addChild((w,e,t)->0.06,new IdleTask<>());
+        utilitySelectTask.addChild((w,e,t)->0.06,IDLE); //发呆
+        utilitySelectTask.addChild((w,e,t)->{
+            long time = w.getDayTime()%24000L;
+            double timeNor=time/24000D;
+            return Math.max(0,timeNor-0.5);
+        },new SleepTask<>());
+        utilitySelectTask.addChild((w,e,t)->{
+            return 1-e.getFoodStats().getFoodLevel()/20D;
+        },FEED_SELF);
+
+        utilitySelectTask.addChild((w,e,t)->{
+            Optional<LivingEntity> nearestHostile = e.getBrain().getMemory(MemoryModuleType.NEAREST_HOSTILE);
+            if(nearestHostile.isPresent())
+                return (double) (e.getHealth() / e.getMaxHealth());
+            return 0d;
+        },BATTLE);
+
+        utilitySelectTask.addChild((w,e,t)->{
+            Optional<LivingEntity> nearestHostile = e.getBrain().getMemory(MemoryModuleType.NEAREST_HOSTILE);
+            if(nearestHostile.isPresent())
+                return (double) 1-(e.getHealth() / e.getMaxHealth()); //reverse with battle
+            return 0d;
+        },SELF_PROTECTION);
 
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
@@ -122,7 +146,7 @@ public class OutsiderTasks {
 
         SequencesTask<OutsiderEntity> attackEntityForItem = new SequencesTask<>("Attack For Item");
         ///attackEntityForItem.children.add(new FindAttackTargetTask<>();
-        attackEntityForItem.addChild(new AttackTargetTask(t->AIUtil.getClosestItemProvider(t,predicate)));
+        attackEntityForItem.addChild(new AttackTargetTask(t->AIUtil.getNearestItemProvider(t, predicate)));
         attackEntityForItem.addChild(pickItemTask);
 
         killForItemTask.addChild(pickItemTask); //先尝试在地上寻找

@@ -13,13 +13,11 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
-import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.ICraftingRecipe;
-import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.DamageSource;
@@ -123,12 +121,12 @@ public class AIUtil {
         return null;
     }
 
-    public static LivingEntity getClosestFoodProvider(OutsiderEntity entity)
+    public static LivingEntity getNearestFoodProvider(OutsiderEntity entity)
     {
-        return getClosestItemProvider(entity, ItemStack::isFood);
+        return getNearestItemProvider(entity, ItemStack::isFood);
     }
 
-    public static LivingEntity getClosestItemProvider(OutsiderEntity entity, Predicate<ItemStack> predicate)
+    public static LivingEntity getNearestItemProvider(OutsiderEntity entity, Predicate<ItemStack> predicate)
     {
         Optional<List<LivingEntity>> visibleMobsOpt = entity.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
         if (visibleMobsOpt.isPresent())

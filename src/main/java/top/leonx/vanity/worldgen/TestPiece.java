@@ -69,9 +69,9 @@ public class TestPiece extends TemplateStructurePiece {
 
     @Override
     public boolean create(IWorld worldIn, ChunkGenerator<?> chunkGeneratorIn, Random randomIn, MutableBoundingBox mutableBoundingBoxIn, ChunkPos chunkPosIn) {
-        int l = this.getXWithOffset(2, 5);
+        int l = this.getXWithOffset(1, 1);
         int i1 = this.getYWithOffset(2);
-        int k = this.getZWithOffset(2, 5);
+        int k = this.getZWithOffset(1, 1);
         if (mutableBoundingBoxIn.isVecInside(new BlockPos(l, i1, k))) {
             OutsiderEntity outsiderEntity = ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.create(worldIn.getWorld());
             outsiderEntity.enablePersistence();
