@@ -36,15 +36,15 @@ import java.util.stream.Collectors;
 public class AIUtil {
     static Random random = new Random();
     public static final BlockState DUMMY_BLOCK_STATE=new BlockState(Blocks.IRON_BLOCK, ImmutableMap.of()); // don't crash.
-    public static final Comparator<ItemStack> COMPARE_VALUE=Comparator.comparingInt(AIUtil::getItemValue);
+    public static final Comparator<ItemStack> COMPARE_VALUE=Comparator.comparingDouble(AIUtil::getItemValue);
     public static final Comparator<ItemStack> COMPARE_HARDNESS=Comparator.comparingDouble(t->((BlockItem) t.getItem()).getBlock().getHarvestLevel(DUMMY_BLOCK_STATE));
 
 
     @SuppressWarnings("deprecation")
-    public static int getItemValue(ItemStack itemStack) {
+    public static double getItemValue(ItemStack itemStack) {
         Material material = ((BlockItem) itemStack.getItem()).getBlock().getMaterial(DUMMY_BLOCK_STATE);
         if(material.equals(Material.IRON))
-            return 10;
+            return 12;
         else if(material.equals(Material.SPONGE))
             return 9;
         else if(ItemTags.LOGS.contains(itemStack.getItem()))
@@ -52,18 +52,18 @@ public class AIUtil {
         else if(ItemTags.WOOL.contains(itemStack.getItem()))
             return 4;
         else if(ItemTags.PLANKS.contains(itemStack.getItem()))
-            return 4;
+            return 1.5;
         else if(material.equals(Material.GLASS))
-            return 5;
+            return 2;
         else if(itemStack.getItem().equals(Items.COBBLESTONE))
             return 0;
         else if(material.equals(Material.ROCK))
             return 2;
         else if(material.equals(Material.CLAY))
-            return 3;
+            return 1;
         else if(itemStack.getItem().equals(Items.DIRT))
-            return 0;
-        return 5;
+            return -1;
+        return 0;
     }
 
     public static Collection<ItemStack> getLivingEntityDrops(Entity entity) {

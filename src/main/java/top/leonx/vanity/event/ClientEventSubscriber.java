@@ -33,7 +33,7 @@ import top.leonx.vanity.init.ModEntityTypes;
 import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = VanityMod.MOD_ID,bus = Mod.EventBusSubscriber.Bus.MOD,value = Dist.CLIENT)
-public class ClientEvent{
+public class ClientEventSubscriber {
     @SubscribeEvent
     public static void onFMLClientSetupEvent(final FMLClientSetupEvent event)
     {

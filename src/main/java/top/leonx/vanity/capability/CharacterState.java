@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class CharacterState {
+    public static final float MAX_RELATIONSHIP=100;
     public static final CharacterState EMPTY = new CharacterState();
     private final Map<UUID, Float> relationMap = new HashMap<>();
     private final Map<UUID, Float> loveMap     = new HashMap<>();
@@ -22,7 +23,7 @@ public class CharacterState {
         return genderStr.length() > 0 && genderStr.equals("male") ? Gender.MALE : Gender.FEMALE;
     }
 
-    public void promoteRelationWith(UUID uuid, int i) {
+    public void promoteRelationWith(UUID uuid, float i) {
         setRelationWith(uuid,getRelationWith(uuid)+i);
     }
 
