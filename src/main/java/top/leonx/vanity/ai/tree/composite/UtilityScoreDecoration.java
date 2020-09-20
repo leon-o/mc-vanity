@@ -1,5 +1,6 @@
 package top.leonx.vanity.ai.tree.composite;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 
 public abstract class UtilityScoreDecoration{
@@ -46,8 +47,8 @@ public abstract class UtilityScoreDecoration{
         }
 
         @Override
-        public double decorate(double rawScore,UtilitySelectTask<?> selector) {
-            if(equals(selector.utilityScoreDecorationMap.getOrDefault(selector.currentTask,null)))
+        public double decorate(double rawScore,UtilitySelectTask<? extends LivingEntity> selector) {
+            if(selector.utilityScoreDecorationMap.containsEntry(selector.lastTask,this))
             {
                 cooldown=maxCooldownTick;
             }

@@ -21,7 +21,7 @@ public class UtilitySelectTask<T extends LivingEntity> extends CompositeTask<T> 
     public final  HashMultimap<BehaviorTreeTask<T>,UtilityScoreDecoration>                utilityScoreDecorationMap =HashMultimap.create();
     private final TernaryFunc<ServerWorld, T, Long, Double>                           DUMMY_FUNC                = (s, e, l) -> 0d;
     public        BehaviorTreeTask<T>                                                 currentTask;
-
+    public        BehaviorTreeTask<T>                                                 lastTask;
     public UtilitySelectTask(String name) {
         super(name);
     }
@@ -94,7 +94,11 @@ public class UtilitySelectTask<T extends LivingEntity> extends CompositeTask<T> 
                     task.callForStart(worldIn, entityIn, executionDuration);
                 }
 
-                currentTask = task;
+                if(currentTask!=task){
+                    lastTask=currentTask;
+                    currentTask = task;
+                }
+
                 break;
             }
         }
