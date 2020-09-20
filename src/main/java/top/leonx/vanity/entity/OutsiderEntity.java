@@ -41,10 +41,13 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.ai.OutsiderTasks;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.container.OutsiderContainer;
+import top.leonx.vanity.event.OutsiderEvent;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
@@ -596,6 +599,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 itemEntity.addVelocity(vec.x, vec.y, vec.z);
 
                 if (posVec.distanceTo(itemPosVec) <= 0.4 && inventory.storeItemStack(itemstack)) {
+                    boolean cancelled = MinecraftForge.EVENT_BUS.post(new OutsiderEvent.PickItemEvent(this,itemstack,itemEntity.getOwnerId(),itemEntity.getThrowerId()));
+                    if(cancelled)return;
+
                     copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
                     onItemPickup(this, i);
                     UUID throwerId = itemEntity.getThrowerId();
