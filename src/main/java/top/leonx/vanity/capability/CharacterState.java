@@ -3,6 +3,7 @@ package top.leonx.vanity.capability;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -12,6 +13,8 @@ import java.util.UUID;
 public class CharacterState {
     public static final float MAX_RELATIONSHIP=100;
     public static final float MIN_RELATIONSHIP=-100;
+    public static final float MAX_LOVE=100;
+    public static final float MIN_LOVE=0;
     public static final CharacterState EMPTY = new CharacterState();
     private final Map<UUID, Float> relationMap = new HashMap<>();
     private final Map<UUID, Float> loveMap     = new HashMap<>();
@@ -23,11 +26,12 @@ public class CharacterState {
         String genderStr = root.getString(Keys.GENDER);
         return genderStr.length() > 0 && genderStr.equals("male") ? Gender.MALE : Gender.FEMALE;
     }
-
     public void promoteRelationWith(UUID uuid, float i) {
         setRelationWith(uuid,getRelationWith(uuid)+i);
     }
-
+    public void promoteLoveWith(UUID uuid, float i) {
+        setLoveWith(uuid,getLoveWith(uuid)+i);
+    }
     public void setGender(Gender gender) {
         root.putString("gender", gender.toString());
     }
@@ -96,11 +100,11 @@ public class CharacterState {
     }
 
     public void setLoveWith(UUID id, float value) {
-        loveMap.put(id, value);
+        loveMap.put(id, MathHelper.clamp(value,MIN_LOVE,MAX_LOVE));
     }
 
     public void setRelationWith(UUID id, float value) {
-        relationMap.put(id,Math.min(Math.max(value,MIN_RELATIONSHIP),MAX_RELATIONSHIP) );
+        relationMap.put(id,MathHelper.clamp(value,MIN_RELATIONSHIP,MAX_RELATIONSHIP) );
     }
 
     public void setState(String key, float value) {
@@ -137,7 +141,7 @@ public class CharacterState {
                 CompoundNBT entry = (CompoundNBT) inbt;
                 UUID        id    = entry.getUniqueId("id");
                 float       value = entry.getFloat("value");
-                relationMap.put(id, value);
+                loveMap.put(id, value);
             }
         }
     }

@@ -13,7 +13,7 @@ import top.leonx.vanity.init.*;
 public class VanityMod
 {
     public static final String MOD_ID="vanity";
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
     public VanityMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();

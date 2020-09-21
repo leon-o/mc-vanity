@@ -15,6 +15,7 @@ import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.ICraftingRecipe;
@@ -69,7 +70,20 @@ public class AIUtil {
             return -1;
         return 0;
     }
+    public static double getLoveValue(ItemStack stack)
+    {
+        Item item = stack.getItem();
+        if(item.equals(Items.DIAMOND))
+        {
+            return 8;
+        }else if(item.equals(Items.POPPY))
+        {
+            return 2;
+        }
 
+
+        return 0;
+    }
     public static Collection<ItemStack> getLivingEntityDrops(Entity entity) {
         if(!(entity instanceof LivingEntity)) return Collections.emptyList();
         LivingEntity livingEntity=(LivingEntity)entity;

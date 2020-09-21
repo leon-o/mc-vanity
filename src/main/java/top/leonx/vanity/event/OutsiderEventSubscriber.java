@@ -26,16 +26,26 @@ public class OutsiderEventSubscriber {
         Entity target = event.getTarget();
         if (target instanceof LivingEntity) {
             LivingEntity livingEntity = (LivingEntity) target;
+
             if (livingEntity.getAttackingEntity() instanceof OutsiderEntity) {
                 OutsiderEntity outsiderEntity = (OutsiderEntity) livingEntity;
                 outsiderEntity.getCharacterState().promoteRelationWith(event.getPlayer().getUniqueID(), 1f);
-                CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+
+                if(!target.world.isRemote())
+                {
+                    CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+                }
             }
 
             for (OutsiderEntity outsiderEntity : target.getEntityWorld().getEntitiesWithinAABB(OutsiderEntity.class, target.getBoundingBox().expand(10, 10, 10))) {
                 outsiderEntity.getCharacterState().promoteRelationWith(event.getPlayer().getUniqueID(), 0.5F);
-                CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+
+                if(!target.world.isRemote())
+                {
+                    CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+                }
             }
+
         }
     }
     @SubscribeEvent
@@ -51,19 +61,37 @@ public class OutsiderEventSubscriber {
 
             ItemStack itemStack    = event.getItemStack();
             float     relaIncrease = (float) (0.02 * AIUtil.getItemValue(itemStack) * itemStack.getCount());
-            outsiderEntity.getCharacterState().promoteRelationWith(throwerId, relaIncrease);
-            CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+            boolean modified=false;
+            if(relaIncrease!=0)
+            {
+                outsiderEntity.getCharacterState().promoteRelationWith(throwerId, relaIncrease);
+                modified=true;
+            }
 
+            float loveIncrease=(float) (0.02 * AIUtil.getLoveValue(itemStack) * itemStack.getCount());
+            if(loveIncrease!=0)
+            {
+                outsiderEntity.getCharacterState().promoteLoveWith(throwerId, loveIncrease);
+                modified=true;
+            }
             if(!outsiderEntity.world.isRemote())
             {
                 Vec3d pos = outsiderEntity.getEyePosition(1f);
                 for (int i = 0; i < relaIncrease; i++) {
-                    ((ServerWorld) outsiderEntity.world).spawnParticle(ParticleTypes.HEART, outsiderEntity.getPosXRandom(1), outsiderEntity.getPosYRandom() ,
+                    ((ServerWorld) outsiderEntity.world).spawnParticle(ModParticleTypes.GREEN_HEART.get(), outsiderEntity.getPosXRandom(1), outsiderEntity.getPosYRandom()+1 ,
+                                                                       outsiderEntity.getPosZRandom(1), 1, 0,
+                                                                       0.1, 0, 0.1);
+                }
+
+                for (int i = 0; i < loveIncrease; i++) {
+                    ((ServerWorld) outsiderEntity.world).spawnParticle(ModParticleTypes.PINK_HEART.get(), outsiderEntity.getPosXRandom(1), outsiderEntity.getPosYRandom()+1 ,
                                                                        outsiderEntity.getPosZRandom(1), 1, 0,
                                                                        0.1, 0, 0.1);
                 }
             }
 
+            if(modified)
+                CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
         }
     }
 }

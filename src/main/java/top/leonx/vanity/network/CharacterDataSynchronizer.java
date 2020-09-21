@@ -12,6 +12,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
+import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.init.ModCapabilityTypes;
 
@@ -35,6 +36,11 @@ public class CharacterDataSynchronizer {
     }
 
     public static void UpdateDataToTracking(Entity entity, CharacterState data) {
+        if(entity.world.isRemote())
+        {
+            VanityMod.LOGGER.warn("Can't send package to tracked players from client side");
+            return;
+        }
         VanityPacketHandler.CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), new CharacterDataSynchronizer.CharacterStateMsg(data, entity.getEntityId()));
     }
 
