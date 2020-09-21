@@ -11,13 +11,14 @@ import java.util.UUID;
 
 public class CharacterState {
     public static final float MAX_RELATIONSHIP=100;
+    public static final float MIN_RELATIONSHIP=-100;
     public static final CharacterState EMPTY = new CharacterState();
     private final Map<UUID, Float> relationMap = new HashMap<>();
     private final Map<UUID, Float> loveMap     = new HashMap<>();
     boolean needInit = true;
     private       CompoundNBT      root        = new CompoundNBT();
     private       MOOD             currentMood;
-    private UUID followedEntityUuid;
+
     public Gender getGender() {
         String genderStr = root.getString(Keys.GENDER);
         return genderStr.length() > 0 && genderStr.equals("male") ? Gender.MALE : Gender.FEMALE;
@@ -99,7 +100,7 @@ public class CharacterState {
     }
 
     public void setRelationWith(UUID id, float value) {
-        relationMap.put(id, value);
+        relationMap.put(id,Math.min(Math.max(value,MIN_RELATIONSHIP),MAX_RELATIONSHIP) );
     }
 
     public void setState(String key, float value) {

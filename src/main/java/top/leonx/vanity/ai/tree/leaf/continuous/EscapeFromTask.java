@@ -41,7 +41,7 @@ public class EscapeFromTask<T extends CreatureEntity> extends BehaviorTreeTask<T
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
 
         LivingEntity avoidTarget = avoidTargetGetter.apply(entity);
-        if(avoidTarget.isAlive()){
+        if(avoidTarget!=null && avoidTarget.isAlive()){
             Vec3d vec3d = RandomPositionGenerator.findRandomTargetBlockAwayFrom(entity, 16, 7, avoidTarget.getPositionVec());
             if(vec3d==null) return;
             entity.getNavigator().tryMoveToXYZ(vec3d.x,vec3d.y,vec3d.z,1);

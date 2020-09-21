@@ -42,10 +42,14 @@ public class AIUtil {
 
     @SuppressWarnings("deprecation")
     public static double getItemValue(ItemStack itemStack) {
-        Material material = ((BlockItem) itemStack.getItem()).getBlock().getMaterial(DUMMY_BLOCK_STATE);
-        if(material.equals(Material.IRON))
+        Material material = null;
+        if(itemStack.getItem() instanceof BlockItem)
+        {
+            material=((BlockItem) itemStack.getItem()).getBlock().getMaterial(DUMMY_BLOCK_STATE);
+        }
+        if(Objects.equals(material, Material.IRON))
             return 12;
-        else if(material.equals(Material.SPONGE))
+        else if(Objects.equals(material, Material.SPONGE))
             return 9;
         else if(ItemTags.LOGS.contains(itemStack.getItem()))
             return 6;
@@ -53,13 +57,13 @@ public class AIUtil {
             return 4;
         else if(ItemTags.PLANKS.contains(itemStack.getItem()))
             return 1.5;
-        else if(material.equals(Material.GLASS))
+        else if(Objects.equals(material, Material.GLASS))
             return 2;
         else if(itemStack.getItem().equals(Items.COBBLESTONE))
             return 0;
-        else if(material.equals(Material.ROCK))
+        else if(Objects.equals(material, Material.ROCK))
             return 2;
-        else if(material.equals(Material.CLAY))
+        else if(Objects.equals(material, Material.CLAY))
             return 1;
         else if(itemStack.getItem().equals(Items.DIRT))
             return -1;
