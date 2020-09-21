@@ -11,14 +11,10 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
-import net.minecraftforge.client.model.obj.OBJLoader;
-import net.minecraftforge.client.model.obj.OBJModel;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -30,7 +26,6 @@ import top.leonx.vanity.client.renderer.entity.OutsiderRenderer;
 import top.leonx.vanity.client.screen.DialogScreen;
 import top.leonx.vanity.client.screen.OutsiderInventoryScreen;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
-import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModContainerTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModParticleTypes;
@@ -42,13 +37,16 @@ public class ClientEventSubscriber {
     @SubscribeEvent
     public static void onFMLClientSetupEvent(final FMLClientSetupEvent event)
     {
-        ScreenManager.registerFactory(ModContainerTypes.VANITY_MIRROR_CONTAINER, VanityMirrorScreen::new);
-        ScreenManager.registerFactory(ModContainerTypes.OUTSIDER, DialogScreen::new);
-        ScreenManager.registerFactory(ModContainerTypes.OUTSIDER_INVENTORY, OutsiderInventoryScreen::new);
+        //noinspection deprecation
+        DeferredWorkQueue.runLater(()->{
+            ScreenManager.registerFactory(ModContainerTypes.VANITY_MIRROR_CONTAINER.get(), VanityMirrorScreen::new);
+            ScreenManager.registerFactory(ModContainerTypes.OUTSIDER_DIALOG.get(), DialogScreen::new);
+            ScreenManager.registerFactory(ModContainerTypes.OUTSIDER_INVENTORY.get(), OutsiderInventoryScreen::new);
+        });
 
         ModBodyPartRenderers.register();
 
-        RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE, OutsiderRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get(), OutsiderRenderer::new);
 
         //event.getMinecraftSupplier().get().particles.registerFactory(ModParticleTypes.GREEN_HEART, HeartParticle.Factory::new);
         //ClientRegistry.bindTileEntityRenderer(ModTileEntityType.TERRITORY_TILE_ENTITY, TerritoryTableTileEntityRenderer::new);
@@ -58,7 +56,8 @@ public class ClientEventSubscriber {
     public static void onParticleFactoryRegistry(ParticleFactoryRegisterEvent event)
     {
         ParticleManager particles = Minecraft.getInstance().particles;
-        particles.registerFactory(ModParticleTypes.GREEN_HEART, HeartParticle.Factory::new);
+        particles.registerFactory(ModParticleTypes.GREEN_HEART.get(), HeartParticle.Factory::new);
+        particles.registerFactory(ModParticleTypes.PINK_HEART.get(), HeartParticle.Factory::new);
     }
 
     @SubscribeEvent

@@ -35,7 +35,7 @@ public class OutsiderInventoryContainer extends Container {
     }
 
     public OutsiderInventoryContainer(int windowId, PlayerInventory inv, OutsiderEntity entity) {
-        super(ModContainerTypes.OUTSIDER_INVENTORY, windowId);
+        super(ModContainerTypes.OUTSIDER_INVENTORY.get(), windowId);
         this.outsider = entity;
         player = inv.player;
 

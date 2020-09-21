@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 
 public class VanityMirrorTileEntity extends TileEntity implements INamedContainerProvider {
     public VanityMirrorTileEntity() {
-        super(ModTileEntityTypes.VANITY_MIRROR_TILE_ENTITY_TILE_ENTITY_TYPE);
+        super(ModTileEntityTypes.VANITY_MIRROR.get());
     }
 
 

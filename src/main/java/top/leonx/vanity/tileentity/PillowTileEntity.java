@@ -12,7 +12,7 @@ import java.util.UUID;
 public class PillowTileEntity extends TileEntity {
     public UUID ownerId;
     public PillowTileEntity() {
-        super(ModTileEntityTypes.PILLOW_TILE_ENTITY);
+        super(ModTileEntityTypes.PILLOW_TILE_ENTITY.get());
     }
 
     public void readFromItemStack(ItemStack stack) {

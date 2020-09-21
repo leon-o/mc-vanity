@@ -1,11 +1,19 @@
 package top.leonx.vanity.init;
 
 import net.minecraft.block.Block;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.block.PillowBlock;
 import top.leonx.vanity.block.VanityMirrorBlock;
 
-public class ModBlocks {
-    public static final Block VANITY_MIRROR=new VanityMirrorBlock().setRegistryName("vanity_mirror");
-    public static final Block PILLOW=new PillowBlock().setRegistryName("pillow");
-    public static final Block[] BLOCKS={VANITY_MIRROR,PILLOW};
+import java.util.Locale;
+
+public final class  ModBlocks {
+    public static final DeferredRegister<Block> BLOCKS = new DeferredRegister<>(ForgeRegistries.BLOCKS, VanityMod.MOD_ID);
+
+    public static final RegistryObject<Block> VANITY_MIRROR=BLOCKS.register("vanity_mirror",VanityMirrorBlock::new);
+    public static final RegistryObject<Block> PILLOW=BLOCKS.register("pillow",PillowBlock::new);
 }

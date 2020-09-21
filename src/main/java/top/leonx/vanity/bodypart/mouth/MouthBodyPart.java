@@ -1,17 +1,13 @@
 package top.leonx.vanity.bodypart.mouth;
 
-import net.minecraft.util.ResourceLocation;
-import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.bodypart.AbstractBodyPart;
+import top.leonx.vanity.bodypart.BodyPart;
 import top.leonx.vanity.bodypart.BodyPartGroup;
 import top.leonx.vanity.bodypart.BodyPartProperty;
 import top.leonx.vanity.util.ColorUtil;
 
 import java.util.List;
 
-public class MouthBodyPart extends AbstractBodyPart {
-    ResourceLocation location;
-
+public class MouthBodyPart extends BodyPart {
     public MouthBodyPart() {
 
         super(BodyPartProperty.create().setGroup(BodyPartGroup.MOUTH).addFloat("mouth_height", -0.05f, 0.1f, 0f).addFloat("mouth_size", 0.5f, 2, 1f));
@@ -20,11 +16,5 @@ public class MouthBodyPart extends AbstractBodyPart {
     @Override
     public List<Integer> getAvailableColors() {
         return ColorUtil.COLORS;
-    }
-
-    @Override
-    public ResourceLocation getIconLocation() {
-        if (location == null && getRegistryName() != null) location = new ResourceLocation(VanityMod.MOD_ID, String.format("textures/gui/icon/%s.png", getRegistryName()));
-        return location;
     }
 }

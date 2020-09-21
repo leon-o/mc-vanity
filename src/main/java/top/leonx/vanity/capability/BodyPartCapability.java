@@ -4,11 +4,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
-import top.leonx.vanity.bodypart.AbstractBodyPart;
-import top.leonx.vanity.bodypart.BodyPartGroup;
-import top.leonx.vanity.bodypart.BodyPartRegistry;
 import top.leonx.vanity.bodypart.BodyPartStack;
 
 import javax.annotation.Nullable;

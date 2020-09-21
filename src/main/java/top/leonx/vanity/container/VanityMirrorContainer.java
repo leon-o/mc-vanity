@@ -24,7 +24,7 @@ public class VanityMirrorContainer extends Container {
     PlayerEntity                    player;
     BodyPartCapability.BodyPartData originBodyPartData;
     public VanityMirrorContainer(int windowId, PlayerInventory inventory, VanityMirrorTileEntity tileEntity) {
-        super(ModContainerTypes.VANITY_MIRROR_CONTAINER, windowId);
+        super(ModContainerTypes.VANITY_MIRROR_CONTAINER.get(), windowId);
         player = inventory.player;
 
         BodyPartCapability.BodyPartData bodyPartData = player.getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY);

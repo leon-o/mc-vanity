@@ -1,24 +1,22 @@
 package top.leonx.vanity.bodypart;
 
-import javafx.util.Pair;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
-import org.antlr.v4.runtime.misc.Triple;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class BodyPartStack {
-    AbstractBodyPart item;
-    int              color;
-    Map<String,Float> adjustableAttributes=new HashMap<>();
-    public BodyPartStack(AbstractBodyPart item)
+    BodyPart item;
+    int      color;
+    Map<String,Float> adjustableAttributes;
+    public BodyPartStack(BodyPart item)
     {
         this(item,0xFFFFFF);
     }
-    public BodyPartStack(AbstractBodyPart item, int color)
+    public BodyPartStack(BodyPart item, int color)
     {
         this.item=item;
         this.color=color;
@@ -29,17 +27,17 @@ public class BodyPartStack {
 
     }
 
-    public BodyPartStack(AbstractBodyPart item, int color, Map<String,Float> attributes) {
+    public BodyPartStack(BodyPart item, int color, Map<String,Float> attributes) {
         this.item=item;
         this.color=color;
         adjustableAttributes=attributes;
     }
 
-    public AbstractBodyPart getItem() {
+    public BodyPart getItem() {
         return item;
     }
 
-    public void setItem(AbstractBodyPart item) {
+    public void setItem(BodyPart item) {
         this.item = item;
     }
 
@@ -80,8 +78,8 @@ public class BodyPartStack {
     {
         BodyPartGroup group       = BodyPartGroup.getGroupByName(nbt.getString("group"));
         if(group==null) return null;
-        ResourceLocation location=new ResourceLocation(nbt.getString("namespace"),nbt.getString("path"));
-        AbstractBodyPart item  = BodyPartRegistry.getBodyPart(group, location);
+        ResourceLocation location =new ResourceLocation(nbt.getString("namespace"),nbt.getString("path"));
+        BodyPart         item     = BodyPartRegistry.getBodyPart(group, location);
         if(item==null) return null;
         int              color =nbt.getInt("color");
         ListNBT attributes=nbt.getList("attribute",10);

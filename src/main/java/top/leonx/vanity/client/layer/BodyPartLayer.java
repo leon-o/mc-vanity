@@ -17,7 +17,7 @@ import top.leonx.vanity.client.BodyPartRendererRegistry;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.util.Color;
 import top.leonx.vanity.util.ColorUtil;
-import top.leonx.vanity.bodypart.AbstractBodyPart;
+import top.leonx.vanity.bodypart.BodyPart;
 import top.leonx.vanity.bodypart.BodyPartStack;
 
 import java.util.List;
@@ -45,7 +45,7 @@ public class BodyPartLayer<T extends LivingEntity, M extends EntityModel<T> & IH
         for (BodyPartStack stack : stacksList) {
             Color color = ColorUtil.splitColor(stack.getColor(),true);
 
-            AbstractBodyPart vanityItem = stack.getItem();
+            BodyPart vanityItem = stack.getItem();
             if(vanityItem !=null)
             {
                 BodyPartRenderer renderer = BodyPartRendererRegistry.getRenderer(vanityItem);

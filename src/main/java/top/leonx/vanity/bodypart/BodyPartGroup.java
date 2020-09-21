@@ -13,11 +13,11 @@ import java.util.function.Supplier;
 public class BodyPartGroup {
     public static final Map<String, BodyPartGroup> GROUPS = new HashMap<>();
 
-    public static final BodyPartGroup BASE_HAIR_GROUP  = new BodyPartGroup(BodyPartCategory.HAIR, "base_hair", () -> ModBodyParts.FRINGE_1, 1, t -> 0.3);
-    public static final BodyPartGroup EXTRA_HAIR_GROUP = new BodyPartGroup(BodyPartCategory.HAIR, "extra_hair", () -> ModBodyParts.LONG_DOUBLE_PONYTAIL, 2);
-    public static final BodyPartGroup EYE_GROUP        = new BodyPartGroup(BodyPartCategory.HAIR, "eye", () -> ModBodyParts.EYE_1, 1);
-    public static final BodyPartGroup SKIN_GROUP       = new BodyPartGroup(BodyPartCategory.HAIR, "skin", () -> ModBodyParts.SKIN_FEMALE_1, 1);
-    public static final BodyPartGroup MOUTH            = new BodyPartGroup(BodyPartCategory.HAIR, "mouth", () -> ModBodyParts.MOUTH_1, 1);
+    public static final BodyPartGroup BASE_HAIR_GROUP  = new BodyPartGroup(BodyPartCategory.HAIR, "base_hair", ModBodyParts.FRINGE_1::get, 1, t -> 0.3);
+    public static final BodyPartGroup EXTRA_HAIR_GROUP = new BodyPartGroup(BodyPartCategory.HAIR, "extra_hair", ModBodyParts.LONG_DOUBLE_PONYTAIL::get, 2);
+    public static final BodyPartGroup EYE_GROUP        = new BodyPartGroup(BodyPartCategory.HAIR, "eye", ModBodyParts.EYE_1::get, 1);
+    public static final BodyPartGroup SKIN_GROUP       = new BodyPartGroup(BodyPartCategory.HAIR, "skin", ModBodyParts.SKIN_FEMALE_1::get, 1);
+    public static final BodyPartGroup MOUTH            = new BodyPartGroup(BodyPartCategory.HAIR, "mouth", ModBodyParts.MOUTH_1::get, 1);
 
     private final String                                            name;
     private final Supplier<IHasIcon>                                icon;

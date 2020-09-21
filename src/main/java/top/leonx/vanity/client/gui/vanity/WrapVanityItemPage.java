@@ -20,9 +20,9 @@ public class WrapVanityItemPage {
     private        ToggleWidget           forwardButton;
     private        ToggleWidget           backButton;
     private        int                    totalPages;
-    private        int             currentPage;
-    private List<AbstractBodyPart> itemList;
-    private IHasIcon               lastClickedItem;
+    private        int     currentPage;
+    private List<BodyPart> itemList;
+    private IHasIcon       lastClickedItem;
     private       Queue<BodyPartStack> selectedItem;
     private       BodyPartGroup        currentGroup;
 
@@ -70,7 +70,7 @@ public class WrapVanityItemPage {
         for(int j = 0; j < this.buttons.size(); ++j) {
             VanityItemWidget vanityItemWidget = this.buttons.get(j);
             if (i + j < this.itemList.size()) {
-                AbstractBodyPart icon = this.itemList.get(i + j);
+                BodyPart icon = this.itemList.get(i + j);
                 vanityItemWidget.init(icon, this);
                 vanityItemWidget.visible = true;
                 vanityItemWidget.setStateTriggered(selectedItem.stream().anyMatch(t->t.getItem().equals(icon)));
@@ -189,9 +189,6 @@ public class WrapVanityItemPage {
     }
 
     public boolean mouseReleased(double mouseX, double mouseY, int id) {
-        if(adjustPanel.mouseReleased(mouseX,mouseY,id))
-            return true;
-
-        return false;
+        return adjustPanel.mouseReleased(mouseX, mouseY, id);
     }
 }

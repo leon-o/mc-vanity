@@ -1,31 +1,26 @@
 package top.leonx.vanity.bodypart;
 
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.ModDimension;
+import net.minecraftforge.registries.ForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.RegistryManager;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.hair.IHasIcon;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 
-public abstract class AbstractBodyPart implements IHasIcon {
-    private       String           registryName;
-    private final BodyPartProperty property;
+public abstract class BodyPart implements IHasIcon {
+    private final                           BodyPartProperty             property;
     private       int              color;
-    public AbstractBodyPart(BodyPartProperty property)
+    private String name;
+    public BodyPart(BodyPartProperty property)
     {
         this.property=property;
-    }
-
-    public AbstractBodyPart setRegistryName(String registryName) {
-        this.registryName = registryName;
-        return this;
-    }
-
-    public String getRegistryName() {
-        return registryName;
     }
 
     public BodyPartProperty getProperty() {
@@ -44,8 +39,6 @@ public abstract class AbstractBodyPart implements IHasIcon {
 
     /**
      * 调整
-     * @param stacks
-     * @param selfStack
      */
     public void adjust(Collection<BodyPartStack> stacks, BodyPartStack selfStack)
     {
@@ -53,9 +46,24 @@ public abstract class AbstractBodyPart implements IHasIcon {
     }
     ResourceLocation iconLocation;
     @Override
+    @OnlyIn(Dist.CLIENT)
     public ResourceLocation getIconLocation() {
-        if(iconLocation==null&&getRegistryName()!=null)
-            iconLocation=new ResourceLocation(VanityMod.MOD_ID, String.format("textures/gui/icon/%s.png", getRegistryName()));
+        if(iconLocation==null && getName()!=null)
+            iconLocation=new ResourceLocation(VanityMod.MOD_ID, String.format("textures/gui/icon/%s.png", getName()));
         return iconLocation;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Nullable
+    public ResourceLocation getRegistryName()
+    {
+        return new ResourceLocation(VanityMod.MOD_ID,getGroup().getName()+"/"+name);
     }
 }

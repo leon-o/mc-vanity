@@ -31,9 +31,10 @@ public class VanityMirrorBlock extends Block {
     @Nullable
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return ModTileEntityTypes.VANITY_MIRROR_TILE_ENTITY_TILE_ENTITY_TYPE.create();
+        return ModTileEntityTypes.VANITY_MIRROR.get().create();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if(worldIn.isRemote)return ActionResultType.PASS;

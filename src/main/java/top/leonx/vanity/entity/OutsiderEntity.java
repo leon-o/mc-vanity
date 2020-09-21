@@ -18,7 +18,6 @@ import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
@@ -42,16 +41,14 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.ai.OutsiderTasks;
 import top.leonx.vanity.capability.CharacterState;
-import top.leonx.vanity.container.OutsiderContainer;
+import top.leonx.vanity.container.OutsiderDialogContainer;
 import top.leonx.vanity.event.OutsiderEvent;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
-import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.util.GeneralFoodStats;
 import top.leonx.vanity.util.OutsiderInventory;
 import top.leonx.vanity.util.PlayerSimPathNavigator;
@@ -78,7 +75,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
                                                                                                                              SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
-                                                                                                                             SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR,
+                                                                                                                             SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR.get(),
                                                                                                                              SensorType.VILLAGER_HOSTILES);
 
     public final OutsiderInventory inventory   = new OutsiderInventory(this);
@@ -348,7 +345,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     @Nullable
     @Override
     public AgeableEntity createChild(AgeableEntity ageable) {
-        return new OutsiderEntity(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE, this.world);
+        return new OutsiderEntity(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get(), this.world);
     }
 
     /**
@@ -639,7 +636,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             INamedContainerProvider provider = new INamedContainerProvider() {
                 @Override
                 public Container createMenu(int id, PlayerInventory inventory, PlayerEntity player) {
-                    return new OutsiderContainer(id, inventory, OutsiderEntity.this);
+                    return new OutsiderDialogContainer(id, inventory, OutsiderEntity.this);
                 }
 
                 @Override

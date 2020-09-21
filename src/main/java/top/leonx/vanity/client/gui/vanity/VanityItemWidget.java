@@ -5,25 +5,25 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ToggleWidget;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
 import top.leonx.vanity.container.VanityMirrorContainer;
-import top.leonx.vanity.bodypart.AbstractBodyPart;
+import top.leonx.vanity.bodypart.BodyPart;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class VanityItemWidget extends ToggleWidget {
+    @SuppressWarnings("FieldCanBeLocal")
     private VanityMirrorContainer container;
-    private AbstractBodyPart      icon;
-    private float                 time;
-    private  float                  animationTime;
-    private  int                    currentIndex;
+    private BodyPart              icon;
 
     public VanityItemWidget() {
         super(0, 0, 25, 25, false);
     }
 
-    public void init(AbstractBodyPart icon, WrapVanityItemPage vanityItemPage) {
+    public void init(BodyPart icon, WrapVanityItemPage vanityItemPage) {
         this.icon = icon;
-        this.container = (VanityMirrorContainer) vanityItemPage.getMinecraft().player.openContainer;
+        if (vanityItemPage.getMinecraft().player != null) {
+            this.container = (VanityMirrorContainer) vanityItemPage.getMinecraft().player.openContainer;
+        }
         initTextureValues(192,96,32,32,VanityMirrorScreen.VANITY_TEX);
         //List<IRecipe<?>> list = p_203400_1_.getRecipes(this.book.isFilteringCraftable(this.field_203401_p));
 
@@ -65,7 +65,7 @@ public class VanityItemWidget extends ToggleWidget {
         return id == 0 || id == 1;
     }
 
-    public AbstractBodyPart getItem() {
+    public BodyPart getItem() {
         return icon;
     }
 }

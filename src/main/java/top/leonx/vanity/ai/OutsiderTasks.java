@@ -52,7 +52,7 @@ public class OutsiderTasks {
     }
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> idle(float p_220641_1_) {
         return ImmutableList.of(Pair.of(2, new FirstShuffledTask<>(
-                ImmutableList.of(Pair.of(InteractWithEntityTask.func_220445_a(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE, 8, MemoryModuleType.INTERACTION_TARGET, p_220641_1_, 2), 2),
+                ImmutableList.of(Pair.of(InteractWithEntityTask.func_220445_a(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get(), 8, MemoryModuleType.INTERACTION_TARGET, p_220641_1_, 2), 2),
                                  Pair.of(InteractWithEntityTask.func_220445_a(EntityType.CAT, 8, MemoryModuleType.INTERACTION_TARGET, p_220641_1_, 2), 1),
                                  Pair.of(new FindWalkTargetTask(p_220641_1_), 1), Pair.of(new WalkToTargetTask(200), 1), Pair.of(new JumpOnBedTask(p_220641_1_), 1)))));
     }

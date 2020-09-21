@@ -56,7 +56,7 @@ public class CraftItemTask extends BehaviorTreeTask<OutsiderEntity> {
         }
         needCraftTable = matchedRecipes.stream().noneMatch(t->t.canFit(2, 2));
         if(!needCraftTable) return;
-        Optional<BlockPos> closest = world.getPointOfInterestManager().findClosest(ModPointOfInterest.CRAFT_TABLE.getPredicate(), t -> true, new BlockPos(entity), 48,
+        Optional<BlockPos> closest = world.getPointOfInterestManager().findClosest(ModPointOfInterest.CRAFT_TABLE.get().getPredicate(), t -> true, new BlockPos(entity), 48,
                                                                                    PointOfInterestManager.Status.ANY);
         if(closest.isPresent())
             closestCraftTable=closest.get();

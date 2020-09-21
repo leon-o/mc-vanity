@@ -51,7 +51,7 @@ public class TestStructure extends ScatteredStructure<NoFeatureConfig> {
 
         @Override
         public void init(ChunkGenerator<?> generator, TemplateManager templateManagerIn, int chunkX, int chunkZ, Biome biomeIn) {
-            NoFeatureConfig nofeatureconfig = generator.getStructureConfig(biomeIn, ModFeatures.TEST);//todo
+            NoFeatureConfig nofeatureconfig = generator.getStructureConfig(biomeIn, ModFeatures.TEST.get());
             int             blockX          = chunkX * 16;
             int             blockZ          = chunkZ * 16;
             int             height          = generator.getHeight(blockX, blockZ, Heightmap.Type.WORLD_SURFACE);

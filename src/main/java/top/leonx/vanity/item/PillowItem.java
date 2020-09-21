@@ -14,7 +14,7 @@ import top.leonx.vanity.init.ModBlocks;
 
 public class PillowItem extends BlockItem {
     public PillowItem() {
-        super(ModBlocks.PILLOW, new Item.Properties().group(ItemGroup.DECORATIONS));
+        super(ModBlocks.PILLOW.get(), new Item.Properties().group(ItemGroup.DECORATIONS));
     }
 
     @Override

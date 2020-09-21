@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
-public class DressBodyPart extends AbstractBodyPart{
+public class DressBodyPart extends BodyPart {
     public DressBodyPart() {
         super(BodyPartProperty.create().setGroup(BodyPartGroup.EXTRA_HAIR_GROUP));
     }

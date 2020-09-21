@@ -9,14 +9,13 @@ import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.client.gui.Label;
 import top.leonx.vanity.client.gui.dialog.DialogButton;
 import top.leonx.vanity.client.gui.dialog.ProcessBar;
-import top.leonx.vanity.container.OutsiderContainer;
-import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.container.OutsiderDialogContainer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class DialogScreen extends ContainerScreen<OutsiderContainer> {
+public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
     public static final ResourceLocation DIALOG_TEX = new ResourceLocation(VanityMod.MOD_ID, "textures/gui/dialog.png");
     int halfH,halfW, dialogPanelLeft, dialogPanelTop, dialogPanelBottom, dialogPanelWidth =256,dialogPanelHeight=80;
     int infoPanelLeft,infoPanelTop,infoPanelBottom,infoPanelWidth=80,infoPanelHeight=96;
@@ -24,7 +23,7 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
     private final List<Label> labels=new ArrayList<>();
     private ProcessBar relationShipProcessBar;
     private ProcessBar loveShipProcessBar;
-    public DialogScreen(OutsiderContainer screenContainer, PlayerInventory inv, ITextComponent titleIn) {
+    public DialogScreen(OutsiderDialogContainer screenContainer, PlayerInventory inv, ITextComponent titleIn) {
         super(screenContainer, inv, titleIn);
     }
 
@@ -55,16 +54,16 @@ public class DialogScreen extends ContainerScreen<OutsiderContainer> {
             boolean followed =Objects.equals(container.outsider.getFollowedPlayerUUID(), container.getPlayer().getUniqueID());
             if(followed)
             {
-                container.requestOperation(OutsiderContainer.DISBAND);
+                container.requestOperation(OutsiderDialogContainer.DISBAND);
                 s.setMessage("Follow me");
             }else{
-                container.requestOperation(OutsiderContainer.FOLLOW_ME);
+                container.requestOperation(OutsiderDialogContainer.FOLLOW_ME);
                 s.setMessage("Disband");
             }
         };
 
         dialogButtons.get(1).setMessage("INVENTORY");
-        dialogButtons.get(1).onPress=(s)-> container.requestOperation(OutsiderContainer.OPEN_INVENTORY);
+        dialogButtons.get(1).onPress=(s)-> container.requestOperation(OutsiderDialogContainer.OPEN_INVENTORY);
 
         addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+4,infoPanelTop+4));
         addLabel(new Label("Relationship").setXY(infoPanelLeft+4,infoPanelTop+24));

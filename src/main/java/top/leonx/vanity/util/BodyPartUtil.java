@@ -4,7 +4,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import top.leonx.vanity.bodypart.AbstractBodyPart;
+import top.leonx.vanity.bodypart.BodyPart;
 import top.leonx.vanity.bodypart.BodyPartGroup;
 import top.leonx.vanity.bodypart.BodyPartRegistry;
 import top.leonx.vanity.bodypart.BodyPartStack;
@@ -20,16 +20,16 @@ public class BodyPartUtil {
         List<BodyPartStack> list=new ArrayList<>();
         for (BodyPartGroup group : groups) {
             if(Math.random()<=group.getEmptyRate(BodyPartCapability.BodyPartData.EMPTY)) continue;
-            TreeMap<Float,AbstractBodyPart> rankTree=new TreeMap<>();
-            Set<AbstractBodyPart> bodyParts = BodyPartRegistry.getBodyParts(group);
-            float lastRank=0;
-            for (AbstractBodyPart bodyPart : bodyParts) {
+            TreeMap<Float, BodyPart> rankTree  =new TreeMap<>();
+            Set<BodyPart>            bodyParts = BodyPartRegistry.getBodyParts(group);
+            float                    lastRank  =0;
+            for (BodyPart bodyPart : bodyParts) {
                 lastRank+=bodyPart.getProperty().getCommonness();
                 rankTree.put(lastRank,bodyPart);
             }
-            double randomFac = Math.random() * lastRank;
-            SortedMap<Float, AbstractBodyPart> tailMap = rankTree.tailMap((float) randomFac);
-            AbstractBodyPart bodyPart=tailMap.get(tailMap.firstKey());
+            double                     randomFac = Math.random() * lastRank;
+            SortedMap<Float, BodyPart> tailMap   = rankTree.tailMap((float) randomFac);
+            BodyPart                   bodyPart  =tailMap.get(tailMap.firstKey());
             list.add(new BodyPartStack(bodyPart,bodyPart.getRandomColor()));
         }
         BodyPartCapability.BodyPartData tmpData=new BodyPartCapability.BodyPartData();

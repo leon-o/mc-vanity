@@ -73,11 +73,14 @@ public class TestPiece extends TemplateStructurePiece {
         int i1 = this.getYWithOffset(2);
         int k = this.getZWithOffset(1, 1);
         if (mutableBoundingBoxIn.isVecInside(new BlockPos(l, i1, k))) {
-            OutsiderEntity outsiderEntity = ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.create(worldIn.getWorld());
-            outsiderEntity.enablePersistence();
-            outsiderEntity.setLocationAndAngles((double)l + 0.5D, i1, (double)k + 0.5D, 0.0F, 0.0F);
-            outsiderEntity.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(new BlockPos(l, i1, k)), SpawnReason.STRUCTURE, null, null);
-            worldIn.addEntity(outsiderEntity);
+            OutsiderEntity outsiderEntity = ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get().create(worldIn.getWorld());
+            if(outsiderEntity!=null)
+            {
+                outsiderEntity.enablePersistence();
+                outsiderEntity.setLocationAndAngles((double)l + 0.5D, i1, (double)k + 0.5D, 0.0F, 0.0F);
+                outsiderEntity.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(new BlockPos(l, i1, k)), SpawnReason.STRUCTURE, null, null);
+                worldIn.addEntity(outsiderEntity);
+            }
         }
 
         return super.create(worldIn, chunkGeneratorIn, randomIn, mutableBoundingBoxIn, chunkPosIn);

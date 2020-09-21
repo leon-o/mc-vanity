@@ -75,7 +75,7 @@ public class PillowBlock extends HorizontalBlock {
     @Nullable
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return ModTileEntityTypes.PILLOW_TILE_ENTITY.create();
+        return ModTileEntityTypes.PILLOW_TILE_ENTITY.get().create();
     }
 
     @Override

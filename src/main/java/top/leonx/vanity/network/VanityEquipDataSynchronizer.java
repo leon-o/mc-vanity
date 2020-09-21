@@ -14,7 +14,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.init.ModCapabilityTypes;
-import top.leonx.vanity.bodypart.AbstractBodyPart;
+import top.leonx.vanity.bodypart.BodyPart;
 import top.leonx.vanity.bodypart.BodyPartGroup;
 import top.leonx.vanity.bodypart.BodyPartRegistry;
 import top.leonx.vanity.bodypart.BodyPartStack;
@@ -140,9 +140,9 @@ public class VanityEquipDataSynchronizer {
             for (int i = 0; i < itemsCount; i++) {
                 BodyPartGroup    group    = BodyPartGroup.getGroupByName(buffer.readString());
                 ResourceLocation location = new ResourceLocation(buffer.readString(), buffer.readString());
-                int              color    = buffer.readInt();
-                AbstractBodyPart item = BodyPartRegistry.getBodyPart(group, location);
-                int mapSize=buffer.readInt();
+                int      color   = buffer.readInt();
+                BodyPart item    = BodyPartRegistry.getBodyPart(group, location);
+                int      mapSize =buffer.readInt();
                 Map<String,Float> attributeMap=new HashMap<>();
                 for(int j=0;j<mapSize;j++)
                 {

@@ -13,10 +13,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.NetworkHooks;
-import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModContainerTypes;
-import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
 
@@ -26,9 +24,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class OutsiderContainer extends Container {
+public class OutsiderDialogContainer extends Container {
     static {
-        VanityPacketHandler.registerMessage(3, OperationMsg.class, OperationMsg::encoder, OperationMsg::decoder, OutsiderContainer::handler);
+        VanityPacketHandler.registerMessage(3, OperationMsg.class, OperationMsg::encoder, OperationMsg::decoder, OutsiderDialogContainer::handler);
     }
 
     public OutsiderEntity outsider;
@@ -57,12 +55,12 @@ public class OutsiderContainer extends Container {
         };
         NetworkHooks.openGui((ServerPlayerEntity) container.player, provider, t->t.writeInt(container.outsider.getEntityId()));
     });
-    public OutsiderContainer(int windowId, PlayerInventory inv, PacketBuffer data) {
+    public OutsiderDialogContainer(int windowId, PlayerInventory inv, PacketBuffer data) {
         this(windowId,inv,readOutsiderFromBuffer(data));
     }
 
-    public OutsiderContainer(int windowId, PlayerInventory inv, OutsiderEntity entity) {
-        super(ModContainerTypes.OUTSIDER, windowId);
+    public OutsiderDialogContainer(int windowId, PlayerInventory inv, OutsiderEntity entity) {
+        super(ModContainerTypes.OUTSIDER_DIALOG.get(), windowId);
         this.outsider = entity;
         player = inv.player;
     }
@@ -80,8 +78,8 @@ public class OutsiderContainer extends Container {
         context.enqueueWork(() -> {
             ServerPlayerEntity sender = context.getSender();
             if (sender == null) return;
-            if (sender.openContainer instanceof OutsiderContainer) {
-                OutsiderContainer container = (OutsiderContainer) sender.openContainer;
+            if (sender.openContainer instanceof OutsiderDialogContainer) {
+                OutsiderDialogContainer container = (OutsiderDialogContainer) sender.openContainer;
                 Operation.getOperation(msg.opCode).execute.accept(container);
                 CharacterDataSynchronizer.UpdateDataToTracking(container.outsider,container.outsider.getCharacterState());
             }
@@ -102,15 +100,15 @@ public class OutsiderContainer extends Container {
     public static class Operation {
         private final static Map<Integer, Operation> OPERATION_MAP   = new HashMap<>();
         private final static Operation               DUMMY_OPERATION = new Operation(-1, (t) -> {});
-        int                         opCode;
-        Consumer<OutsiderContainer> execute;
+        int                               opCode;
+        Consumer<OutsiderDialogContainer> execute;
 
-        private Operation(int opCode, Consumer<OutsiderContainer> execute) {
+        private Operation(int opCode, Consumer<OutsiderDialogContainer> execute) {
             this.opCode = opCode;
             this.execute = execute;
         }
 
-        public static Operation create(Consumer<OutsiderContainer> execute) {
+        public static Operation create(Consumer<OutsiderDialogContainer> execute) {
             Operation operation = new Operation(OPERATION_MAP.size(), execute);
             OPERATION_MAP.put(operation.opCode, operation);
             return operation;

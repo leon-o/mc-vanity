@@ -3,6 +3,7 @@ package top.leonx.vanity.event;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
@@ -57,7 +58,8 @@ public class OutsiderEventSubscriber {
             {
                 Vec3d pos = outsiderEntity.getEyePosition(1f);
                 for (int i = 0; i < relaIncrease; i++) {
-                    ((ServerWorld) outsiderEntity.world).spawnParticle(ModParticleTypes.GREEN_HEART, outsiderEntity.getPosXRandom(1), outsiderEntity.getPosYRandom() , outsiderEntity.getPosZRandom(1), 1, 0,
+                    ((ServerWorld) outsiderEntity.world).spawnParticle(ParticleTypes.HEART, outsiderEntity.getPosXRandom(1), outsiderEntity.getPosYRandom() ,
+                                                                       outsiderEntity.getPosZRandom(1), 1, 0,
                                                                        0.1, 0, 0.1);
                 }
             }
