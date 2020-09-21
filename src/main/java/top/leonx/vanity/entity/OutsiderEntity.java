@@ -598,9 +598,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 Vec3d vec        = posVec.add(itemPosVec.inverse()).normalize().scale(0.2);
                 itemEntity.addVelocity(vec.x, vec.y, vec.z);
 
-                if (posVec.distanceTo(itemPosVec) <= 0.4 && inventory.storeItemStack(itemstack)) {
+                if (posVec.distanceTo(itemPosVec) <= 0.4) {
                     boolean cancelled = MinecraftForge.EVENT_BUS.post(new OutsiderEvent.PickItemEvent(this,itemstack,itemEntity.getOwnerId(),itemEntity.getThrowerId()));
-                    if(cancelled)return;
+
+                    if(cancelled || !inventory.storeItemStack(itemstack))return;
 
                     copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
                     onItemPickup(this, i);
@@ -844,7 +845,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     private void initBrain(Brain<OutsiderEntity> brain) {
         //float f = getFinalMoveSpeed();
-        brain.registerActivity(Activity.CORE, OutsiderTasks.debug());
+        brain.registerActivity(Activity.CORE, OutsiderTasks.protectPlayer());
         //brain.registerActivity(Activity.IDLE, ImmutableList.of(Pair.of(2, new FirstShuffledTask<>(ImmutableList.of(Pair.of(new WalkToTargetTask(200), 1), Pair.of(new FindWalkTargetTask(), 1))))));
 
 

@@ -6,6 +6,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
+import net.minecraft.particles.ParticleType;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
@@ -128,6 +129,11 @@ public class ModEventSubscriber {
         event.getRegistry().registerAll(ModFeatures.FEATURES);
     }
 
+    @SubscribeEvent
+    public static void onParticleTypeRegistry(final RegistryEvent.Register<ParticleType<?>> event)
+    {
+        event.getRegistry().registerAll(ModParticleTypes.GREEN_HEART.setRegistryName("green_heart"));
+    }
 //    @SubscribeEvent
 //    public static void onStructurePiecesRegistry(final RegistryEvent.Register<IStructurePieceType> event)
 //    {

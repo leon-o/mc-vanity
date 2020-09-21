@@ -2,6 +2,8 @@ package top.leonx.vanity.event;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScreenManager;
+import net.minecraft.client.particle.HeartParticle;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.entity.VillagerRenderer;
 import net.minecraft.client.renderer.entity.ZombieRenderer;
@@ -11,9 +13,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.client.model.obj.OBJModel;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -29,6 +33,7 @@ import top.leonx.vanity.client.screen.VanityMirrorScreen;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModContainerTypes;
 import top.leonx.vanity.init.ModEntityTypes;
+import top.leonx.vanity.init.ModParticleTypes;
 
 import java.util.Map;
 
@@ -44,7 +49,16 @@ public class ClientEventSubscriber {
         ModBodyPartRenderers.register();
 
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE, OutsiderRenderer::new);
+
+        //event.getMinecraftSupplier().get().particles.registerFactory(ModParticleTypes.GREEN_HEART, HeartParticle.Factory::new);
         //ClientRegistry.bindTileEntityRenderer(ModTileEntityType.TERRITORY_TILE_ENTITY, TerritoryTableTileEntityRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void onParticleFactoryRegistry(ParticleFactoryRegisterEvent event)
+    {
+        ParticleManager particles = Minecraft.getInstance().particles;
+        particles.registerFactory(ModParticleTypes.GREEN_HEART, HeartParticle.Factory::new);
     }
 
     @SubscribeEvent
