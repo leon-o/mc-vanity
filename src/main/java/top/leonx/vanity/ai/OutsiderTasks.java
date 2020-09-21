@@ -20,6 +20,7 @@ import top.leonx.vanity.ai.tree.leaf.continuous.*;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.util.AIUtil;
+import top.leonx.vanity.util.GeneralFoodStats;
 
 import java.util.List;
 import java.util.Objects;
@@ -117,10 +118,11 @@ public class OutsiderTasks {
         utilitySelectTask.addChild((w,e,t)->{
             long time = w.getDayTime()%24000L;
             double timeNor=time/24000D;
-            return Math.max(0,timeNor-0.5);
+            return AIUtil.sigmod(timeNor,70.96d,42.58d);
         },new SleepTask<>());
         utilitySelectTask.addChild((w,e,t)->{
-            return 1-e.getFoodStats().getFoodLevel()/20D;
+            GeneralFoodStats<OutsiderEntity> foodStats = e.getFoodStats();
+            return AIUtil.sigmod(foodStats.getFoodLevel()/20d,-23.56, -17.4);
         },FEED_SELF);
 
         utilitySelectTask.addChild((w,e,t)->{

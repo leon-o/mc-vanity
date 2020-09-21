@@ -1,7 +1,7 @@
 package top.leonx.vanity.ai.tree.composite;
 
 import com.google.common.collect.HashMultimap;
-import javafx.util.Pair;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.server.ServerWorld;
@@ -11,6 +11,7 @@ import top.leonx.vanity.util.BinaryFunc;
 import top.leonx.vanity.util.TernaryFunc;
 
 import java.util.*;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 
@@ -78,16 +79,18 @@ public class UtilitySelectTask<T extends LivingEntity> extends CompositeTask<T> 
     }
 
     private void selectChildTask(ServerWorld worldIn, T entityIn, long executionDuration) {
-        List<BehaviorTreeTask<T>> sorted = getChildren().stream().sorted(Comparator.comparingDouble((BehaviorTreeTask<T> t) -> {
+        List<Pair<Double,BehaviorTreeTask<T>>> sorted = getChildren().stream().map((BehaviorTreeTask<T> t) -> {
             Double utilityScore = utilityCalculatorMap.getOrDefault(t, DUMMY_FUNC).compute(worldIn, entityIn, executionDuration);
             for (UtilityScoreDecoration decoration : utilityScoreDecorationMap.get(t)) {
                 utilityScore=decoration.decorate(utilityScore,this);
             }
 //            if (Objects.equals(currentTask, t)) utilityScore += inertiaUtilityIncrement.compute((double) executionDuration, (double) decayDuration);
-            return utilityScore;
-        }).reversed()).collect(Collectors.toList());
+            return new Pair<>(utilityScore,t);
+        }).sorted(Comparator.comparingDouble((ToDoubleFunction<Pair<Double, BehaviorTreeTask<T>>>) Pair::getFirst).reversed()).collect(Collectors.toList());
 
-        for (BehaviorTreeTask<T> task : sorted) {
+        for (Pair<Double,BehaviorTreeTask<T>> taskPair : sorted) {
+            BehaviorTreeTask<T> task=taskPair.getSecond();
+
             if (task.canStart(worldIn, entityIn, executionDuration)) {
                 if (currentTask != task || task.getResult() != Result.RUNNING) {
                     if (currentTask != null) currentTask.callForEnd(worldIn, entityIn, executionDuration);

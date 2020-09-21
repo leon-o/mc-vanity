@@ -845,7 +845,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     private void initBrain(Brain<OutsiderEntity> brain) {
         //float f = getFinalMoveSpeed();
-        brain.registerActivity(Activity.CORE, OutsiderTasks.protectPlayer());
+        brain.registerActivity(Activity.CORE, OutsiderTasks.daily());
         //brain.registerActivity(Activity.IDLE, ImmutableList.of(Pair.of(2, new FirstShuffledTask<>(ImmutableList.of(Pair.of(new WalkToTargetTask(200), 1), Pair.of(new FindWalkTargetTask(), 1))))));
 
 

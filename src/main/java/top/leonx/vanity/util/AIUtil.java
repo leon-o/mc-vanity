@@ -94,9 +94,12 @@ public class AIUtil {
         //return manager.getRecipes().stream().filter(t -> t.getRecipeOutput().equals(itemStack)).collect(Collectors.toList());
     }
 
-    public static double sigmod(double x,double scale,double bias)
+    /**
+     * 1/(1+exp(-a*x+b)
+     */
+    public static double sigmod(double x,double a,double b)
     {
-        return 1/(1+Math.exp(-x*scale+bias));
+        return 1/(1+Math.exp(-x*a+b));
     }
 
     public static double entityDangerousAssessment(LivingEntity target, LivingEntity owner)

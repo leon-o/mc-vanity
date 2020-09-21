@@ -19,7 +19,7 @@ public class AttackTargetTask extends BehaviorTreeTask<OutsiderEntity> {
 
     @Override
     public void onEnd(ServerWorld world, OutsiderEntity entity, long executionDuration) {
-
+        entity.getNavigator().clearPath();
         entity.setAttackTarget(null);
     }
 
@@ -42,7 +42,7 @@ public class AttackTargetTask extends BehaviorTreeTask<OutsiderEntity> {
         LivingEntity target = entity.getAttackTarget();
         if (target == null) return;
 
-        entity.getNavigator().tryMoveToEntityLiving(target, entity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+        entity.getNavigator().tryMoveToEntityLiving(target, 1);
         entity.getLookController().setLookPositionWithEntity(target, 30.0F, 30.0F);
         if (entity.canAttack(target) && entity.getAttackCoolingPercentage(1f)>=1) entity.interactionManager.attackLootAt();
 
