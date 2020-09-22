@@ -25,6 +25,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.PathNavigator;
@@ -43,6 +46,8 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.ai.OutsiderTasks;
+import top.leonx.vanity.bodypart.BodyPartStack;
+import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.container.OutsiderDialogContainer;
 import top.leonx.vanity.event.OutsiderEvent;
@@ -80,9 +85,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     public final OutsiderInventory inventory   = new OutsiderInventory(this);
 
-    public final OutsiderInteractionManager interactionManager=new OutsiderInteractionManager(this);
-
-    private final GeneralFoodStats<OutsiderEntity> foodStats       = new GeneralFoodStats<>();
+    public final     OutsiderInteractionManager       interactionManager =new OutsiderInteractionManager(this);
+    private static final DataParameter<BlockPos>      SPAWN_POS               = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.BLOCK_POS);
+    private final    GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>();
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
     private final CooldownTracker                  cooldownTracker = new CooldownTracker();
     private       ServerPlayerEntity               followedPlayer;
@@ -92,7 +97,22 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
         super(type, world);
         moveController = new OutsiderMovementController(this);
+    }
 
+    @Override
+    protected void registerData() {
+        super.registerData();
+        dataManager.register(SPAWN_POS,world.getSpawnPoint());
+    }
+
+    public void setSpawnPos(BlockPos pos)
+    {
+        dataManager.set(SPAWN_POS,pos);
+    }
+
+    public BlockPos getSpawnPos()
+    {
+        return dataManager.get(SPAWN_POS);
     }
 
     /**
@@ -873,6 +893,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     }
 
+    /**
+     * Spawn the sweep particles that sword created.
+     */
     protected void spawnSweepParticles() {
         double d0 = -MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F));
         double d1 = MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F));
@@ -885,10 +908,52 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.world.getProfiler().startSection("brain");
         this.getBrain().tick((ServerWorld) this.world, this);
         this.world.getProfiler().endSection();
-
-
-        super.updateAITasks();
     }
 
+    /**
+     * Handle death update and respawn the entity.
+     */
+    @Override
+    protected void onDeathUpdate() {
+        ++this.deathTime;
+        if (this.deathTime == 20) {
+            respawnEntity();
+            this.remove(true);
 
+            for(int i = 0; i < 20; ++i) {
+                double d0 = this.rand.nextGaussian() * 0.02D;
+                double d1 = this.rand.nextGaussian() * 0.02D;
+                double d2 = this.rand.nextGaussian() * 0.02D;
+                this.world.addParticle(ParticleTypes.POOF, this.getPosXRandom(1.0D), this.getPosYRandom(), this.getPosZRandom(1.0D), d0, d1, d2);
+            }
+        }
+    }
+
+    /**
+     * Spawn a duplicate entity in spawn point.
+     */
+    private void respawnEntity()
+    {
+        if(!world.isRemote())
+        {
+            OutsiderEntity outsiderEntity = ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get().create(world.getWorld());
+            if(outsiderEntity!=null)
+            {
+                //copy capabilities.
+                outsiderEntity.getCharacterState().setRoot(getCharacterState().getRoot().copy());
+                List<BodyPartStack> originalBodyParts = getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY).getItemStacksList();
+                BodyPartCapability.BodyPartData newBodyPartData = outsiderEntity.getCapability(ModCapabilityTypes.BODY_PART).orElse(new BodyPartCapability.BodyPartData());
+                newBodyPartData.getItemStacksList().addAll(originalBodyParts);
+                newBodyPartData.setNeedInit(false);
+
+
+                outsiderEntity.enablePersistence();
+                BlockPos spawnPos = getSpawnPos();
+                outsiderEntity.setLocationAndAngles((double)spawnPos.getX() + 0.5D, spawnPos.getY(), (double)spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+                outsiderEntity.onInitialSpawn(world, world.getDifficultyForLocation(spawnPos), SpawnReason.STRUCTURE, null, null);
+
+                world.addEntity(outsiderEntity);
+            }
+        }
+    }
 }
