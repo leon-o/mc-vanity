@@ -25,9 +25,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.PathNavigator;
@@ -81,12 +78,12 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
                                                                                                                              SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
                                                                                                                              SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR.get(),
-                                                                                                                             SensorType.VILLAGER_HOSTILES);
+                                                                                                                             ModSensorTypes.OUTSIDER_NEAREST_HOSTEL_SENSOR.get());
 
     public final OutsiderInventory inventory   = new OutsiderInventory(this);
 
     public final     OutsiderInteractionManager       interactionManager =new OutsiderInteractionManager(this);
-    private static final DataParameter<BlockPos>      SPAWN_POS               = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.BLOCK_POS);
+    //private static final DataParameter<BlockPos>      SPAWN_POS               = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.BLOCK_POS);
     private final    GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>();
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
     private final CooldownTracker                  cooldownTracker = new CooldownTracker();
@@ -99,7 +96,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         moveController = new OutsiderMovementController(this);
     }
 
-    @Override
+/*    @Override
     protected void registerData() {
         super.registerData();
         dataManager.register(SPAWN_POS,world.getSpawnPoint());
@@ -113,7 +110,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public BlockPos getSpawnPos()
     {
         return dataManager.get(SPAWN_POS);
-    }
+    }*/
 
     /**
      * Add the exhaustion of food Stats
@@ -948,7 +945,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
 
                 outsiderEntity.enablePersistence();
-                BlockPos spawnPos = getSpawnPos();
+                BlockPos spawnPos = getBedPosition().orElse(world.getSpawnPoint());
                 outsiderEntity.setLocationAndAngles((double)spawnPos.getX() + 0.5D, spawnPos.getY(), (double)spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
                 outsiderEntity.onInitialSpawn(world, world.getDifficultyForLocation(spawnPos), SpawnReason.STRUCTURE, null, null);
 
