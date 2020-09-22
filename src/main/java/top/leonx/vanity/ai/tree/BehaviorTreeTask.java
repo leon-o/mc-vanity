@@ -43,7 +43,11 @@ public abstract class BehaviorTreeTask<T extends LivingEntity> {
         else
             delayTicks--;
     }
-    protected void delay(int tick)
+
+    /**
+     * {@link BehaviorTreeTask#onUpdate(ServerWorld, LivingEntity, long)} won't be called until delay time ends
+     */
+    protected void setUpDelay(int tick)
     {
         delayTicks=tick;
     }

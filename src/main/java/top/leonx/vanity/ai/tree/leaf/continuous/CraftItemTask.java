@@ -82,7 +82,7 @@ public class CraftItemTask extends BehaviorTreeTask<OutsiderEntity> {
                 if(!startCrafting){
                     entity.swingArm(Hand.MAIN_HAND);
                     startCrafting=true;
-                    delay(20);
+                    setUpDelay(20);
                 }
 
                 craft(entity);

@@ -1,10 +1,8 @@
 package top.leonx.vanity.ai.tree.leaf.continuous;
 
-import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
-import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -42,7 +40,7 @@ public class SleepTask<T extends MobEntity> extends BehaviorTreeTask<T> {
 
                 if(!halt) //wait for 10 ticks
                 {
-                    delay(10);
+                    setUpDelay(10);
                     halt=true;
                 }else{
                     entity.swingArm(Hand.MAIN_HAND);

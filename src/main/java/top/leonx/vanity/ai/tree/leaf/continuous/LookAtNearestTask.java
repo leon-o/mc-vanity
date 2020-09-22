@@ -8,7 +8,7 @@ import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 
 import java.util.Optional;
 
-public class IdleTask<T extends MobEntity> extends BehaviorTreeTask<T> {
+public class LookAtNearestTask<T extends MobEntity> extends BehaviorTreeTask<T> {
 
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {

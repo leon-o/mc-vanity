@@ -13,6 +13,7 @@ public class SynchronousTask<T extends LivingEntity> extends CompositeTask<T> {
         super(name);
     }
 
+
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         for (BehaviorTreeTask<T> child : getChildren()) {

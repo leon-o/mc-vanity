@@ -80,7 +80,7 @@ public class CharacterState {
 
     public Gender getSexualOrientation() {
         String str = root.getString(Keys.SexualOrientation);
-        return Gender.valueOf(str);
+        return str.length()>0?Gender.valueOf(str):Gender.FEMALE;
     }
 
     public void setSexualOrientation(Gender gender) {

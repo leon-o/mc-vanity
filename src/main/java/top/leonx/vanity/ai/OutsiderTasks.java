@@ -12,10 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
-import top.leonx.vanity.ai.tree.composite.SelectorTask;
-import top.leonx.vanity.ai.tree.composite.SequencesTask;
-import top.leonx.vanity.ai.tree.composite.SynchronousTask;
-import top.leonx.vanity.ai.tree.composite.UtilitySelectTask;
+import top.leonx.vanity.ai.tree.composite.*;
 import top.leonx.vanity.ai.tree.leaf.continuous.*;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModEntityTypes;
@@ -31,9 +28,10 @@ public class OutsiderTasks {
     public static final BehaviorTreeTask<OutsiderEntity> EAT_FOOD_TASK =new EatFoodTask();
     public static final BehaviorTreeTask<OutsiderEntity> FIND_FOOD = findFood();
     public static final BehaviorTreeTask<OutsiderEntity> FEED_SELF=increaseSatiety();
-    public static final BehaviorTreeTask<OutsiderEntity> BATTLE=battle();
-    public static final BehaviorTreeTask<OutsiderEntity> IDLE=new IdleTask<>();
-    public static final BehaviorTreeTask<OutsiderEntity> SELF_PROTECTION=selfProtection();
+    public static final BehaviorTreeTask<OutsiderEntity> BATTLE          =battle();
+    public static final BehaviorTreeTask<OutsiderEntity> LOOK_NEAREST    =new LookAtNearestTask<>();
+    public static final BehaviorTreeTask<OutsiderEntity> SELF_PROTECTION =selfProtection();
+    public static final BehaviorTreeTask<OutsiderEntity> RANDOM_WALK=new RandomWalkTask<>();
 
     public static BehaviorTreeTask<OutsiderEntity> findFood()
     {
@@ -80,7 +78,7 @@ public class OutsiderTasks {
         UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Protect Player");
 
         //闲置
-        utilitySelectTask.addChild((w,e,t)->0.06,IDLE);
+        utilitySelectTask.addChild((w,e,t)->0.06, LOOK_NEAREST);
         //跟随玩家
         utilitySelectTask.addChild((w, e, t) ->e.getFollowedPlayer()==null?0:AIUtil.sigmod(e.getDistance(e.getFollowedPlayer()), 0.4, 5), new FollowEntityTask(OutsiderEntity::getFollowedPlayer));
         //战斗
@@ -113,13 +111,22 @@ public class OutsiderTasks {
     {
         //日常生活就是，吃饭、睡觉、打怪、发呆。
         UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Daily Life");
+        RandomSelectTask<OutsiderEntity>  idleTask        = new RandomSelectTask<>("Idle");
 
-        utilitySelectTask.addChild((w,e,t)->0.06,IDLE); //发呆
+//        SynchronousTask<OutsiderEntity> randomWalk = new SynchronousTask<>("Random Walk");
+//        randomWalk.addChild(LOOK_NEAREST);
+//        randomWalk.addChild(new RandomWalkTask<>());
+
+        idleTask.addChild( LOOK_NEAREST,100,200);
+        idleTask.addChild(new RandomWalkTask<>(), 40, 100);
+
+        utilitySelectTask.addChild((w,e,t)->0.06,idleTask); //发呆，闲逛
         utilitySelectTask.addChild((w,e,t)->{
             long time = w.getDayTime()%24000L;
             double timeNor=time/24000D;
             return AIUtil.sigmod(timeNor,70.96d,42.58d);
         },new SleepTask<>());
+
         utilitySelectTask.addChild((w,e,t)->{
             GeneralFoodStats<OutsiderEntity> foodStats = e.getFoodStats();
             return AIUtil.sigmod(foodStats.getFoodLevel()/20d,-23.56, -17.4);

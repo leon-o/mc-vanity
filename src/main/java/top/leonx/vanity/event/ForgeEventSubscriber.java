@@ -82,8 +82,6 @@ public class ForgeEventSubscriber {
         Entity       target = evt.getTarget();
         PlayerEntity player = evt.getPlayer();
         if (player instanceof ServerPlayerEntity && target instanceof LivingEntity) {
-            BlockPos     pos       = ((ServerPlayerEntity) player).getServerWorld().findNearestStructure("test", player.getPosition(), 100, false);
-            System.out.println(pos);
             LivingEntity livingBase = (LivingEntity) target;
             if (BodyPartUtil.hasBodyPart(livingBase)) {
                 BodyPartCapability.BodyPartData bodyPartData = livingBase.getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY);
