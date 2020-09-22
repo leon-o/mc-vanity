@@ -2,6 +2,8 @@ package top.leonx.vanity.event;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -44,6 +46,13 @@ public class ForgeEventSubscriber {
     public static void onEntitySpawn(final EntityJoinWorldEvent event) {
         if (event.getWorld().isRemote) return;
         if (event.getEntity() instanceof LivingEntity) {
+
+            if(event.getEntity() instanceof MobEntity)
+            {
+                MobEntity mobEntity = (MobEntity) event.getEntity();
+                mobEntity.targetSelector.addGoal(2,new NearestAttackableTargetGoal<>(mobEntity,OutsiderEntity.class,true));
+            }
+
             LivingEntity livingEntity = (LivingEntity) event.getEntity();
             if(CharacterStateUtil.hasCharacterState(livingEntity))
             {

@@ -46,7 +46,6 @@ public class ModEventSubscriber {
         VanityEquipDataSynchronizer.register();
         CharacterDataSynchronizer.register();
         PlayerSimulator.register();
-
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPostRegisterBiome(final RegistryEvent.Register<Biome> event) {

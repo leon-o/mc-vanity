@@ -9,6 +9,7 @@ import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -104,6 +105,10 @@ public class OutsiderMovementController extends MovementController {
                     Direction.Axis.Y) + (double) blockpos.getY() && !block.isIn(BlockTags.DOORS) && !block.isIn(BlockTags.FENCES)) {
                 this.mob.getJumpController().setJumping();
                 this.action = MovementController.Action.JUMPING;
+            }
+            if (mob.areEyesInFluid(FluidTags.WATER, true)) {
+                //noinspection deprecation
+                entity.setMoveVertical(entity.moveVertical+1f);
             }
 //                if (mob.onGround) {
 //                    this.mob.getJumpController().setJumping();
