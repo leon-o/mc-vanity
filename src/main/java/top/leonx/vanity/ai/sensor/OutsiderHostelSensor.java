@@ -19,13 +19,13 @@ public class OutsiderHostelSensor extends Sensor<OutsiderEntity> {
         {
             List<LivingEntity> visibleMobs=visibleMobsOpt.get();
             PlayerEntity       followedPlayer = entityIn.getFollowedPlayer();
-            Optional<LivingEntity> nearestHostle = visibleMobs.stream().filter(t ->
+            Optional<LivingEntity> nearestHostel = visibleMobs.stream().filter(t ->
 
                 followedPlayer != null && (Objects.equals(t.getAttackingEntity(), followedPlayer) || (t instanceof MobEntity && Objects.equals(((MobEntity) t).getAttackTarget(),followedPlayer)))
                         || (Objects.equals( t.getAttackingEntity(), entityIn) || (t instanceof MobEntity && Objects.equals(((MobEntity) t).getAttackTarget(), entityIn)))
 
             ).min(Comparator.comparingDouble(entityIn::getDistanceSq));
-            entityIn.getBrain().setMemory(MemoryModuleType.NEAREST_HOSTILE,nearestHostle);
+            entityIn.getBrain().setMemory(MemoryModuleType.NEAREST_HOSTILE,nearestHostel);
         }
     }
 
