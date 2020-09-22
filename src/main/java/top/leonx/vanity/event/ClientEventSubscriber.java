@@ -48,8 +48,6 @@ public class ClientEventSubscriber {
 
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get(), OutsiderRenderer::new);
 
-        //event.getMinecraftSupplier().get().particles.registerFactory(ModParticleTypes.GREEN_HEART, HeartParticle.Factory::new);
-        //ClientRegistry.bindTileEntityRenderer(ModTileEntityType.TERRITORY_TILE_ENTITY, TerritoryTableTileEntityRenderer::new);
     }
 
     @SubscribeEvent

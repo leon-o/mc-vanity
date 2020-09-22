@@ -2,6 +2,7 @@ package top.leonx.vanity.event;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.Vec3d;
@@ -11,7 +12,9 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import top.leonx.vanity.VanityMod;
+import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModParticleTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.util.AIUtil;
@@ -67,16 +70,23 @@ public class OutsiderEventSubscriber {
                 outsiderEntity.getCharacterState().promoteRelationWith(throwerId, relaIncrease);
                 modified=true;
             }
+            PlayerEntity player=outsiderEntity.world.getPlayerByUuid(throwerId);
 
-            float loveIncrease=(float) (0.02 * AIUtil.getLoveValue(itemStack) * itemStack.getCount());
-            if(loveIncrease!=0)
+            float loveIncrease=0;
+            if(player!=null &&player.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY).getGender().equals(outsiderEntity.getCharacterState().getSexualOrientation()))
             {
-                outsiderEntity.getCharacterState().promoteLoveWith(throwerId, loveIncrease);
-                modified=true;
+                loveIncrease=(float) (0.02 * AIUtil.getLoveValue(itemStack) * itemStack.getCount());
+
+                if(loveIncrease!=0)
+                {
+                    outsiderEntity.getCharacterState().promoteLoveWith(throwerId, loveIncrease);
+                    modified=true;
+                }
             }
+
             if(!outsiderEntity.world.isRemote())
             {
-                Vec3d pos = outsiderEntity.getEyePosition(1f);
+                //Vec3d pos = outsiderEntity.getEyePosition(1f);
                 for (int i = 0; i < relaIncrease; i++) {
                     ((ServerWorld) outsiderEntity.world).spawnParticle(ModParticleTypes.GREEN_HEART.get(), outsiderEntity.getPosXRandom(1), outsiderEntity.getPosYRandom()+1 ,
                                                                        outsiderEntity.getPosZRandom(1), 1, 0,
