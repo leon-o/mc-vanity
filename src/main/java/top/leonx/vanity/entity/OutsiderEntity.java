@@ -25,6 +25,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.PathNavigator;
@@ -37,6 +40,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -51,13 +55,11 @@ import top.leonx.vanity.event.OutsiderEvent;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
-import top.leonx.vanity.util.GeneralFoodStats;
-import top.leonx.vanity.util.OutsiderInventory;
-import top.leonx.vanity.util.PlayerSimPathNavigator;
-import top.leonx.vanity.util.PlayerSimulator;
+import top.leonx.vanity.util.*;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -88,28 +90,31 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
     private final CooldownTracker                  cooldownTracker = new CooldownTracker();
     private       ServerPlayerEntity               followedPlayer;
-    private       CharacterState                   characterState;
+    private       CharacterState  characterState;
+    //private DataParameter<String> NAME = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.STRING);
 
     //public final  OutsiderContainer container;
-    public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
-        super(type, world);
+
+    public OutsiderEntity(EntityType<OutsiderEntity> type, World world)
+    {
+        super(type,world);
         moveController = new OutsiderMovementController(this);
     }
 
-/*    @Override
+    /*    @Override
     protected void registerData() {
         super.registerData();
-        dataManager.register(SPAWN_POS,world.getSpawnPoint());
+        dataManager.register(NAME, "Nobody");
     }
 
-    public void setSpawnPos(BlockPos pos)
+    public void setName(String name)
     {
-        dataManager.set(SPAWN_POS,pos);
+        dataManager.set(NAME,name);
     }
 
-    public BlockPos getSpawnPos()
-    {
-        return dataManager.get(SPAWN_POS);
+    @Override
+    public ITextComponent getName() {
+        return super.getName();
     }*/
 
     /**
@@ -943,7 +948,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 newBodyPartData.getItemStacksList().addAll(originalBodyParts);
                 newBodyPartData.setNeedInit(false);
 
-
+                outsiderEntity.setCustomName(this.getCustomName());
                 outsiderEntity.enablePersistence();
                 BlockPos spawnPos = getBedPosition().orElse(world.getSpawnPoint());
                 outsiderEntity.setLocationAndAngles((double)spawnPos.getX() + 0.5D, spawnPos.getY(), (double)spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
@@ -952,5 +957,12 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 world.addEntity(outsiderEntity);
             }
         }
+    }
+
+    @Override
+    public void setRevengeTarget(@Nullable LivingEntity livingBase) {
+        if(livingBase instanceof MobEntity && !Objects.equals(((MobEntity) livingBase).getAttackTarget(), this))
+            return; //I know you didn't mean it.
+        super.setRevengeTarget(livingBase);
     }
 }
