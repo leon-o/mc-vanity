@@ -11,10 +11,13 @@ public abstract class BehaviorTreeTask<T extends LivingEntity> {
     public Result getResult() {
         return result;
     }
+    private final String name = getClass().getName();
     public String getTaskName()
     {
-        return this.getClass().getName();
+        return name;
     }
+
+
     protected void submitResult(Result result) {
         this.result = result;
     }

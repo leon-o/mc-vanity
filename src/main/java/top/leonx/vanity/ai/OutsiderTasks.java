@@ -216,8 +216,22 @@ public class OutsiderTasks {
 
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> debug()
     {
-        BehaviorTreeRootTask<OutsiderEntity> rootTask=new BehaviorTreeRootTask<>();
-        rootTask.child=new BreakBlockTask();//new CraftItemTask(t->new ItemStack(Items.OAK_STAIRS),false);
-        return ImmutableList.of(new Pair<>(1, rootTask));
+        @SuppressWarnings("unchecked")
+        BehaviorTreeTask<OutsiderEntity> build = ScriptBuilder.<OutsiderEntity>start("DEBUG")
+            .sync("Heal while running",
+                t -> t.then(new EscapeFromTask<>()),
+                t -> t.utilitySelect("heal_self",
+                    p->{p.tryEach("use_potion_then_eat",
+                        q-> q.then(new UsePotionTask(e->e)),
+                        q-> q.then(FEED_SELF)
+                        );
+                        return (w,e,time)->AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -15, -5);
+                    },
+                    p->{p.tryEach("eat_then_use_potion",
+                        q->q.then(FEED_SELF),q->q.then(new UsePotionTask(e->e)));
+                        return (w,e,time)->e.getFoodStats().needFood()?0.8:0 * AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5);
+                    }))
+                .build();
+        return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(build)));
     }
 }
