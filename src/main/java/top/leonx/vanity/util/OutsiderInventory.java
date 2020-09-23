@@ -310,7 +310,7 @@ public class OutsiderInventory implements IInventory, INameable {
         } else return false;
     }
 
-    public ItemStack findItemStack(Predicate<ItemStack> predicate, Comparator<ItemStack> comparator) {
+    public ItemStack findItemStack(@Nonnull Predicate<ItemStack> predicate,@Nonnull Comparator<ItemStack> comparator) {
         Optional<ItemStack> max = allInventories.stream().flatMap(Collection::stream).filter(predicate).max(comparator);
         return max.orElse(ItemStack.EMPTY);
     }

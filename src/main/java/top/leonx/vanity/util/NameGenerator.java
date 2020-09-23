@@ -8,7 +8,7 @@ public class NameGenerator {
             "Wi","Su","Ni"
     };
     public static final String[] part2={
-            "ir","lan","bin","ba","li","an","on","mon","son","can","con"
+            "ir","lan","bin","ba","rn","an","on","mon","son","can","con"
     };
     public static final String[] part3={
             "ly","da","tron","er","na","hub","ge","lian"

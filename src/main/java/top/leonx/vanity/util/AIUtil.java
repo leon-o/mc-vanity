@@ -162,34 +162,39 @@ public class AIUtil {
     @SuppressWarnings("DuplicatedCode")
     public static double getModifiedAttackDamage(double baseValue, LivingEntity targetEntity, ItemStack stack)
     {
-        double oBaseValue=baseValue;
         Multimap<String, AttributeModifier> attributeModifiers = stack.getItem().getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
         Collection<AttributeModifier>       damageModifier = attributeModifiers.get(SharedMonsterAttributes.ATTACK_DAMAGE.getName());
-        for (AttributeModifier attributeModifier : damageModifier) {
-            AttributeModifier.Operation operation = attributeModifier.getOperation();
-            if(operation.equals(AttributeModifier.Operation.ADDITION))
-            {
-                baseValue+=attributeModifier.getAmount();
-            }else if(operation.equals(AttributeModifier.Operation.MULTIPLY_BASE))
-            {
-                baseValue+=oBaseValue*attributeModifier.getAmount();
-            }else {
-                baseValue*=attributeModifier.getAmount();
-            }
-        }
-        if(targetEntity!=null)
-            baseValue+=EnchantmentHelper.getModifierForCreature(stack, targetEntity.getCreatureAttribute());
 
-        return baseValue;
+        return getModifyAttributeValue(baseValue,damageModifier);
     }
 
     @SuppressWarnings("DuplicatedCode")
     public static double getModifiedAttackSpeed(double baseValue, ItemStack stack)
     {
-        double oBaseValue=baseValue;
         Multimap<String, AttributeModifier> attributeModifiers = stack.getItem().getAttributeModifiers(EquipmentSlotType.MAINHAND, stack);
-        Collection<AttributeModifier>       damageModifier = attributeModifiers.get(SharedMonsterAttributes.ATTACK_SPEED.getName());
-        for (AttributeModifier attributeModifier : damageModifier) {
+        Collection<AttributeModifier>       speedModifier = attributeModifiers.get(SharedMonsterAttributes.ATTACK_SPEED.getName());
+
+        return getModifyAttributeValue(baseValue,speedModifier);
+    }
+
+    public static double getModifiedArmor(double baseValue,ItemStack stack)
+    {
+        Multimap<String, AttributeModifier> attributeModifiers = stack.getItem().getAttributeModifiers(MobEntity.getSlotForItemStack(stack), stack);
+        Collection<AttributeModifier>       armorModifiers = attributeModifiers.get(SharedMonsterAttributes.ARMOR.getName());
+        return getModifyAttributeValue(baseValue,armorModifiers);
+    }
+
+    public static double getModifiedArmorToughness(double baseValue,ItemStack stack)
+    {
+        Multimap<String, AttributeModifier> attributeModifiers = stack.getItem().getAttributeModifiers(MobEntity.getSlotForItemStack(stack), stack);
+        Collection<AttributeModifier>       modifiers = attributeModifiers.get(SharedMonsterAttributes.ARMOR_TOUGHNESS.getName());
+        return getModifyAttributeValue(baseValue,modifiers);
+    }
+
+    public static double getModifyAttributeValue(double baseValue,Collection<AttributeModifier> modifiers)
+    {
+        double oBaseValue=baseValue;
+        for (AttributeModifier attributeModifier : modifiers) {
             AttributeModifier.Operation operation = attributeModifier.getOperation();
             if(operation.equals(AttributeModifier.Operation.ADDITION))
             {

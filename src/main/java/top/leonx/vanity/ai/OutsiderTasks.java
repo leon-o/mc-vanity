@@ -157,7 +157,8 @@ public class OutsiderTasks {
 
         return killForItemTask;
     }
-    private static UtilitySelectTask<OutsiderEntity> battle() {
+    private static SequencesTask<OutsiderEntity> battle() {
+        SequencesTask<OutsiderEntity> equipArmorThenBattle=new SequencesTask<>("Equip Then Battle");
         UtilitySelectTask<OutsiderEntity> battleTask = new UtilitySelectTask<>("Battle");
         battleTask.addChild((w, e, t) -> {
             return (double) (e.getHealth() / e.getMaxHealth()); //生命越多越勇
@@ -170,7 +171,9 @@ public class OutsiderTasks {
             return 0d;
         }, new DefendWithShieldTask());
 
-        return battleTask;
+        equipArmorThenBattle.addChild(new EquipArmorTask());
+        equipArmorThenBattle.addChild(battleTask);
+        return equipArmorThenBattle;
     }
 
     private static Pair<Integer, Task<LivingEntity>> lookAtMany() {

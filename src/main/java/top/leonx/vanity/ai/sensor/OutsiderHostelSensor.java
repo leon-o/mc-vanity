@@ -5,6 +5,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.Sensor;
+import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.entity.OutsiderEntity;
@@ -20,7 +21,7 @@ public class OutsiderHostelSensor extends Sensor<OutsiderEntity> {
             List<LivingEntity> visibleMobs=visibleMobsOpt.get();
             PlayerEntity       followedPlayer = entityIn.getFollowedPlayer();
             Optional<LivingEntity> nearestHostel = visibleMobs.stream().filter(t ->
-
+                t instanceof MonsterEntity||
                 followedPlayer != null && (Objects.equals(t.getAttackingEntity(), followedPlayer) || (t instanceof MobEntity && Objects.equals(((MobEntity) t).getAttackTarget(),followedPlayer)))
                         || (Objects.equals( t.getAttackingEntity(), entityIn) || (t instanceof MobEntity && Objects.equals(((MobEntity) t).getAttackTarget(), entityIn)))
 

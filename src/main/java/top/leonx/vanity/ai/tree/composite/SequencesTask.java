@@ -24,7 +24,7 @@ public class SequencesTask<T extends LivingEntity> extends CompositeTask<T> {
     @Override
     protected void onStart(ServerWorld world, T entity, long executionDuration) {
         runningPointer=0;
-        allSuccess=false;
+        allSuccess=true;
         if(getChildren().size()>0){
             runningTask=getChildren().get(runningPointer);
             runningTask.callForStart(world,entity,executionDuration);

@@ -21,6 +21,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
@@ -566,6 +567,15 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             return slotIn.getSlotType() == EquipmentSlotType.Group.ARMOR ? this.inventory.armorInventory.get(slotIn.getIndex()) : ItemStack.EMPTY;
         }
     }
+    public void EquipItem(EquipmentSlotType slotIn,ItemStack stack)
+    {
+        setItemStackToSlot(slotIn,stack.copy());
+        stack.setCount(0);
+    }
+
+    protected void damageArmor(float damage) {
+        this.inventory.damageArmor(damage);
+    }
 
     @Override
     public HandSide getPrimaryHand() {
@@ -947,6 +957,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 BodyPartCapability.BodyPartData newBodyPartData = outsiderEntity.getCapability(ModCapabilityTypes.BODY_PART).orElse(new BodyPartCapability.BodyPartData());
                 newBodyPartData.getItemStacksList().addAll(originalBodyParts);
                 newBodyPartData.setNeedInit(false);
+
+                if(world.getGameRules().get(GameRules.KEEP_INVENTORY).get())
+                    outsiderEntity.inventory.copyInventory(this.inventory);
 
                 outsiderEntity.setCustomName(this.getCustomName());
                 outsiderEntity.enablePersistence();
