@@ -4,6 +4,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
@@ -39,14 +40,16 @@ public class PickItemTask<T extends OutsiderEntity> extends BehaviorTreeTask<T> 
     @Override
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
         if(targetEntity==null) {submitResult(Result.FAIL); return;}
-        entity.getNavigator().tryMoveToEntityLiving(targetEntity,1);
+        entity.getLookController().setLookPositionWithEntity(targetEntity,30,30);
+        entity.getNavigator().tryMoveToEntityLiving(targetEntity, MathHelper.clamp(entity.getDistance(targetEntity)+0.5,0,2)/2);
         if(!targetEntity.isAlive())
             submitResult(Result.SUCCESS);
-        //todo 如何判断是否捡到了呢
     }
 
     @Override
     protected void onEnd(ServerWorld world, T entity, long executionDuration) {
         entity.getNavigator().clearPath();
+        //noinspection deprecation
+        entity.setAIMoveSpeed(0);
     }
 }

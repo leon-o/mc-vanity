@@ -44,7 +44,7 @@ public class AttackTargetTask extends BehaviorTreeTask<OutsiderEntity> {
 
         entity.getNavigator().tryMoveToEntityLiving(target, 1);
         entity.getLookController().setLookPositionWithEntity(target, 30.0F, 30.0F);
-        if (entity.canAttack(target) && entity.getAttackCoolingPercentage(1f)>=1) entity.interactionManager.attackLootAt();
+        if (entity.canAttack(target) && entity.getAttackCoolingPercentage(0f)>=1) entity.interactionManager.attackLootAt();
 
         if (!entity.getAttackTarget().isAlive()) {
             submitResult(Result.SUCCESS);
