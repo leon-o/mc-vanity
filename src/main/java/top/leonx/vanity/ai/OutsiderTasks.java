@@ -25,13 +25,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 public class OutsiderTasks {
-    public static final BehaviorTreeTask<OutsiderEntity> EAT_FOOD_TASK =new EatFoodTask();
-    public static final BehaviorTreeTask<OutsiderEntity> FIND_FOOD = findFood();
-    public static final BehaviorTreeTask<OutsiderEntity> FEED_SELF=increaseSatiety();
-    public static final BehaviorTreeTask<OutsiderEntity> BATTLE          =battle();
-    public static final BehaviorTreeTask<OutsiderEntity> LOOK_NEAREST    =new LookAtNearestTask<>();
-    public static final BehaviorTreeTask<OutsiderEntity> SELF_PROTECTION =selfProtection();
-    public static final BehaviorTreeTask<OutsiderEntity> RANDOM_WALK=new RandomWalkTask<>();
 
     public static BehaviorTreeTask<OutsiderEntity> findFood()
     {
@@ -57,11 +50,11 @@ public class OutsiderTasks {
 
     public static SelectorTask<OutsiderEntity> increaseSatiety() {
         SelectorTask<OutsiderEntity> feedSelfTask = new SelectorTask<>("Feed Self");
-        feedSelfTask.addChild(EAT_FOOD_TASK); //从背包里找食物吃
+        feedSelfTask.addChild(new EatFoodTask()); //从背包里找食物吃
 
         SequencesTask<OutsiderEntity> findFoodThenEatTask = new SequencesTask<>("Find Food Then Eat");
-        findFoodThenEatTask.addChild(FIND_FOOD);
-        findFoodThenEatTask.addChild(EAT_FOOD_TASK);
+        findFoodThenEatTask.addChild(findFood());
+        findFoodThenEatTask.addChild(new EatFoodTask());
 
         feedSelfTask.addChild(findFoodThenEatTask); //背包里没有就要去找
 
@@ -74,15 +67,16 @@ public class OutsiderTasks {
                                 Pair.of(3, new FindWalkTargetTask(f, 2, 2)), lookAtPlayerOrVillager());
     }
 
+
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> protectPlayer() {
         UtilitySelectTask<OutsiderEntity> utilitySelectTask = new UtilitySelectTask<>("Protect Player");
 
         //闲置
-        utilitySelectTask.addChild((w,e,t)->0.06, LOOK_NEAREST);
+        utilitySelectTask.addChild((w,e,t)->0.06, new LookAtNearestTask<>());
         //跟随玩家
         utilitySelectTask.addChild((w, e, t) ->e.getFollowedPlayer()==null?0:AIUtil.sigmod(e.getDistance(e.getFollowedPlayer()), 0.4, 5), new FollowEntityTask(OutsiderEntity::getFollowedPlayer));
         //战斗
-        utilitySelectTask.addChild((w, e, t) -> {
+        utilitySelectTask.addChild(( w, e, t) -> {
             Optional<List<LivingEntity>> visibleMobsOptional = e.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
             if (visibleMobsOptional.isPresent()) { //存在威胁者，效用值为0.5否则为0
                 List<LivingEntity> visibleMobs = visibleMobsOptional.get();
@@ -91,7 +85,7 @@ public class OutsiderTasks {
 
                 return hasMenace ? 0.5d : 0d;
             } else return 0d;
-        }, BATTLE);
+        }, battle());
 
         //当不在战斗状态，并且饿了，就吃点东西
         utilitySelectTask.addChild((ServerWorld w, OutsiderEntity e, Long t)->{
@@ -99,7 +93,7 @@ public class OutsiderTasks {
                 return 0.4d;
             else
                 return 0d;
-        },FEED_SELF);
+        },increaseSatiety());
 
         //自我保护
         utilitySelectTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), selfProtection());
@@ -117,7 +111,7 @@ public class OutsiderTasks {
 //        randomWalk.addChild(LOOK_NEAREST);
 //        randomWalk.addChild(new RandomWalkTask<>());
 
-        idleTask.addChild( LOOK_NEAREST,100,200);
+        idleTask.addChild(new LookAtNearestTask<>(),100,200);
         idleTask.addChild(new RandomWalkTask<>(), 40, 100);
 
         utilitySelectTask.addChild((w,e,t)->0.06,idleTask); //发呆，闲逛
@@ -130,21 +124,21 @@ public class OutsiderTasks {
         utilitySelectTask.addChild((w,e,t)->{
             GeneralFoodStats<OutsiderEntity> foodStats = e.getFoodStats();
             return AIUtil.sigmod(foodStats.getFoodLevel()/20d,-23.56, -17.4);
-        },FEED_SELF);
+        },increaseSatiety());
 
         utilitySelectTask.addChild((w,e,t)->{
             Optional<LivingEntity> nearestHostile = e.getBrain().getMemory(MemoryModuleType.NEAREST_HOSTILE);
             if(nearestHostile.isPresent())
                 return (double) (e.getHealth() / e.getMaxHealth());
             return 0d;
-        },BATTLE);
+        },battle());
 
         utilitySelectTask.addChild((w,e,t)->{
             Optional<LivingEntity> nearestHostile = e.getBrain().getMemory(MemoryModuleType.NEAREST_HOSTILE);
             if(nearestHostile.isPresent())
                 return (double) 1-(e.getHealth() / e.getMaxHealth()); //reverse with battle
             return 0d;
-        },SELF_PROTECTION);
+        },selfProtection());
 
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
@@ -166,13 +160,13 @@ public class OutsiderTasks {
     private static UtilitySelectTask<OutsiderEntity> battle() {
         UtilitySelectTask<OutsiderEntity> battleTask = new UtilitySelectTask<>("Battle");
         battleTask.addChild((w, e, t) -> {
-            if (e.getAttackTarget() == null) return 0d;
             return (double) (e.getHealth() / e.getMaxHealth()); //生命越多越勇
-        }, new AttackTargetTask(AIUtil::getMostDangerousEntityNear));
+        }, new AttackTargetTask(t->t.getBrain().getMemory(MemoryModuleType.NEAREST_HOSTILE).orElse(null)));
 
         battleTask.addChild((w, e, t) -> {
             Optional<LivingEntity> hurtBy = e.getBrain().getMemory(MemoryModuleType.HURT_BY_ENTITY);
-            if (hurtBy.isPresent()) return 1d - e.getHealth() / e.getMaxHealth();
+            if (hurtBy.isPresent())
+                return 1d - e.getHealth() / e.getMaxHealth();
             return 0d;
         }, new DefendWithShieldTask());
 
@@ -223,12 +217,12 @@ public class OutsiderTasks {
                 t -> t.utilitySelect("heal_self",
                     p->{p.tryEach("use_potion_then_eat",
                         q-> q.then(new UsePotionTask(e->e)),
-                        q-> q.then(FEED_SELF)
+                        q-> q.then(increaseSatiety())
                         );
                         return (w,e,time)->AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -15, -5);
                     },
                     p->{p.tryEach("eat_then_use_potion",
-                        q->q.then(FEED_SELF),q->q.then(new UsePotionTask(e->e)));
+                        q->q.then(increaseSatiety()),q->q.then(new UsePotionTask(e->e)));
                         return (w,e,time)->e.getFoodStats().needFood()?0.8:0 * AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5);
                     }))
                 .build();
