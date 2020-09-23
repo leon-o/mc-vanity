@@ -5,11 +5,13 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
+import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -29,6 +31,7 @@ import top.leonx.vanity.network.VanityEquipDataSynchronizer;
 import top.leonx.vanity.util.BodyPartUtil;
 import top.leonx.vanity.bodypart.BodyPartGroup;
 import top.leonx.vanity.util.CharacterStateUtil;
+import top.leonx.vanity.util.NameGenerator;
 
 @Mod.EventBusSubscriber(modid = VanityMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEventSubscriber {
@@ -44,10 +47,17 @@ public class ForgeEventSubscriber {
 
     @SubscribeEvent
     public static void onEntitySpawn(final EntityJoinWorldEvent event) {
+
         if (event.getWorld().isRemote) return;
+
+        if(event.getEntity() instanceof OutsiderEntity && !event.getEntity().hasCustomName())
+        {
+            event.getEntity().setCustomName(new StringTextComponent(NameGenerator.getRandomName(event.getWorld().rand)));
+        }
+
         if (event.getEntity() instanceof LivingEntity) {
 
-            if(event.getEntity() instanceof MobEntity)
+            if(event.getEntity() instanceof MonsterEntity)
             {
                 MobEntity mobEntity = (MobEntity) event.getEntity();
                 mobEntity.targetSelector.addGoal(2,new NearestAttackableTargetGoal<>(mobEntity,OutsiderEntity.class,true));
