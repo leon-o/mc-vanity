@@ -2,6 +2,7 @@ package top.leonx.vanity.client.screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -10,6 +11,7 @@ import top.leonx.vanity.client.gui.Label;
 import top.leonx.vanity.client.gui.dialog.DialogButton;
 import top.leonx.vanity.client.gui.dialog.ProcessBar;
 import top.leonx.vanity.container.OutsiderDialogContainer;
+import top.leonx.vanity.entity.OutsiderRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,32 +41,7 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         dialogPanelLeft =infoPanelLeft+infoPanelWidth;
         dialogPanelTop =height-dialogPanelHeight-16;
         dialogPanelBottom = dialogPanelTop +dialogPanelHeight;
-        dialogButtons.clear();
-
-        int dialogButtonStartX= dialogPanelLeft +4;
-        int dialogButtonWidth=64;
-        int dialogButtonMargin=2;
-        for (int i = 0; i < 4; i++) {
-            DialogButton dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 32,"",null);
-            dialogButtons.add(dialogButton);
-            this.addButton(dialogButton);
-        }
-        dialogButtons.get(0).setMessage(Objects.equals(container.outsider.getFollowedPlayerUUID(), container.getPlayer().getUniqueID())?"Disband":"Follow me");
-        dialogButtons.get(0).onPress=(s)->{
-            boolean followed =Objects.equals(container.outsider.getFollowedPlayerUUID(), container.getPlayer().getUniqueID());
-            if(followed)
-            {
-                container.requestOperation(OutsiderDialogContainer.DISBAND);
-                s.setMessage("Follow me");
-            }else{
-                container.requestOperation(OutsiderDialogContainer.FOLLOW_ME);
-                s.setMessage("Disband");
-            }
-        };
-
-        dialogButtons.get(1).setMessage("INVENTORY");
-        dialogButtons.get(1).onPress=(s)-> container.requestOperation(OutsiderDialogContainer.OPEN_INVENTORY);
-
+        updateDialogButtons();
         addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+4,infoPanelTop+4));
         addLabel(new Label("Relationship").setXY(infoPanelLeft+4,infoPanelTop+24));
         relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5).setMaxValue(30f);
@@ -83,7 +60,28 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         blit(infoPanelLeft,infoPanelTop,0,160,infoPanelWidth,infoPanelHeight);
         blit(dialogPanelLeft, dialogPanelTop, 0, 0, dialogPanelWidth, dialogPanelHeight);
     }
+    private int dialogButtonPage=0;
+    private void updateDialogButtons()
+    {
+        buttons.removeAll(dialogButtons);
+        dialogButtons.clear();
 
+        final int dialogButtonStartX= dialogPanelLeft +4;
+        final int dialogButtonWidth=64;
+        final int dialogButtonMargin=2;
+        final int buttonNumPerPage=3;
+
+        for (int i = dialogButtonPage*buttonNumPerPage;
+             i < Math.min(container.availableRequests.size(),(dialogButtonPage+1)*buttonNumPerPage);
+             i++) {
+
+            DialogButton dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 32,"",null);
+            OutsiderRequest request = container.availableRequests.get(i);
+            dialogButton.setMessage(I18n.format(request.getTranslateKey()));
+            dialogButton.onPress=e->container.requestOperation(request);
+            dialogButtons.add(dialogButton);
+        }
+    }
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
         super.render(mouseX, mouseY, partialTicks);

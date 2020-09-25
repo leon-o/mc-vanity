@@ -24,6 +24,11 @@ public class LookTurnToTask<T extends MobEntity> extends BehaviorTreeTask<T> {
     @Override
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
         Vec3d targetPos = targetPosGetter.apply(entity);
+        if(targetPos==null)
+        {
+            submitResult(Result.FAIL);
+            return;
+        }
         entity.getLookController().setLookPosition(targetPos);
         Vec3d targetLookVec = targetPos.add(entity.getEyePosition(1F).inverse());
         if(targetLookVec.dotProduct(entity.getLookVec())<1E-2)

@@ -6,23 +6,20 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.NetworkEvent;
-import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.entity.OutsiderRequest;
 import top.leonx.vanity.init.ModContainerTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class OutsiderDialogContainer extends Container {
     static {
@@ -34,26 +31,7 @@ public class OutsiderDialogContainer extends Container {
     public PlayerEntity getPlayer() {
         return player;
     }
-
-    public static final Operation FOLLOW_ME = Operation.create(container -> {
-        if (container.player instanceof ServerPlayerEntity) container.outsider.setFollowedPlayer((ServerPlayerEntity) container.player);
-    });
-
-    public static final Operation DISBAND=Operation.create(container-> container.outsider.setFollowedPlayer(null));
-    public static final Operation OPEN_INVENTORY=Operation.create(container->{
-        INamedContainerProvider provider = new INamedContainerProvider() {
-            @Override
-            public ITextComponent getDisplayName() {
-                return container.outsider.getDisplayName();
-            }
-
-            @Override
-            public Container createMenu(int id, @Nonnull PlayerInventory inventory,@Nonnull PlayerEntity player) {
-                return new OutsiderInventoryContainer(id,inventory,container.outsider);
-            }
-        };
-        NetworkHooks.openGui((ServerPlayerEntity) container.player, provider, t->t.writeInt(container.outsider.getEntityId()));
-    });
+    public List<OutsiderRequest> availableRequests;
     public OutsiderDialogContainer(int windowId, PlayerInventory inv, PacketBuffer data) {
         this(windowId,inv,readOutsiderFromBuffer(data));
     }
@@ -62,6 +40,7 @@ public class OutsiderDialogContainer extends Container {
         super(ModContainerTypes.OUTSIDER_DIALOG.get(), windowId);
         this.outsider = entity;
         player = inv.player;
+        updateAvailableRequest();
     }
     private static OutsiderEntity readOutsiderFromBuffer(PacketBuffer data)
     {
@@ -72,6 +51,11 @@ public class OutsiderDialogContainer extends Container {
 
         return null;
     }
+
+    public void updateAvailableRequest()
+    {
+        availableRequests =OutsiderRequest.getOperations().stream().filter(t->t.canExecute(player, outsider)).collect(Collectors.toList());
+    }
     private static void handler(OperationMsg msg, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
@@ -79,7 +63,7 @@ public class OutsiderDialogContainer extends Container {
             if (sender == null) return;
             if (sender.openContainer instanceof OutsiderDialogContainer) {
                 OutsiderDialogContainer container = (OutsiderDialogContainer) sender.openContainer;
-                Operation.getOperation(msg.opCode).execute.accept(container);
+                OutsiderRequest.getRequest(msg.name).Execute(container.player, container.outsider);
                 CharacterDataSynchronizer.UpdateDataToTracking(container.outsider,container.outsider.getCharacterState());
             }
         });
@@ -98,49 +82,29 @@ public class OutsiderDialogContainer extends Container {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void requestOperation(Operation operation) {
+    public void requestOperation(OutsiderRequest operation) {
         VanityPacketHandler.CHANNEL.sendToServer(new OperationMsg(operation));
     }
 
-    public static class Operation {
-        private final static Map<Integer, Operation> OPERATION_MAP   = new HashMap<>();
-        private final static Operation               DUMMY_OPERATION = new Operation(-1, (t) -> {});
-        int                               opCode;
-        Consumer<OutsiderDialogContainer> execute;
 
-        private Operation(int opCode, Consumer<OutsiderDialogContainer> execute) {
-            this.opCode = opCode;
-            this.execute = execute;
-        }
-
-        public static Operation create(Consumer<OutsiderDialogContainer> execute) {
-            Operation operation = new Operation(OPERATION_MAP.size(), execute);
-            OPERATION_MAP.put(operation.opCode, operation);
-            return operation;
-        }
-
-        public static Operation getOperation(int id) {
-            return OPERATION_MAP.getOrDefault(id, DUMMY_OPERATION);
-        }
-    }
 
     static class OperationMsg {
-        int opCode;
+        String name;
 
-        public OperationMsg(Operation operation) {
-            this.opCode = operation.opCode;
+        public OperationMsg(OutsiderRequest operation) {
+            this.name = operation.getName();
         }
 
-        public OperationMsg(int opCode) {
-            this.opCode = opCode;
+        public OperationMsg(String name) {
+            this.name = name;
         }
 
         public static OperationMsg decoder(PacketBuffer buffer) {
-            return new OperationMsg(buffer.readInt());
+            return new OperationMsg(buffer.readString());
         }
 
         public static void encoder(OperationMsg msg, PacketBuffer buffer) {
-            buffer.writeInt(msg.opCode);
+            buffer.writeString(msg.name);
         }
     }
 
