@@ -18,22 +18,24 @@ import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
+import net.minecraft.fluid.IFluidState;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.pathfinding.SwimmerPathNavigator;
 import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
+import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -41,7 +43,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -91,32 +92,18 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     private final PlayerAbilities                  abilities       = new PlayerAbilities();
     private final CooldownTracker                  cooldownTracker = new CooldownTracker();
     private       ServerPlayerEntity               followedPlayer;
-    private       CharacterState  characterState;
-    //private DataParameter<String> NAME = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.STRING);
-
-    //public final  OutsiderContainer container;
-
+    private     CharacterState       characterState;
+    protected final PlayerSimPathNavigator waterNavigator;
+    protected final GroundPathNavigator  groundNavigator;
     public OutsiderEntity(EntityType<OutsiderEntity> type, World world)
     {
         super(type,world);
         moveController = new OutsiderMovementController(this);
+        this.waterNavigator = new PlayerSimPathNavigator(this, world);
+        this.groundNavigator = new PlayerSimPathNavigator(this,world);
+        this.navigator=groundNavigator;
     }
 
-    /*    @Override
-    protected void registerData() {
-        super.registerData();
-        dataManager.register(NAME, "Nobody");
-    }
-
-    public void setName(String name)
-    {
-        dataManager.set(NAME,name);
-    }
-
-    @Override
-    public ITextComponent getName() {
-        return super.getName();
-    }*/
 
     /**
      * Add the exhaustion of food Stats
@@ -624,10 +611,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
                 Vec3d posVec     = getPositionVec().add(0, 1, 0);
                 Vec3d itemPosVec = itemEntity.getPositionVec();
-                Vec3d vec        = posVec.add(itemPosVec.inverse()).normalize().scale(0.2);
+                Vec3d vec        = posVec.add(itemPosVec.inverse()).normalize().scale(0.15);
                 itemEntity.addVelocity(vec.x, vec.y, vec.z);
 
-                if (posVec.distanceTo(itemPosVec) <= 0.4) {
+                if (posVec.distanceTo(itemPosVec) <= 0.7) {
                     boolean cancelled = MinecraftForge.EVENT_BUS.post(new OutsiderEvent.PickItemEvent(this,itemstack,itemEntity.getOwnerId(),itemEntity.getThrowerId()));
 
                     if(cancelled || !inventory.storeItemStack(itemstack))return;
@@ -839,15 +826,72 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     @Override
     protected PathNavigator createNavigator(World worldIn) {
-        return new PlayerSimPathNavigator(this, worldIn);
+        return groundNavigator;
     }
 
+    private boolean targetInWater() {
+        /*if (this.swimmingUp) {
+            return true;
+        } else {*/
+
+        LivingEntity livingentity = this.getAttackTarget();
+        if (livingentity != null && livingentity.isInWater()) {
+            return true;
+        }
+        BlockPos    targetPos  = getNavigator().getTargetPos();
+
+        //noinspection ConstantConditions
+        if(targetPos==null)
+            return false;
+        IFluidState fluidState = world.getFluidState(targetPos);
+        return !fluidState.getBlockState().isSolid() && fluidState.getFluid() == Fluids.WATER;
+
+
+        /*}*/
+    }
+
+    public void updateSwimming() {
+        if (!this.world.isRemote) {
+            if (this.isServerWorld() && this.isInWater() && this.targetInWater()) {
+                this.navigator = this.waterNavigator;
+                this.setSwimming(true);
+            } else {
+                this.navigator = this.groundNavigator;
+                this.setSwimming(false);
+            }
+        }
+    }
     @Override
-    protected void damageEntity(DamageSource damageSrc, float damageAmount) {
-        super.damageEntity(damageSrc, damageAmount);
+    protected void damageEntity(DamageSource damageSrc, float damageAmount) { //Copy from LivingEntity
+        if (!this.isInvulnerableTo(damageSrc)) {
+            damageAmount = net.minecraftforge.common.ForgeHooks.onLivingHurt(this, damageSrc, damageAmount);
+            if (damageAmount <= 0) return;
+            damageAmount = this.applyArmorCalculations(damageSrc, damageAmount);
+            damageAmount = this.applyPotionDamageCalculations(damageSrc, damageAmount);
+            float modifiedDamageAmount = Math.max(damageAmount - this.getAbsorptionAmount(), 0.0F);
+            this.setAbsorptionAmount(this.getAbsorptionAmount() - (damageAmount - modifiedDamageAmount));
+            float f = damageAmount - modifiedDamageAmount;
+            if (f > 0.0F && f < 3.4028235E37F && damageSrc.getTrueSource() instanceof ServerPlayerEntity) {
+                ((ServerPlayerEntity)damageSrc.getTrueSource()).addStat(Stats.DAMAGE_DEALT_ABSORBED, Math.round(f * 10.0F));
+            }
+
+            modifiedDamageAmount = net.minecraftforge.common.ForgeHooks.onLivingDamage(this, damageSrc, modifiedDamageAmount);
+            if (modifiedDamageAmount != 0.0F) {
+                float f1 = this.getHealth();
+                if(!(damageSrc.getTrueSource() instanceof MobEntity && ((MobEntity) damageSrc.getTrueSource()).getAttackTarget()!=this)) //I know you didn't mean it.
+                    this.getCombatTracker().trackDamage(damageSrc, f1, modifiedDamageAmount);
+                this.setHealth(f1 - modifiedDamageAmount); // Forge: moved to fix MC-121048
+                this.setAbsorptionAmount(this.getAbsorptionAmount() - modifiedDamageAmount);
+            }
+        }
         this.addExhaustion(damageSrc.getHungerDamage());
     }
-
+    @Override
+    public void setRevengeTarget(@Nullable LivingEntity livingBase) {
+        if(livingBase instanceof MobEntity && !Objects.equals(((MobEntity) livingBase).getAttackTarget(), this))
+            return; //I know you didn't mean it.
+        super.setRevengeTarget(livingBase);
+    }
     protected void damageShield(float damage) {
         if (damage >= 3.0F && this.activeItemStack.isShield(this)) {
             int  i    = 1 + MathHelper.floor(damage);
@@ -902,7 +946,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_SPEED);
         this.getAttributes().registerAttribute(PlayerEntity.REACH_DISTANCE);
         this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.1D);
-
+        this.getAttribute(SWIM_SPEED).setBaseValue(5F);
     }
 
     /**
@@ -972,10 +1016,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         }
     }
 
-    @Override
-    public void setRevengeTarget(@Nullable LivingEntity livingBase) {
-        if(livingBase instanceof MobEntity && !Objects.equals(((MobEntity) livingBase).getAttackTarget(), this))
-            return; //I know you didn't mean it.
-        super.setRevengeTarget(livingBase);
-    }
+
+
+
 }

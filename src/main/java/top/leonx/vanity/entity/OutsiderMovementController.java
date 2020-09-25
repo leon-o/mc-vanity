@@ -26,6 +26,8 @@ public class OutsiderMovementController extends MovementController {
     public void tick() {
         if(!(this.mob instanceof OutsiderEntity)) return;
         OutsiderEntity entity=(OutsiderEntity)this.mob;
+
+
         if (this.action == MovementController.Action.STRAFE) {
             float maxMoveSpeed  = entity.getFinalMaxMoveSpeed();
             float navigatorSpeed = (float) this.speed * maxMoveSpeed;
@@ -58,7 +60,7 @@ public class OutsiderMovementController extends MovementController {
             this.action = MovementController.Action.WAIT;
         } else if (this.action == MovementController.Action.MOVE_TO) {
             this.action = MovementController.Action.WAIT;
-            //setMoveTo(-380d,4d,349d,0);
+
             double deltaX = this.posX - this.mob.getPosX();
             double deltaZ = this.posZ - this.mob.getPosZ();
             double deltaY = this.posY - this.mob.getPosY();
@@ -106,10 +108,10 @@ public class OutsiderMovementController extends MovementController {
                 this.mob.getJumpController().setJumping();
                 this.action = MovementController.Action.JUMPING;
             }
-            if (mob.areEyesInFluid(FluidTags.WATER, true)) {
-                //noinspection deprecation
-                entity.setMoveVertical(entity.moveVertical+1f);
-            }
+//            if (mob.areEyesInFluid(FluidTags.WATER, true)) {
+//                //noinspection deprecation
+//                entity.setMoveVertical(entity.moveVertical+1f);
+//            }
 //                if (mob.onGround) {
 //                    this.mob.getJumpController().setJumping();
 //                    this.action = MovementController.Action.JUMPING;
