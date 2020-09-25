@@ -18,7 +18,6 @@ import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.fluid.IFluidState;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -32,7 +31,6 @@ import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.pathfinding.SwimmerPathNavigator;
 import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
 import net.minecraft.stats.Stats;
@@ -57,7 +55,10 @@ import top.leonx.vanity.event.OutsiderEvent;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
-import top.leonx.vanity.util.*;
+import top.leonx.vanity.util.GeneralFoodStats;
+import top.leonx.vanity.util.OutsiderInventory;
+import top.leonx.vanity.util.PlayerSimPathNavigator;
+import top.leonx.vanity.util.PlayerSimulator;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -84,24 +85,25 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                                                                                                                              SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR.get(),
                                                                                                                              ModSensorTypes.OUTSIDER_NEAREST_HOSTEL_SENSOR.get());
 
-    public final OutsiderInventory inventory   = new OutsiderInventory(this);
+    public final OutsiderInventory inventory = new OutsiderInventory(this);
 
-    public final     OutsiderInteractionManager       interactionManager =new OutsiderInteractionManager(this);
+    public final    OutsiderInteractionManager       interactionManager = new OutsiderInteractionManager(this);
+    protected final PlayerSimPathNavigator           waterNavigator;
+    protected final GroundPathNavigator              groundNavigator;
     //private static final DataParameter<BlockPos>      SPAWN_POS               = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.BLOCK_POS);
-    private final    GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>();
-    private final PlayerAbilities                  abilities       = new PlayerAbilities();
-    private final CooldownTracker                  cooldownTracker = new CooldownTracker();
-    private       ServerPlayerEntity               followedPlayer;
-    private     CharacterState       characterState;
-    protected final PlayerSimPathNavigator waterNavigator;
-    protected final GroundPathNavigator  groundNavigator;
-    public OutsiderEntity(EntityType<OutsiderEntity> type, World world)
-    {
-        super(type,world);
+    private final   GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>();
+    private final   PlayerAbilities                  abilities          = new PlayerAbilities();
+    private final   CooldownTracker                  cooldownTracker    = new CooldownTracker();
+    public          ServerPlayerEntity               interactingPlayer  = null;
+    private         ServerPlayerEntity               followedPlayer;
+    private         CharacterState                   characterState;
+
+    public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
+        super(type, world);
         moveController = new OutsiderMovementController(this);
         this.waterNavigator = new PlayerSimPathNavigator(this, world);
-        this.groundNavigator = new PlayerSimPathNavigator(this,world);
-        this.navigator=groundNavigator;
+        this.groundNavigator = new PlayerSimPathNavigator(this, world);
+        this.navigator = groundNavigator;
     }
 
 
@@ -456,21 +458,21 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public float getDigSpeed(BlockState state, @Nullable BlockPos pos) {
         float speed = getHeldItemMainhand().getDestroySpeed(state);
         if (speed > 1.0F) {
-            int i = EnchantmentHelper.getEfficiencyModifier(this);
+            int       i         = EnchantmentHelper.getEfficiencyModifier(this);
             ItemStack itemstack = this.getHeldItemMainhand();
             if (i > 0 && !itemstack.isEmpty()) {
-                speed += (float)(i * i + 1);
+                speed += (float) (i * i + 1);
             }
         }
 
         if (EffectUtils.hasMiningSpeedup(this)) {
-            speed *= 1.0F + (float)(EffectUtils.getMiningSpeedup(this) + 1) * 0.2F;
+            speed *= 1.0F + (float) (EffectUtils.getMiningSpeedup(this) + 1) * 0.2F;
         }
 
         if (this.isPotionActive(Effects.MINING_FATIGUE)) {
             float multiplyFac;
             //noinspection ConstantConditions
-            switch(this.getActivePotionEffect(Effects.MINING_FATIGUE).getAmplifier()) {
+            switch (this.getActivePotionEffect(Effects.MINING_FATIGUE).getAmplifier()) {
                 case 0:
                     multiplyFac = 0.3F;
                     break;
@@ -487,11 +489,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             speed *= multiplyFac;
         }
 
-        if (this.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(this))
-            speed /= 5.0F;
+        if (this.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(this)) speed /= 5.0F;
 
-        if (!this.onGround)
-            speed /= 5.0F;
+        if (!this.onGround) speed /= 5.0F;
 
         return speed;
     }
@@ -554,14 +554,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             return slotIn.getSlotType() == EquipmentSlotType.Group.ARMOR ? this.inventory.armorInventory.get(slotIn.getIndex()) : ItemStack.EMPTY;
         }
     }
-    public void EquipItem(EquipmentSlotType slotIn,ItemStack stack)
-    {
-        setItemStackToSlot(slotIn,stack.copy());
-        stack.setCount(0);
-    }
 
-    protected void damageArmor(float damage) {
-        this.inventory.damageArmor(damage);
+    public void EquipItem(EquipmentSlotType slotIn, ItemStack stack) {
+        setItemStackToSlot(slotIn, stack.copy());
+        stack.setCount(0);
     }
 
     @Override
@@ -615,9 +611,9 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 itemEntity.addVelocity(vec.x, vec.y, vec.z);
 
                 if (posVec.distanceTo(itemPosVec) <= 0.7) {
-                    boolean cancelled = MinecraftForge.EVENT_BUS.post(new OutsiderEvent.PickItemEvent(this,itemstack,itemEntity.getOwnerId(),itemEntity.getThrowerId()));
+                    boolean cancelled = MinecraftForge.EVENT_BUS.post(new OutsiderEvent.PickItemEvent(this, itemstack, itemEntity.getOwnerId(), itemEntity.getThrowerId()));
 
-                    if(cancelled || !inventory.storeItemStack(itemstack))return;
+                    if (cancelled || !inventory.storeItemStack(itemstack)) return;
 
                     copy.setCount(copy.getCount() - itemEntity.getItem().getCount());
                     onItemPickup(this, i);
@@ -645,12 +641,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return super.onFoodEaten(world, stack);
     }
 
-
-
     @Override
     public boolean processInteract(PlayerEntity player, Hand hand) {
         boolean successful = super.processInteract(player, hand);
-        successful|=player.getHeldItemMainhand().interactWithEntity(player,this,Hand.MAIN_HAND);
+        successful |= player.getHeldItemMainhand().interactWithEntity(player, this, Hand.MAIN_HAND);
         if (!world.isRemote && !successful) {
             INamedContainerProvider provider = new INamedContainerProvider() {
                 @Override
@@ -664,8 +658,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 }
             };
             NetworkHooks.openGui((ServerPlayerEntity) player, provider, t -> t.writeInt(this.getEntityId()));
-            this.lookController.setLookPosition(player.getEyePosition(1F));
-            return true;
+            interactingPlayer= (ServerPlayerEntity) player;
+            successful = true;
         }
 
         return successful;
@@ -746,7 +740,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return this.getHealth() > 0.0F && this.getHealth() < this.getMaxHealth();
     }
 
-
     @Override
     public void tick() {
         super.tick();
@@ -789,11 +782,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         super.stopActiveHand();
     }
 
-    //    @Override
-//    public boolean attackEntityFrom(DamageSource source, float amount) {
-//        return super.attackEntityFrom(source, amount);
-//    }
-
     @Override
     public void writeAdditional(CompoundNBT compound) {
         super.writeAdditional(compound);
@@ -803,11 +791,34 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         compound.putUniqueId("followed", followedPlayer == null ? new UUID(0, 0) : followedPlayer.getUniqueID());
     }
 
+    //    @Override
+//    public boolean attackEntityFrom(DamageSource source, float amount) {
+//        return super.attackEntityFrom(source, amount);
+//    }
+
+    public void updateSwimming() {
+        if (!this.world.isRemote) {
+            if (this.isServerWorld() && this.isInWater() && this.targetInWater()) {
+                this.navigator = this.waterNavigator;
+                this.setSwimming(true);
+            } else {
+                this.navigator = this.groundNavigator;
+                this.setSwimming(false);
+            }
+        }
+    }
+
     //////
 
     // SHIELD
 
     //////
+
+    @Override
+    public void setRevengeTarget(@Nullable LivingEntity livingBase) {
+        if (livingBase instanceof MobEntity && !Objects.equals(((MobEntity) livingBase).getAttackTarget(), this)) return; //I know you didn't mean it.
+        super.setRevengeTarget(livingBase);
+    }
 
     protected void blockUsingShield(LivingEntity entityIn) {
         super.blockUsingShield(entityIn);
@@ -829,38 +840,10 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         return groundNavigator;
     }
 
-    private boolean targetInWater() {
-        /*if (this.swimmingUp) {
-            return true;
-        } else {*/
-
-        LivingEntity livingentity = this.getAttackTarget();
-        if (livingentity != null && livingentity.isInWater()) {
-            return true;
-        }
-        BlockPos    targetPos  = getNavigator().getTargetPos();
-
-        //noinspection ConstantConditions
-        if(targetPos==null)
-            return false;
-        IFluidState fluidState = world.getFluidState(targetPos);
-        return !fluidState.getBlockState().isSolid() && fluidState.getFluid() == Fluids.WATER;
-
-
-        /*}*/
+    protected void damageArmor(float damage) {
+        this.inventory.damageArmor(damage);
     }
 
-    public void updateSwimming() {
-        if (!this.world.isRemote) {
-            if (this.isServerWorld() && this.isInWater() && this.targetInWater()) {
-                this.navigator = this.waterNavigator;
-                this.setSwimming(true);
-            } else {
-                this.navigator = this.groundNavigator;
-                this.setSwimming(false);
-            }
-        }
-    }
     @Override
     protected void damageEntity(DamageSource damageSrc, float damageAmount) { //Copy from LivingEntity
         if (!this.isInvulnerableTo(damageSrc)) {
@@ -872,13 +855,13 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             this.setAbsorptionAmount(this.getAbsorptionAmount() - (damageAmount - modifiedDamageAmount));
             float f = damageAmount - modifiedDamageAmount;
             if (f > 0.0F && f < 3.4028235E37F && damageSrc.getTrueSource() instanceof ServerPlayerEntity) {
-                ((ServerPlayerEntity)damageSrc.getTrueSource()).addStat(Stats.DAMAGE_DEALT_ABSORBED, Math.round(f * 10.0F));
+                ((ServerPlayerEntity) damageSrc.getTrueSource()).addStat(Stats.DAMAGE_DEALT_ABSORBED, Math.round(f * 10.0F));
             }
 
             modifiedDamageAmount = net.minecraftforge.common.ForgeHooks.onLivingDamage(this, damageSrc, modifiedDamageAmount);
             if (modifiedDamageAmount != 0.0F) {
                 float f1 = this.getHealth();
-                if(!(damageSrc.getTrueSource() instanceof MobEntity && ((MobEntity) damageSrc.getTrueSource()).getAttackTarget()!=this)) //I know you didn't mean it.
+                if (!(damageSrc.getTrueSource() instanceof MobEntity && ((MobEntity) damageSrc.getTrueSource()).getAttackTarget() != this)) //I know you didn't mean it.
                     this.getCombatTracker().trackDamage(damageSrc, f1, modifiedDamageAmount);
                 this.setHealth(f1 - modifiedDamageAmount); // Forge: moved to fix MC-121048
                 this.setAbsorptionAmount(this.getAbsorptionAmount() - modifiedDamageAmount);
@@ -886,12 +869,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         }
         this.addExhaustion(damageSrc.getHungerDamage());
     }
-    @Override
-    public void setRevengeTarget(@Nullable LivingEntity livingBase) {
-        if(livingBase instanceof MobEntity && !Objects.equals(((MobEntity) livingBase).getAttackTarget(), this))
-            return; //I know you didn't mean it.
-        super.setRevengeTarget(livingBase);
-    }
+
     protected void damageShield(float damage) {
         if (damage >= 3.0F && this.activeItemStack.isShield(this)) {
             int  i    = 1 + MathHelper.floor(damage);
@@ -929,6 +907,25 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     /**
+     * Handle death update and respawn the entity.
+     */
+    @Override
+    protected void onDeathUpdate() {
+        ++this.deathTime;
+        if (this.deathTime == 20) {
+            respawnEntity();
+            this.remove(true);
+
+            for (int i = 0; i < 20; ++i) {
+                double d0 = this.rand.nextGaussian() * 0.02D;
+                double d1 = this.rand.nextGaussian() * 0.02D;
+                double d2 = this.rand.nextGaussian() * 0.02D;
+                this.world.addParticle(ParticleTypes.POOF, this.getPosXRandom(1.0D), this.getPosYRandom(), this.getPosZRandom(1.0D), d0, d1, d2);
+            }
+        }
+    }
+
+    /**
      * Called when item use finished.
      * If the onItemUseFinished isn't null, it will be called.
      * {@link OutsiderInteractionManager#useItemInMainHand}
@@ -950,6 +947,33 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     /**
+     * Spawn a duplicate entity in spawn point.
+     */
+    private void respawnEntity() {
+        if (!world.isRemote()) {
+            OutsiderEntity outsiderEntity = ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get().create(world.getWorld());
+            if (outsiderEntity != null) {
+                //copy capabilities.
+                outsiderEntity.getCharacterState().setRoot(getCharacterState().getRoot().copy());
+                List<BodyPartStack>             originalBodyParts = getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY).getItemStacksList();
+                BodyPartCapability.BodyPartData newBodyPartData   = outsiderEntity.getCapability(ModCapabilityTypes.BODY_PART).orElse(new BodyPartCapability.BodyPartData());
+                newBodyPartData.getItemStacksList().addAll(originalBodyParts);
+                newBodyPartData.setNeedInit(false);
+
+                if (world.getGameRules().get(GameRules.KEEP_INVENTORY).get()) outsiderEntity.inventory.copyInventory(this.inventory);
+
+                outsiderEntity.setCustomName(this.getCustomName());
+                outsiderEntity.enablePersistence();
+                BlockPos spawnPos = getBedPosition().orElse(world.getSpawnPoint());
+                outsiderEntity.setLocationAndAngles((double) spawnPos.getX() + 0.5D, spawnPos.getY(), (double) spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+                outsiderEntity.onInitialSpawn(world, world.getDifficultyForLocation(spawnPos), SpawnReason.STRUCTURE, null, null);
+
+                world.addEntity(outsiderEntity);
+            }
+        }
+    }
+
+    /**
      * Spawn the sweep particles that sword created.
      */
     protected void spawnSweepParticles() {
@@ -960,63 +984,31 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         }
     }
 
+    private boolean targetInWater() {
+        /*if (this.swimmingUp) {
+            return true;
+        } else {*/
+
+        LivingEntity livingentity = this.getAttackTarget();
+        if (livingentity != null && livingentity.isInWater()) {
+            return true;
+        }
+        BlockPos targetPos = getNavigator().getTargetPos();
+
+        //noinspection ConstantConditions
+        if (targetPos == null) return false;
+        IFluidState fluidState = world.getFluidState(targetPos);
+        return !fluidState.getBlockState().isSolid() && fluidState.getFluid() == Fluids.WATER;
+
+
+        /*}*/
+    }
+
     protected void updateAITasks() {
         this.world.getProfiler().startSection("brain");
         this.getBrain().tick((ServerWorld) this.world, this);
         this.world.getProfiler().endSection();
     }
-
-    /**
-     * Handle death update and respawn the entity.
-     */
-    @Override
-    protected void onDeathUpdate() {
-        ++this.deathTime;
-        if (this.deathTime == 20) {
-            respawnEntity();
-            this.remove(true);
-
-            for(int i = 0; i < 20; ++i) {
-                double d0 = this.rand.nextGaussian() * 0.02D;
-                double d1 = this.rand.nextGaussian() * 0.02D;
-                double d2 = this.rand.nextGaussian() * 0.02D;
-                this.world.addParticle(ParticleTypes.POOF, this.getPosXRandom(1.0D), this.getPosYRandom(), this.getPosZRandom(1.0D), d0, d1, d2);
-            }
-        }
-    }
-
-    /**
-     * Spawn a duplicate entity in spawn point.
-     */
-    private void respawnEntity()
-    {
-        if(!world.isRemote())
-        {
-            OutsiderEntity outsiderEntity = ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get().create(world.getWorld());
-            if(outsiderEntity!=null)
-            {
-                //copy capabilities.
-                outsiderEntity.getCharacterState().setRoot(getCharacterState().getRoot().copy());
-                List<BodyPartStack> originalBodyParts = getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY).getItemStacksList();
-                BodyPartCapability.BodyPartData newBodyPartData = outsiderEntity.getCapability(ModCapabilityTypes.BODY_PART).orElse(new BodyPartCapability.BodyPartData());
-                newBodyPartData.getItemStacksList().addAll(originalBodyParts);
-                newBodyPartData.setNeedInit(false);
-
-                if(world.getGameRules().get(GameRules.KEEP_INVENTORY).get())
-                    outsiderEntity.inventory.copyInventory(this.inventory);
-
-                outsiderEntity.setCustomName(this.getCustomName());
-                outsiderEntity.enablePersistence();
-                BlockPos spawnPos = getBedPosition().orElse(world.getSpawnPoint());
-                outsiderEntity.setLocationAndAngles((double)spawnPos.getX() + 0.5D, spawnPos.getY(), (double)spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
-                outsiderEntity.onInitialSpawn(world, world.getDifficultyForLocation(spawnPos), SpawnReason.STRUCTURE, null, null);
-
-                world.addEntity(outsiderEntity);
-            }
-        }
-    }
-
-
 
 
 }

@@ -31,7 +31,6 @@ public class OutsiderDialogContainer extends Container {
 
     public OutsiderEntity outsider;
     PlayerEntity player;
-
     public PlayerEntity getPlayer() {
         return player;
     }
@@ -90,6 +89,12 @@ public class OutsiderDialogContainer extends Container {
     @Override
     public boolean canInteractWith(@Nonnull PlayerEntity playerIn) {
         return true;
+    }
+
+    @Override
+    public void onContainerClosed(PlayerEntity playerIn) {
+        super.onContainerClosed(playerIn);
+        outsider.interactingPlayer=null;
     }
 
     @OnlyIn(Dist.CLIENT)

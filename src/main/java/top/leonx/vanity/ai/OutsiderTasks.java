@@ -97,7 +97,8 @@ public class OutsiderTasks {
 
         //自我保护
         utilitySelectTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), selfProtection());
-
+        //对话的时候，看着我的眼睛
+        utilitySelectTask.addChild((w,e,t)->e.interactingPlayer!=null?0.1:0,new LookTurnToTask<>(outsider->outsider.interactingPlayer.getEyePosition(0f)));
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
 
@@ -139,6 +140,9 @@ public class OutsiderTasks {
                 return (double) 1-(e.getHealth() / e.getMaxHealth()); //reverse with battle
             return 0d;
         },selfProtection());
+
+        //对话的时候，看着我的眼睛
+        utilitySelectTask.addChild((w,e,t)->e.interactingPlayer!=null?0.1:0,new LookTurnToTask<>(outsider->outsider.interactingPlayer.getEyePosition(0f)));
 
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
