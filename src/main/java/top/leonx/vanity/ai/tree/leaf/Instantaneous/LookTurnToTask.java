@@ -1,4 +1,4 @@
-package top.leonx.vanity.ai.tree.leaf.continuous;
+package top.leonx.vanity.ai.tree.leaf.Instantaneous;
 
 import net.minecraft.entity.MobEntity;
 import net.minecraft.util.math.Vec3d;

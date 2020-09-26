@@ -3,6 +3,7 @@ package top.leonx.vanity.entity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.Dynamic;
+import jdk.nashorn.internal.runtime.options.Option;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
@@ -27,6 +28,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.GroundPathNavigator;
@@ -63,6 +67,7 @@ import top.leonx.vanity.util.PlayerSimulator;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -94,8 +99,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     private final   GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>();
     private final   PlayerAbilities                  abilities          = new PlayerAbilities();
     private final   CooldownTracker                  cooldownTracker    = new CooldownTracker();
-    public          ServerPlayerEntity               interactingPlayer  = null;
-    private         ServerPlayerEntity               followedPlayer;
+    public          ServerPlayerEntity          interactingPlayer  = null;
+    public static final DataParameter<Optional<UUID>> FOLLOWED_PLAYER_ID =EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.OPTIONAL_UNIQUE_ID);
     private         CharacterState                   characterState;
 
     public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
@@ -106,6 +111,11 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.navigator = groundNavigator;
     }
 
+    @Override
+    protected void registerData() {
+        super.registerData();
+        dataManager.register(FOLLOWED_PLAYER_ID,Optional.empty());
+    }
 
     /**
      * Add the exhaustion of food Stats
@@ -517,24 +527,20 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     @Nullable
     public PlayerEntity getFollowedPlayer() {
         if (world.isRemote) return null;
-
-        return followedPlayer;
-        //if(getCharacterState().getFollowedEntityUUID()==null) return null;
-
-        //Entity entity = ((ServerWorld) world).getEntityByUuid(getCharacterState().getFollowedEntityUUID());
-
-        //return entity instanceof ServerPlayerEntity?(ServerPlayerEntity)entity:null ;
+        Optional<UUID> optionalUUID = getFollowedPlayerUUID();
+        return optionalUUID.map(uuid -> world.getPlayerByUuid(uuid)).orElse(null);
     }
 
     public void setFollowedPlayer(@Nullable ServerPlayerEntity entity) {
-        followedPlayer = entity;
+        setFollowedPlayerUUID(entity!=null?entity.getUniqueID():null);
     }
 
-    @Nullable
-    public UUID getFollowedPlayerUUID() {
-        return followedPlayer == null ? null : followedPlayer.getUniqueID();
+    public Optional<UUID> getFollowedPlayerUUID() {
+        return dataManager.get(FOLLOWED_PLAYER_ID);
     }
-
+    public void setFollowedPlayerUUID(UUID uuid) {
+        dataManager.set(FOLLOWED_PLAYER_ID,Optional.ofNullable(uuid));
+    }
     @Override
     public GeneralFoodStats<OutsiderEntity> getFoodStats() {
         return foodStats;
@@ -673,7 +679,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         ListNBT listnbt  = compound.getList("Inventory", 10);
         UUID    followed = compound.getUniqueId("followed");
         if (!world.isRemote() && followed.getLeastSignificantBits() != 0 && followed.getMostSignificantBits() != 0)
-            followedPlayer = (ServerPlayerEntity) ((ServerWorld) world).getEntityByUuid(followed);
+            setFollowedPlayerUUID(followed);
         this.inventory.read(listnbt);
     }
 
@@ -788,7 +794,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         foodStats.write(compound);
         abilities.write(compound);
         compound.put("Inventory", this.inventory.write(new ListNBT()));
-        compound.putUniqueId("followed", followedPlayer == null ? new UUID(0, 0) : followedPlayer.getUniqueID());
+        compound.putUniqueId("followed", getFollowedPlayerUUID().orElse(new UUID(0,0)));
     }
 
     //    @Override
@@ -896,13 +902,14 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     private void initBrain(Brain<OutsiderEntity> brain) {
         //float f = getFinalMoveSpeed();
-        brain.registerActivity(Activity.CORE, OutsiderTasks.daily());
+        brain.registerActivity(Activity.CORE, OutsiderTasks.protectPlayer());
+        brain.registerActivity(Activity.IDLE, OutsiderTasks.daily());
         //brain.registerActivity(Activity.IDLE, ImmutableList.of(Pair.of(2, new FirstShuffledTask<>(ImmutableList.of(Pair.of(new WalkToTargetTask(200), 1), Pair.of(new FindWalkTargetTask(), 1))))));
 
 
-        brain.setDefaultActivities(ImmutableSet.of(Activity.CORE));
-        brain.setFallbackActivity(Activity.CORE);
-        brain.switchTo(Activity.CORE);
+        //brain.setDefaultActivities(ImmutableSet.of(Activity.IDLE));
+        brain.setFallbackActivity(Activity.IDLE);
+        brain.switchTo(Activity.IDLE);
         brain.updateActivity(this.world.getDayTime(), this.world.getGameTime());
     }
 

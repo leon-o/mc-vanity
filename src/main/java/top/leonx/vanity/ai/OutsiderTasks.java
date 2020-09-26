@@ -7,12 +7,15 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.entity.ai.brain.schedule.Activity;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.ai.tree.composite.*;
+import top.leonx.vanity.ai.tree.leaf.Instantaneous.LookTurnToTask;
+import top.leonx.vanity.ai.tree.leaf.Instantaneous.SwitchActivityTask;
 import top.leonx.vanity.ai.tree.leaf.continuous.*;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModEntityTypes;
@@ -102,6 +105,7 @@ public class OutsiderTasks {
         utilitySelectTask.addChild((w,e,t)->e.interactingPlayer!=null?0.1:0,new LookTurnToTask<>(outsider->outsider.interactingPlayer!=null?outsider.interactingPlayer.getEyePosition(0f):
                 outsider.getEyePosition(0f).add(outsider.getLookVec().scale(5))));
 
+        utilitySelectTask.addChild((w,e,t)->!e.getFollowedPlayerUUID().isPresent()?0.5:0,new SwitchActivityTask<>(()-> Activity.IDLE));
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
 
@@ -147,6 +151,8 @@ public class OutsiderTasks {
         //对话的时候，看着我的眼睛
         utilitySelectTask.addChild((w,e,t)->e.interactingPlayer!=null?0.1:0,new LookTurnToTask<>(outsider->outsider.interactingPlayer!=null?outsider.interactingPlayer.getEyePosition(0f):
                 outsider.getEyePosition(0f).add(outsider.getLookVec().scale(5))));
+
+        utilitySelectTask.addChild((w,e,t)->e.getFollowedPlayerUUID().isPresent()?0.5:0,new SwitchActivityTask<>(()-> Activity.CORE));
 
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }

@@ -11,7 +11,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.NetworkEvent;
 import top.leonx.vanity.entity.OutsiderEntity;
-import top.leonx.vanity.entity.OutsiderRequest;
+import top.leonx.vanity.entity.DialogRequest;
 import top.leonx.vanity.init.ModContainerTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
@@ -31,7 +31,7 @@ public class OutsiderDialogContainer extends Container {
     public PlayerEntity getPlayer() {
         return player;
     }
-    public List<OutsiderRequest> availableRequests;
+    public List<DialogRequest> availableRequests;
     public OutsiderDialogContainer(int windowId, PlayerInventory inv, PacketBuffer data) {
         this(windowId,inv,readOutsiderFromBuffer(data));
     }
@@ -54,7 +54,7 @@ public class OutsiderDialogContainer extends Container {
 
     public void updateAvailableRequest()
     {
-        availableRequests =OutsiderRequest.getOperations().stream().filter(t->t.canExecute(player, outsider)).collect(Collectors.toList());
+        availableRequests = DialogRequest.getOperations().stream().filter(t->t.canExecute(player, outsider)).collect(Collectors.toList());
     }
     private static void handler(OperationMsg msg, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
@@ -63,7 +63,7 @@ public class OutsiderDialogContainer extends Container {
             if (sender == null) return;
             if (sender.openContainer instanceof OutsiderDialogContainer) {
                 OutsiderDialogContainer container = (OutsiderDialogContainer) sender.openContainer;
-                OutsiderRequest.getRequest(msg.name).Execute(container.player, container.outsider);
+                DialogRequest.getRequest(msg.name).Execute(container.player, container.outsider);
                 CharacterDataSynchronizer.UpdateDataToTracking(container.outsider,container.outsider.getCharacterState());
             }
         });
@@ -82,7 +82,7 @@ public class OutsiderDialogContainer extends Container {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void requestOperation(OutsiderRequest operation) {
+    public void requestOperation(DialogRequest operation) {
         VanityPacketHandler.CHANNEL.sendToServer(new OperationMsg(operation));
     }
 
@@ -91,7 +91,7 @@ public class OutsiderDialogContainer extends Container {
     static class OperationMsg {
         String name;
 
-        public OperationMsg(OutsiderRequest operation) {
+        public OperationMsg(DialogRequest operation) {
             this.name = operation.getName();
         }
 

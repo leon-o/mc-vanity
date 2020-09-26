@@ -7,15 +7,15 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import top.leonx.vanity.VanityMod;
+import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.client.gui.Label;
 import top.leonx.vanity.client.gui.dialog.DialogButton;
 import top.leonx.vanity.client.gui.dialog.ProcessBar;
 import top.leonx.vanity.container.OutsiderDialogContainer;
-import top.leonx.vanity.entity.OutsiderRequest;
+import top.leonx.vanity.entity.DialogRequest;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
     public static final ResourceLocation DIALOG_TEX = new ResourceLocation(VanityMod.MOD_ID, "textures/gui/dialog.png");
@@ -44,9 +44,9 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         updateDialogButtons();
         addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+4,infoPanelTop+4));
         addLabel(new Label("Relationship").setXY(infoPanelLeft+4,infoPanelTop+24));
-        relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5).setMaxValue(30f);
+        relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5).setMaxValue(CharacterState.MAX_RELATIONSHIP);
         addLabel(new Label("Love").setXY(infoPanelLeft+4,infoPanelTop+40));
-        loveShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+48,68,5).setMaxValue(30f);
+        loveShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+48,68,5).setMaxValue(CharacterState.MAX_LOVE);
         loveShipProcessBar.type= ProcessBar.Type.PINK;
     }
     private void addLabel(Label label)
@@ -67,7 +67,7 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         dialogButtons.clear();
 
         final int dialogButtonStartX= dialogPanelLeft +4;
-        final int dialogButtonWidth=64;
+        final int dialogButtonWidth=96;
         final int dialogButtonMargin=2;
         final int buttonNumPerPage=3;
 
@@ -75,11 +75,12 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
              i < Math.min(container.availableRequests.size(),(dialogButtonPage+1)*buttonNumPerPage);
              i++) {
 
-            DialogButton dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 32,"",null);
-            OutsiderRequest request = container.availableRequests.get(i);
+            DialogButton  dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 48,"",null);
+            DialogRequest request      = container.availableRequests.get(i);
             dialogButton.setMessage(I18n.format(request.getTranslateKey()));
             dialogButton.onPress=e->container.requestOperation(request);
             dialogButtons.add(dialogButton);
+            addButton(dialogButton);
         }
     }
     @Override

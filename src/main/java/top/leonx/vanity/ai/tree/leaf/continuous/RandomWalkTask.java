@@ -26,6 +26,7 @@ public class RandomWalkTask<T extends CreatureEntity> extends BehaviorTreeTask<T
             return;
         }
         entity.getNavigator().tryMoveToXYZ(randomTarget.x,randomTarget.y,randomTarget.z,1);
+        entity.getLookController().setLookPosition(randomTarget.add(0,1,0));
     }
 
     @Override

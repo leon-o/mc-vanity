@@ -34,8 +34,8 @@ public class FollowEntityTask extends BehaviorTreeTask<OutsiderEntity> {
             entity.getNavigator().clearPath();
             submitResult(Result.SUCCESS);
         }else{
-            Path path = entity.getNavigator().getPathToEntity(followedEntity, 1);
-            if(path!=null && entity.getDistanceSq(followedEntity)>=900)
+            Path path = entity.getNavigator().getPathToEntity(followedEntity, 8);
+            if(path!=null && entity.getDistanceSq(followedEntity)<900)
                 entity.getNavigator().setPath(path,1f);
             else {
                 this.tryToTeleportNearEntity(entity,followedEntity);
