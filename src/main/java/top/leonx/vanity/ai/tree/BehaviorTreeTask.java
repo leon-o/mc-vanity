@@ -58,6 +58,10 @@ public abstract class BehaviorTreeTask<T extends LivingEntity> {
     {
         return true;
     }
+    /**
+     * Some preparatory work and feasibility check.
+     * If this task is impossible to done, call submitResult(FAIL) in this method.
+     */
     protected abstract void onStart(ServerWorld world, T entity, long executionDuration);
     protected abstract void onUpdate(ServerWorld world, T entity, long executionDuration);
     protected abstract void onEnd(ServerWorld world, T entity, long executionDuration);

@@ -95,6 +95,9 @@ public class UtilitySelectTask<T extends LivingEntity> extends CompositeTask<T> 
                 if (currentTask != task || task.getResult() != Result.RUNNING) {
                     if (currentTask != null) currentTask.callForEnd(worldIn, entityIn, executionDuration);
                     task.callForStart(worldIn, entityIn, executionDuration);
+
+                    if(task.getResult()==Result.FAIL)
+                        continue;
                 }
 
                 if(currentTask!=task){
