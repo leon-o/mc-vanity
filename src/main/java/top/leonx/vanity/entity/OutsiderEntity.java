@@ -26,12 +26,14 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
+import net.minecraft.item.UseAction;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
+import net.minecraft.particles.ItemParticleData;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.pathfinding.PathNavigator;
@@ -797,10 +799,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         compound.putUniqueId("followed", getFollowedPlayerUUID().orElse(new UUID(0,0)));
     }
 
-    //    @Override
-//    public boolean attackEntityFrom(DamageSource source, float amount) {
-//        return super.attackEntityFrom(source, amount);
-//    }
 
     public void updateSwimming() {
         if (!this.world.isRemote) {
@@ -812,6 +810,38 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 this.setSwimming(false);
             }
         }
+    }
+
+    @Override
+    protected void triggerItemUseEffects(ItemStack item, int count) {
+        if (!item.isEmpty() && this.isHandActive()) {
+            if (item.getUseAction() == UseAction.DRINK) {
+                this.playSound(this.getDrinkSound(item), 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
+            }
+
+            if (item.getUseAction() == UseAction.EAT) {
+                this.addItemParticles(item, count);
+                this.playSound(this.getEatSound(item), 0.5F + 0.5F * (float)this.rand.nextInt(2), (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F);
+            }
+        }
+    }
+
+    private void addItemParticles(ItemStack stack, int count) {
+        for(int i = 0; i < count; ++i) {
+            Vec3d speedvec = new Vec3d(((double)this.rand.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D);
+            speedvec = speedvec.rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F));
+            speedvec = speedvec.rotateYaw(-this.rotationYawHead * ((float)Math.PI / 180F));
+            double d0 = (double)(-this.rand.nextFloat()) * 0.6D - 0.3D;
+            Vec3d posVec = new Vec3d(((double)this.rand.nextFloat() - 0.5D) * 0.3D, d0, 0.4D);
+            posVec = posVec.rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F));
+            posVec = posVec.rotateYaw(-this.rotationYawHead * ((float)Math.PI / 180F));
+            posVec = posVec.add(this.getPosX(), this.getPosYEye(), this.getPosZ());
+            if (this.world instanceof ServerWorld) //Forge: Fix MC-2518 spawnParticle is nooped on server, need to use server specific variant
+                ((ServerWorld)this.world).spawnParticle(new ItemParticleData(ParticleTypes.ITEM, stack), posVec.x, posVec.y, posVec.z, 1, speedvec.x, speedvec.y + 0.05D, speedvec.z, 0.0D);
+            else
+                this.world.addParticle(new ItemParticleData(ParticleTypes.ITEM, stack), posVec.x, posVec.y, posVec.z, speedvec.x, speedvec.y + 0.05D, speedvec.z);
+        }
+
     }
 
     //////
