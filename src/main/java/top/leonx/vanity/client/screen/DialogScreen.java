@@ -93,11 +93,16 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         }
     }
 
+    int tickCount=0;
     @Override
     public void tick() {
         super.tick();
         relationShipProcessBar.value=container.outsider.getCharacterState().getRelationWith(container.getPlayer().getUniqueID());
         loveShipProcessBar.value=container.outsider.getCharacterState().getLoveWith(container.getPlayer().getUniqueID());
-
+        if(tickCount>=10) {
+            updateDialogButtons();
+            tickCount=0;
+        }
+        tickCount++;
     }
 }

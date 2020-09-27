@@ -7,9 +7,13 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.concurrent.TickDelayedTask;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.entity.DialogRequest;
 import top.leonx.vanity.init.ModContainerTypes;
@@ -60,11 +64,16 @@ public class OutsiderDialogContainer extends Container {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
             ServerPlayerEntity sender = context.getSender();
-            if (sender == null) return;
-            if (sender.openContainer instanceof OutsiderDialogContainer) {
+            if (sender == null) { //Client side.
+                //NOTHING
+            } else if (sender.openContainer instanceof OutsiderDialogContainer) { //server side
                 OutsiderDialogContainer container = (OutsiderDialogContainer) sender.openContainer;
                 DialogRequest.getRequest(msg.name).Execute(container.player, container.outsider);
                 CharacterDataSynchronizer.UpdateDataToTracking(container.outsider,container.outsider.getCharacterState());
+                container.updateAvailableRequest();
+
+                //sender.getServerWorld().getServer().enqueue(new TickDelayedTask(10,
+                //                                                                ()->VanityPacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(()->sender), msg)));
             }
         });
         context.setPacketHandled(true);

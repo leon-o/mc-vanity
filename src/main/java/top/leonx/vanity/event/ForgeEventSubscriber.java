@@ -1,5 +1,6 @@
 package top.leonx.vanity.event;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -10,20 +11,24 @@ import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.capability.BodyPartCapabilityProvider;
 import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.capability.CharacterStateCapabilityProvider;
+import top.leonx.vanity.container.OutsiderDialogContainer;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
@@ -156,5 +161,33 @@ public class ForgeEventSubscriber {
             if(living instanceof PlayerEntity)
                 CharacterDataSynchronizer.UpdateDataToClient((ServerPlayerEntity) living,state,living.getEntityId());
         }
+    }
+
+    private static int serverTickCount =0;
+    private static int clientTickCount =0;
+    @SubscribeEvent
+    public static void  onServerTick(TickEvent.ServerTickEvent event)
+    {
+        if(serverTickCount >=5)
+        {
+            for (ServerPlayerEntity player : ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers()) {
+                if(player.openContainer instanceof OutsiderDialogContainer) ((OutsiderDialogContainer) player.openContainer).updateAvailableRequest();
+            }
+            serverTickCount=0;
+        }
+        serverTickCount++;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event)
+    {
+        if(clientTickCount >=5) {
+            if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.openContainer instanceof OutsiderDialogContainer) {
+                ((OutsiderDialogContainer) Minecraft.getInstance().player.openContainer).updateAvailableRequest();
+            }
+            clientTickCount=0;
+        }
+        clientTickCount++;
     }
 }
