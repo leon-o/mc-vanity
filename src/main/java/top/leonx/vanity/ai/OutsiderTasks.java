@@ -99,7 +99,7 @@ public class OutsiderTasks {
                 return 0.4d;
             else
                 return 0d;
-        },increaseSatiety());
+        },new GoapTask("eat",new EatFoodGoapGoal()));
 
         //自我保护
         utilitySelectTask.addChild((w, e, t) -> AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5), selfProtection());
@@ -135,7 +135,7 @@ public class OutsiderTasks {
         utilitySelectTask.addChild((w,e,t)->{
             GeneralFoodStats<OutsiderEntity> foodStats = e.getFoodStats();
             return AIUtil.sigmod(foodStats.getFoodLevel()/20d,-23.56, -17.4);
-        },increaseSatiety());
+        },new GoapTask("eat",new EatFoodGoapGoal()));
 
         utilitySelectTask.addChild((w,e,t)->{
             Optional<LivingEntity> nearestHostile = e.getBrain().getMemory(MemoryModuleType.NEAREST_HOSTILE);

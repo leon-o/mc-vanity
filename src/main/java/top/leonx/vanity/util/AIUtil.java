@@ -152,7 +152,7 @@ public class AIUtil {
         Optional<List<LivingEntity>> visibleMobsOpt = entity.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
         if (visibleMobsOpt.isPresent())
         {
-            Optional<LivingEntity> closestFoodProvider = visibleMobsOpt.get().stream().filter(mob -> AIUtil.getLivingEntityDrops(mob).stream().anyMatch(predicate)).min(
+            Optional<LivingEntity> closestFoodProvider = visibleMobsOpt.get().stream().filter(mob -> !(mob instanceof MobEntity) && AIUtil.getLivingEntityDrops(mob).stream().anyMatch(predicate)).min(
                     Comparator.comparingDouble(mob -> mob.getDistanceSq(entity)));
             return closestFoodProvider.orElse(null);
         }
