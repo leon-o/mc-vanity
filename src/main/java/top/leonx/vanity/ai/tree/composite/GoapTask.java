@@ -9,8 +9,8 @@ import top.leonx.vanity.ai.goap.PurposefulTaskWrap;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.entity.OutsiderEntity;
 
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GoapTask extends CompositeTask<OutsiderEntity> {
 
@@ -68,22 +68,40 @@ public class GoapTask extends CompositeTask<OutsiderEntity> {
     }
     private void plan(OutsiderEntity entity) {
         getChildren().clear();
+        Stack<PurposefulTaskWrap> wrapChoose=new Stack<>();
+        Stack<BehaviorTreeTask<OutsiderEntity>> taskChoose=new Stack<>();
+        Stack<GoapGoal> goalChoose=new Stack<>();
+
+        HashSet<PurposefulTaskWrap> deprecatedWrap=new HashSet<>();
 
         GoapGoal currentGoal = goal;
         while (!currentGoal.isFit.apply(entity)) {
             GoapGoal finalCurrentGoal = currentGoal;
-            Optional<Tuple<PurposefulTaskWrap,GoapCost>> minGoapCost = PurposefulTaskRegistry.purposefulTasks.stream().map(t -> new Tuple<>(t, t.handleGoapGoal(finalCurrentGoal))).filter(
-                    t -> !t.getB().equals(GoapCost.PASS)).min(Comparator.comparingInt(t -> t.getB().getCost()));
+            Optional<Tuple<PurposefulTaskWrap,GoapCost>> taskWrapMinCost = PurposefulTaskRegistry.purposefulTasks.stream()
+                    .map(t -> new Tuple<>(t, t.handleGoapGoal(finalCurrentGoal)))
+                    .filter(t -> !deprecatedWrap.contains(t.getA())&&!t.getB().equals(GoapCost.PASS))
+                    .min(Comparator.comparingInt(t -> t.getB().getCost()));
 
-            if (minGoapCost.isPresent()) {
-                PurposefulTaskWrap               taskWrap = minGoapCost.get().getA();
-                BehaviorTreeTask<OutsiderEntity> nextTask = taskWrap.task.apply(currentGoal);
-                getChildren().add(nextTask);
-                currentGoal = taskWrap.precondition.apply(currentGoal);
-            } else {
-                getChildren().clear();
-                break;
+            // Didn't find. This means previous task is unable to complete. Roll back and find another.
+            if(!taskWrapMinCost.isPresent())
+            {
+                deprecatedWrap.add(wrapChoose.pop());
+                taskChoose.pop();
+                goalChoose.pop();
+
+                if(wrapChoose.size()==0)
+                    break;
+
+                currentGoal=goalChoose.peek();
+            }else{
+                PurposefulTaskWrap taskWrap = taskWrapMinCost.get().getA();
+                wrapChoose.push(taskWrap);
+                taskChoose.push(taskWrap.task.apply(currentGoal));
+                goalChoose.push(currentGoal);
+
+                currentGoal=taskWrap.precondition.apply(currentGoal); //create next goal by this task's precondition.
             }
         }
+        getChildren().addAll(taskChoose);
     }
 }
