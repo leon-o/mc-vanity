@@ -11,6 +11,9 @@ import net.minecraft.entity.ai.brain.schedule.Activity;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.server.ServerWorld;
+import top.leonx.vanity.ai.goap.EatFoodGoapGoal;
+import top.leonx.vanity.ai.goap.GoapGoal;
+import top.leonx.vanity.ai.goap.UseItemGoapGoal;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.ai.tree.composite.*;
@@ -227,8 +230,7 @@ public class OutsiderTasks {
 
     public static ImmutableList<Pair<Integer, ? extends Task<? super OutsiderEntity>>> debug()
     {
-        @SuppressWarnings("unchecked")
-        BehaviorTreeTask<OutsiderEntity> build = ScriptBuilder.<OutsiderEntity>start("DEBUG")
+/*        BehaviorTreeTask<OutsiderEntity> build = ScriptBuilder.<OutsiderEntity>start("DEBUG")
             .sync("Heal while running",
                 t -> t.then(new EscapeFromTask<>()),
                 t -> t.utilitySelect("heal_self",
@@ -242,7 +244,10 @@ public class OutsiderTasks {
                         q->q.then(increaseSatiety()),q->q.then(new UsePotionTask(e->e)));
                         return (w,e,time)->e.getFoodStats().needFood()?0.8:0 * AIUtil.sigmod(e.getHealth() / e.getMaxHealth(), -8, -5);
                     }))
-                .build();
+                .build();*/
+
+        GoapTask build=new GoapTask("eat",new EatFoodGoapGoal());
+
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(build)));
     }
 }

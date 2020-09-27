@@ -20,6 +20,7 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.leonx.vanity.VanityMod;
+import top.leonx.vanity.ai.goap.PurposefulTaskRegistry;
 import top.leonx.vanity.init.ModBodyParts;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModFeatures;
@@ -46,6 +47,7 @@ public class ModEventSubscriber {
         VanityEquipDataSynchronizer.register();
         CharacterDataSynchronizer.register();
         PlayerSimulator.register();
+        PurposefulTaskRegistry.register();
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPostRegisterBiome(final RegistryEvent.Register<Biome> event) {

@@ -39,6 +39,9 @@ public class AttackTargetTask extends BehaviorTreeTask<OutsiderEntity> {
 
     @Override
     public void onUpdate(ServerWorld world, OutsiderEntity entity, long executionDuration) {
+        if(executionDuration%1000>998)
+            selectAttackTarget(entity);
+
         LivingEntity target = entity.getAttackTarget();
         if (target == null) return;
 
