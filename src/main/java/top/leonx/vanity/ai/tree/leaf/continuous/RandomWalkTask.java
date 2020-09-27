@@ -17,14 +17,15 @@ public class RandomWalkTask<T extends CreatureEntity> extends BehaviorTreeTask<T
 
     @Override
     protected void onUpdate(ServerWorld world, T entity, long executionDuration) {
-        if (entity.getNavigator().getPath()!=null && entity.getDistanceSq(randomTarget)<9) {
-            randomTarget=RandomPositionGenerator.findRandomTarget(entity, 10, 7);
-        }
         if(randomTarget==null)
         {
             submitResult(Result.FAIL);
             return;
         }
+        if (entity.getNavigator().getPath()!=null && entity.getDistanceSq(randomTarget)<9) {
+            randomTarget=RandomPositionGenerator.findRandomTarget(entity, 10, 7);
+        }
+
         entity.getNavigator().tryMoveToXYZ(randomTarget.x,randomTarget.y,randomTarget.z,1);
         entity.getLookController().setLookPosition(randomTarget.add(0,1,0));
     }
