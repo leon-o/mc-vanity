@@ -67,7 +67,8 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         dialogButtons.clear();
 
         final int dialogButtonStartX= dialogPanelLeft +4;
-        final int dialogButtonWidth=96;
+        final int dialogButtonWidth=64;
+        final int dialogButtonHeight=32;
         final int dialogButtonMargin=2;
         final int buttonNumPerPage=3;
 
@@ -75,7 +76,7 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
              i < Math.min(container.availableRequests.size(),(dialogButtonPage+1)*buttonNumPerPage);
              i++) {
 
-            DialogButton  dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - 34, dialogButtonWidth, 48,"",null);
+            DialogButton  dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - dialogButtonHeight-8, dialogButtonWidth, dialogButtonHeight,"",null);
             DialogRequest request      = container.availableRequests.get(i);
             dialogButton.setMessage(I18n.format(request.getTranslateKey()));
             dialogButton.onPress=e->container.requestOperation(request);

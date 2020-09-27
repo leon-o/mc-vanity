@@ -35,7 +35,7 @@ public class FollowEntityTask extends BehaviorTreeTask<OutsiderEntity> {
             submitResult(Result.SUCCESS);
         }else{
             Path path = entity.getNavigator().getPathToEntity(followedEntity, 8);
-            entity.getLookController().setLookPositionWithEntity(followedEntity,20,20);
+            //entity.getLookController().setLookPositionWithEntity(followedEntity,20,20);
             if(path!=null && entity.getDistanceSq(followedEntity)<900)
                 entity.getNavigator().setPath(path,1f);
             else {

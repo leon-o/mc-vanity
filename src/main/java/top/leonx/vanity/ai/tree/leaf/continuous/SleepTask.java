@@ -32,7 +32,7 @@ public class SleepTask<T extends MobEntity> extends BehaviorTreeTask<T> {
         }
         if (!entity.isSleeping()) {
             Vec3d bedPosVec = new Vec3d(bedPos);
-            entity.getNavigator().tryMoveToXYZ(bedPosVec.x, bedPosVec.y, bedPosVec.z, AIUtil.sigmod(entity.getDistanceSq(bedPosVec),1,+4));
+            entity.getNavigator().tryMoveToXYZ(bedPosVec.x, bedPosVec.y, bedPosVec.z, AIUtil.speedEase(entity.getDistanceSq(bedPosVec)));
             entity.getLookController().setLookPosition(bedPosVec);
             if (entity.getDistanceSq(bedPosVec) <= 3.2) {
 

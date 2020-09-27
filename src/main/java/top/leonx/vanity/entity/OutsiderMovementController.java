@@ -96,6 +96,8 @@ public class OutsiderMovementController extends MovementController {
                 this.mob.setMoveVertical((float)motion.y);
             }else{
                 this.mob.rotationYaw = this.limitAngle(this.mob.rotationYaw, deltaAngle, 12.0F);
+                this.mob.setRotationYawHead(this.mob.rotationYaw);
+                this.mob.rotationPitch=(int) Math.toDegrees(Math.asin(deltaY/distance));
                 this.mob.setMoveForward(mob.getAIMoveSpeed());
             }
 

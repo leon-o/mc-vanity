@@ -116,6 +116,10 @@ public class AIUtil {
         return 1/(1+Math.exp(-x*a+b));
     }
 
+    public static double speedEase(double distance)
+    {
+        return AIUtil.sigmod(distance,1,+4);
+    }
     public static double entityDangerousAssessment(LivingEntity target, LivingEntity owner)
     {
         if(target==null || owner==null)return 0;
