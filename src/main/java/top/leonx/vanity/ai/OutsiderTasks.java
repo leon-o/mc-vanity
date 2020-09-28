@@ -21,7 +21,7 @@ import top.leonx.vanity.ai.tree.leaf.continuous.*;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.util.AIUtil;
-import top.leonx.vanity.util.GeneralFoodStats;
+import top.leonx.vanity.entity.GeneralFoodStats;
 
 import java.util.List;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package top.leonx.vanity.util;
+package top.leonx.vanity.entity;
 
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.player.PlayerEntity;

@@ -28,7 +28,7 @@ public class NeedsStatus {
         else if(difficulty==Difficulty.PEACEFUL)
             factor=0.2f;
 
-        socialLevel= MathHelper.clamp(0.06f*factor,0,maxLevel) ;
+        socialLevel= MathHelper.clamp(0.006f*factor,0,maxLevel) ;
         cleanLevel=MathHelper.clamp(0.01f*factor,0,maxLevel);
         entertainmentLevel=MathHelper.clamp(0.015f*factor,0,maxLevel);
     }

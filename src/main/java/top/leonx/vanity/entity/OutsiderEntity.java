@@ -1,9 +1,7 @@
 package top.leonx.vanity.entity;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.Dynamic;
-import jdk.nashorn.internal.runtime.options.Option;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
@@ -61,9 +59,7 @@ import top.leonx.vanity.event.OutsiderEvent;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
-import top.leonx.vanity.util.GeneralFoodStats;
 import top.leonx.vanity.util.OutsiderInventory;
-import top.leonx.vanity.util.PlayerSimPathNavigator;
 import top.leonx.vanity.util.PlayerSimulator;
 
 import javax.annotation.Nullable;
