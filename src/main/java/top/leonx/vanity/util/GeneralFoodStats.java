@@ -12,16 +12,18 @@ import net.minecraft.world.GameRules;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import top.leonx.vanity.entity.IHasFoodStats;
+import top.leonx.vanity.entity.OutsiderEntity;
 
 public class GeneralFoodStats<T extends CreatureEntity & IHasFoodStats<?>> {
-    private int foodLevel = 20;
-    private float foodSaturationLevel;
-    private float foodExhaustionLevel;
-    private int foodTimer;
-    private int prevFoodLevel = 20;
-
-    public GeneralFoodStats() {
+    private       int            foodLevel = 20;
+    private       float          foodSaturationLevel;
+    private       float          foodExhaustionLevel;
+    private       int            foodTimer;
+    private       int            prevFoodLevel = 20;
+    private final T entity;
+    public GeneralFoodStats(T entity) {
         this.foodSaturationLevel = 5.0F;
+        this.entity=entity;
     }
 
     /**
@@ -35,7 +37,9 @@ public class GeneralFoodStats<T extends CreatureEntity & IHasFoodStats<?>> {
     public void consume(Item maybeFood, ItemStack stack) {
         if (maybeFood.isFood()) {
             Food food = maybeFood.getFood();
-            this.addStats(food.getHealing(), food.getSaturation());
+            if (food != null) {
+                this.addStats(food.getHealing(), food.getSaturation());
+            }
         }
 
     }
@@ -43,7 +47,7 @@ public class GeneralFoodStats<T extends CreatureEntity & IHasFoodStats<?>> {
     /**
      * Handles the food game logic.
      */
-    public void tick(T entity) {
+    public void tick() {
         Difficulty difficulty = entity.world.getDifficulty();
         this.prevFoodLevel = this.foodLevel;
         if (this.foodExhaustionLevel > 4.0F) {

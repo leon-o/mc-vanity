@@ -12,8 +12,6 @@ import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.goap.EatFoodGoapGoal;
-import top.leonx.vanity.ai.goap.GoapGoal;
-import top.leonx.vanity.ai.goap.UseItemGoapGoal;
 import top.leonx.vanity.ai.tree.BehaviorTreeRootTask;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.ai.tree.composite.*;

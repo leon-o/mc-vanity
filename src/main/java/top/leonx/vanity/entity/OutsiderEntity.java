@@ -98,7 +98,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     protected final PlayerSimPathNavigator           waterNavigator;
     protected final GroundPathNavigator              groundNavigator;
     //private static final DataParameter<BlockPos>      SPAWN_POS               = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.BLOCK_POS);
-    private final   GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>();
+    private final   GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>(this);
+    private final   NeedsStatus                      needsStatus        = new NeedsStatus(this);
     private final   PlayerAbilities                  abilities          = new PlayerAbilities();
     private final   CooldownTracker                  cooldownTracker    = new CooldownTracker();
     public          ServerPlayerEntity          interactingPlayer  = null;
@@ -677,6 +678,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public void readAdditional(CompoundNBT compound) {
         super.readAdditional(compound);
         foodStats.read(compound);
+        needsStatus.read(compound);
         abilities.read(compound);
         ListNBT listnbt  = compound.getList("Inventory", 10);
         UUID    followed = compound.getUniqueId("followed");
@@ -754,7 +756,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.inventory.tick();
         this.interactionManager.tick();
         if (!this.world.isRemote) {
-            this.foodStats.tick(this);
+            this.foodStats.tick();
+            this.needsStatus.tick();
             tickCooldown();
         }
     }
@@ -794,6 +797,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public void writeAdditional(CompoundNBT compound) {
         super.writeAdditional(compound);
         foodStats.write(compound);
+        needsStatus.write(compound);
         abilities.write(compound);
         compound.put("Inventory", this.inventory.write(new ListNBT()));
         compound.putUniqueId("followed", getFollowedPlayerUUID().orElse(new UUID(0,0)));
