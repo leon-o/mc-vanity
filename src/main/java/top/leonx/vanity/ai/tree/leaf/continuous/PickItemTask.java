@@ -44,7 +44,7 @@ public class PickItemTask<T extends OutsiderEntity> extends BehaviorTreeTask<T> 
         if(targetEntity==null) {submitResult(Result.FAIL); return;}
         entity.getLookController().setLookPositionWithEntity(targetEntity,30,30);
 
-        Path path = entity.getNavigator().getPathToEntity(targetEntity, 1);
+        Path path = entity.getNavigator().getPathToEntity(targetEntity, 0);
         if (path != null) {
             entity.getNavigator().setPath(path, AIUtil.speedEase(entity.getDistanceSq(targetEntity)));
         }
