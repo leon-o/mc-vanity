@@ -31,7 +31,7 @@ public class BodyPartRegistry {
     public static void initBodyParts(final FMLCommonSetupEvent event)
     {
         for (BodyPartRegistryEntry registryEntry : bodyPartRegistrySupplier) {
-            BodyPart bodyPart = registryEntry.bodyPartCreater.get();
+            BodyPart bodyPart = registryEntry.bodyPartCreate.get();
             bodyPart.setName(registryEntry.name);
             registryEntry.updateReference(bodyPart);
 

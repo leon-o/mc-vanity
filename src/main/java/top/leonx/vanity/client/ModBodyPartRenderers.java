@@ -38,7 +38,8 @@ public class ModBodyPartRenderers {
         BodyPartRendererRegistry.register(ModBodyParts.EYE_2, new EyeBodyPartRender(getEyeLocation(ModBodyParts.EYE_2.get().getName())));
         BodyPartRendererRegistry.register(ModBodyParts.EYE_3, new EyeBodyPartRender(getEyeLocation(ModBodyParts.EYE_3.get().getName())));
 
-        BodyPartRendererRegistry.register(ModBodyParts.SKIN_FEMALE_1, new SkinBodyPartRenderer(getSkinLocation(ModBodyParts.SKIN_FEMALE_1.get().getName())));
+        BodyPartRendererRegistry.register(ModBodyParts.SKIN_FEMALE_1, new SkinBodyPartRenderer(getSkinLocation(ModBodyParts.SKIN_FEMALE_1.get().getName()),true));
+        BodyPartRendererRegistry.register(ModBodyParts.SKIN_MALE_1, new SkinBodyPartRenderer(getSkinLocation(ModBodyParts.SKIN_MALE_1.get().getName()),false));
 
         //BodyPartRendererRegistry.register(ModBodyParts.MOUTH_DEBUG,new MouthBodyPartRenderer(getMouthLocation(ModBodyParts.MOUTH_DEBUG.get().getName())));
         BodyPartRendererRegistry.register(ModBodyParts.MOUTH_1,new MouthBodyPartRenderer(getMouthLocation(ModBodyParts.MOUTH_1.get().getName())));

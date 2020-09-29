@@ -41,6 +41,10 @@ public class VanityMirrorContainer extends Container {
         this(windowId,inv,(VanityMirrorTileEntity)inv.player.world.getTileEntity(data.readBlockPos()));
     }
 
+    public PlayerEntity getPlayer() {
+        return player;
+    }
+
     @Override
     public boolean canInteractWith(PlayerEntity playerIn) {
         return true;

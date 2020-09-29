@@ -9,14 +9,15 @@ import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryManager;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.hair.IHasIcon;
+import top.leonx.vanity.util.Gender;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
 public abstract class BodyPart implements IHasIcon {
-    private final                           BodyPartProperty             property;
-    private       int              color;
+    private final BodyPartProperty   property;
+    private int   color;
     private String name;
     public BodyPart(BodyPartProperty property)
     {
@@ -29,6 +30,10 @@ public abstract class BodyPart implements IHasIcon {
     public BodyPartGroup getGroup()
     {
         return property.group;
+    }
+    public Gender getSuitableGender()
+    {
+        return Gender.BOTH;
     }
     public abstract List<Integer> getAvailableColors();
     public int getRandomColor()

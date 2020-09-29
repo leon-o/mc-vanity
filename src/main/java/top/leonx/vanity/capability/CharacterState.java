@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.math.MathHelper;
+import top.leonx.vanity.util.Gender;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public class CharacterState {
 
     public Gender getGender() {
         String genderStr = root.getString(Keys.GENDER);
-        return genderStr.length() > 0 && genderStr.equals("male") ? Gender.MALE : Gender.FEMALE;
+        return genderStr.length() > 0 && genderStr.equals(Gender.MALE.name()) ? Gender.MALE : Gender.FEMALE;
     }
     public void promoteRelationWith(UUID uuid, float i) {
         setRelationWith(uuid,getRelationWith(uuid)+i);
@@ -33,7 +34,7 @@ public class CharacterState {
         setLoveWith(uuid,getLoveWith(uuid)+i);
     }
     public void setGender(Gender gender) {
-        root.putString("gender", gender.toString());
+        root.putString(Keys.GENDER, gender.name());
     }
 
     public float getLoveWith(UUID uuid) {
@@ -174,12 +175,6 @@ public class CharacterState {
             list.add(entryNbt);
         }
         return list;
-    }
-
-
-
-    public enum Gender {
-        MALE, FEMALE,
     }
 
     public enum MOOD {

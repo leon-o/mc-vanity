@@ -5,13 +5,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.ToggleWidget;
 import net.minecraft.client.resources.I18n;
 import top.leonx.vanity.bodypart.*;
+import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
 import top.leonx.vanity.hair.IHasIcon;
+import top.leonx.vanity.init.ModCapabilityTypes;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 public class WrapVanityItemPage {
     private final List<VanityItemWidget> buttons = Lists.newArrayListWithCapacity(20);
@@ -55,7 +58,8 @@ public class WrapVanityItemPage {
     public void updateLists(BodyPartGroup group, Queue<BodyPartStack> selectedItem, boolean backToFirst) {
         currentGroup=group;
         this.selectedItem=selectedItem;
-        this.itemList= new ArrayList<>(BodyPartRegistry.getBodyParts(group));
+        CharacterState characterState = parent.getContainer().getPlayer().getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY);
+        this.itemList= BodyPartRegistry.getBodyParts(group).stream().filter(t->t.getSuitableGender().isSuitable(characterState.getGender())).collect(Collectors.toList());
         this.totalPages = (int)Math.ceil((double)itemList.size() / 20.0D);
         if (this.totalPages <= this.currentPage || backToFirst) {
             this.currentPage = 0;

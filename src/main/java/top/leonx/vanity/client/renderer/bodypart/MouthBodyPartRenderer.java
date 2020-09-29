@@ -56,7 +56,7 @@ public class MouthBodyPartRenderer extends BodyPartRenderer {
         matrixStackIn.scale(mouthSize / 16f, mouthSize / 16f, 1 / 16f);
 
         MatrixStack.Entry last   = matrixStackIn.getLast();
-        IVertexBuilder    buffer = bufferIn.getBuffer(RenderType.getEntityTranslucentCull(mouthLocation));
+        IVertexBuilder    buffer = bufferIn.getBuffer(RenderType.getEntityCutout(mouthLocation));
 
         Vector3f normal = new Vector3f(0, 0, -1f);
         Vector4f v1     = new Vector4f(1, -0.5f, -4.02f, 1.0F);

@@ -79,23 +79,23 @@ public class ForgeEventSubscriber {
                     ServerPlayerEntity mp = (ServerPlayerEntity) livingEntity;
                     CharacterDataSynchronizer.UpdateDataToClient(mp, characterState, livingEntity.getEntityId());
                 }
-            }
-            if (BodyPartUtil.hasBodyPart(livingEntity)) {
-                BodyPartCapability.BodyPartData bodyPartData = livingEntity.getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY);
-                if (bodyPartData.isNeedInit()) {
+                if (BodyPartUtil.hasBodyPart(livingEntity)) {
+                    BodyPartCapability.BodyPartData bodyPartData = livingEntity.getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY);
+                    if (bodyPartData.isNeedInit()) {
 
-                    if(livingEntity instanceof OutsiderEntity || livingEntity instanceof PlayerEntity)
-                    {
-                        bodyPartData.getItemStacksList().addAll(BodyPartUtil.getRandomBodyPart(bodyPartData,BodyPartGroup.GROUPS.values().toArray(new BodyPartGroup[]{})));
-                    }else {
-                        bodyPartData.getItemStacksList().addAll(BodyPartUtil.getRandomBodyPart(bodyPartData,BodyPartGroup.BASE_HAIR_GROUP,BodyPartGroup.EXTRA_HAIR_GROUP));
+                        if(livingEntity instanceof OutsiderEntity || livingEntity instanceof PlayerEntity)
+                        {
+                            bodyPartData.getItemStacksList().addAll(BodyPartUtil.getRandomBodyPart(characterState,BodyPartGroup.GROUPS.values().toArray(new BodyPartGroup[]{})));
+                        }else {
+                            bodyPartData.getItemStacksList().addAll(BodyPartUtil.getRandomBodyPart(characterState,BodyPartGroup.BASE_HAIR_GROUP,BodyPartGroup.EXTRA_HAIR_GROUP));
+                        }
+
+                        bodyPartData.setNeedInit(false);
                     }
-
-                    bodyPartData.setNeedInit(false);
-                }
-                if (livingEntity instanceof ServerPlayerEntity) {
-                    ServerPlayerEntity mp = (ServerPlayerEntity) livingEntity;
-                    VanityEquipDataSynchronizer.UpdateDataToClient(mp, bodyPartData, livingEntity.getEntityId());
+                    if (livingEntity instanceof ServerPlayerEntity) {
+                        ServerPlayerEntity mp = (ServerPlayerEntity) livingEntity;
+                        VanityEquipDataSynchronizer.UpdateDataToClient(mp, bodyPartData, livingEntity.getEntityId());
+                    }
                 }
             }
         }

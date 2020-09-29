@@ -13,7 +13,8 @@ public class CharacterStateUtil {
 
     public static void initCharacterState(CharacterState state)
     {
-        state.setGender(Math.random()<0.5?CharacterState.Gender.MALE: CharacterState.Gender.FEMALE);
+        double random = Math.random();
+        state.setGender(random<0.5d?Gender.MALE: Gender.FEMALE);
 
         state.setNeedInit(false);
     }

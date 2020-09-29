@@ -2,7 +2,6 @@ package top.leonx.vanity.client.renderer.bodypart;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.layers.ArmorLayer;
@@ -14,7 +13,6 @@ import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
@@ -27,15 +25,20 @@ import java.util.Map;
 
 
 public class SkinBodyPartRenderer extends BodyPartRenderer {
+    SkinModel skinModel;
+    final boolean slim;
 
     static SkinModel slimModel=new SkinModel(0,true);
     static SkinModel normModel=new SkinModel(0,false);
 
-    final static ArmorLayer armorLayer=new BipedArmorLayer(null,slimModel,normModel);
+    final static ArmorLayer armorLayer =new BipedArmorLayer(null, slimModel, normModel);
     ResourceLocation skinLocation;
-    public SkinBodyPartRenderer(ResourceLocation skinLocation)
+
+    public SkinBodyPartRenderer(ResourceLocation skinLocation,boolean slim)
     {
         this.skinLocation=skinLocation;
+        this.slim=slim;
+        skinModel =slim?slimModel:normModel;
     }
 
 
@@ -113,28 +116,30 @@ public class SkinBodyPartRenderer extends BodyPartRenderer {
 
     @Override
     public <T extends LivingEntity, M extends EntityModel<T> & IHasHead> void render(LivingEntity livingEntity, M entityModel, Map<String, Float> attributes, CharacterState characterState, Color col, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, int packedOverlayIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        if(entityModel instanceof BipedModel)
+        if(entityModel instanceof BipedModel<?>)
         {
-            BipedModel<LivingEntity> model = (BipedModel) entityModel;
+            BipedModel<LivingEntity> bipedModel = (BipedModel<LivingEntity>) entityModel;
             ItemStack itemStackFromSlot = livingEntity.getItemStackFromSlot(EquipmentSlotType.CHEST);
             boolean renderArmor = itemStackFromSlot.getItem() instanceof ArmorItem;
-            model.setModelAttributes(slimModel);
+            bipedModel.setModelAttributes(skinModel);
 
-            slimModel.setLivingAnimations(livingEntity,limbSwing,limbSwingAmount,partialTicks);
-            slimModel.setRotationAngles(livingEntity,limbSwing,limbSwingAmount,ageInTicks,netHeadYaw,headPitch);
-            slimModel.armorChestRoot.showModel=false;//Temporarily hide
+            skinModel.setLivingAnimations(livingEntity,limbSwing,limbSwingAmount,partialTicks);
+            skinModel.setRotationAngles(livingEntity,limbSwing,limbSwingAmount,ageInTicks,netHeadYaw,headPitch);
+
+            if(slim)
+                skinModel.armorChestRoot.showModel=false;//Temporarily hide
 
 
 
-            slimModel.render(matrixStackIn,bufferIn.getBuffer(RenderType.getEntityCutout(skinLocation)),packedLightIn,packedOverlayIn,col.r,col.g,col.b,col.a);
+            skinModel.render(matrixStackIn,bufferIn.getBuffer(RenderType.getEntityCutout(skinLocation)),packedLightIn,packedOverlayIn,col.r,col.g,col.b,col.a);
 
-            if(renderArmor)
+            if(renderArmor && slim)
             {
                 matrixStackIn.push();
-                slimModel.bipedBody.translateRotate(matrixStackIn);
-                slimModel.armorChestRoot.showModel=true;
+                skinModel.bipedBody.translateRotate(matrixStackIn);
+                skinModel.armorChestRoot.showModel=true;
                 ResourceLocation resource = armorLayer.getArmorResource(livingEntity, itemStackFromSlot, EquipmentSlotType.CHEST, null);
-                slimModel.armorChestRoot.render(matrixStackIn,bufferIn.getBuffer(RenderType.getEntityCutout(resource)),packedLightIn,packedOverlayIn);
+                skinModel.armorChestRoot.render(matrixStackIn,bufferIn.getBuffer(RenderType.getEntityCutout(resource)),packedLightIn,packedOverlayIn);
                 matrixStackIn.pop();
             }
         }
@@ -147,16 +152,16 @@ public class SkinBodyPartRenderer extends BodyPartRenderer {
         ModelRenderer renderModelIn;
         if(isLeftArm)
         {
-            slimModel.leftArmPose=modelIn.leftArmPose;
-            renderModelIn=slimModel.bipedLeftArm;
+            skinModel.leftArmPose=modelIn.leftArmPose;
+            renderModelIn=skinModel.bipedLeftArm;
         }else {
-            slimModel.rightArmPose=modelIn.rightArmPose;
-            renderModelIn=slimModel.bipedRightArm;
+            skinModel.rightArmPose=modelIn.rightArmPose;
+            renderModelIn=skinModel.bipedRightArm;
         }
-        slimModel.swingProgress = 0.0F;
-        slimModel.isSneak = false;
-        slimModel.swimAnimation = 0.0F;
-        slimModel.setRotationAngles(playerIn, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
+        skinModel.swingProgress = 0.0F;
+        skinModel.isSneak = false;
+        skinModel.swimAnimation = 0.0F;
+        skinModel.setRotationAngles(playerIn, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
         renderModelIn.rotateAngleX = 0.0F;
         renderModelIn.render(matrixStackIn, bufferIn.getBuffer(RenderType.getEntitySolid(playerIn.getLocationSkin())), combinedLightIn, OverlayTexture.NO_OVERLAY,color.r,color.g,color.b,color.a);
 

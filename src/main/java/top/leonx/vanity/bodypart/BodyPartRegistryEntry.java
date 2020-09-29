@@ -4,11 +4,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public class BodyPartRegistryEntry implements Supplier<BodyPart> {
-    Supplier<BodyPart> bodyPartCreater;
+    Supplier<BodyPart> bodyPartCreate;
     String             name;
 
-    public BodyPartRegistryEntry(Supplier<BodyPart> bodyPartCreater, String name) {
-        this.bodyPartCreater = bodyPartCreater;
+    public BodyPartRegistryEntry(Supplier<BodyPart> bodyPartCreate, String name) {
+        this.bodyPartCreate = bodyPartCreate;
         this.name = name;
     }
 
