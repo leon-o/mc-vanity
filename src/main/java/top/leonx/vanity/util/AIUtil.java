@@ -13,6 +13,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -156,7 +157,7 @@ public class AIUtil {
         Optional<List<LivingEntity>> visibleMobsOpt = entity.getBrain().getMemory(MemoryModuleType.VISIBLE_MOBS);
         if (visibleMobsOpt.isPresent())
         {
-            Optional<LivingEntity> closestFoodProvider = visibleMobsOpt.get().stream().filter(mob -> !(mob instanceof MobEntity) && AIUtil.getLivingEntityDrops(mob).stream().anyMatch(predicate)).min(
+            Optional<LivingEntity> closestFoodProvider = visibleMobsOpt.get().stream().filter(mob -> !(mob instanceof MonsterEntity) && AIUtil.getLivingEntityDrops(mob).stream().anyMatch(predicate)).min(
                     Comparator.comparingDouble(mob -> mob.getDistanceSq(entity)));
             return closestFoodProvider.orElse(null);
         }
