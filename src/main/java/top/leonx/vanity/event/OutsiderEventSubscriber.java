@@ -32,7 +32,7 @@ public class OutsiderEventSubscriber {
 
             if (livingEntity.getAttackingEntity() instanceof OutsiderEntity) {
                 OutsiderEntity outsiderEntity = (OutsiderEntity) livingEntity;
-                outsiderEntity.getCharacterState().promoteRelationWith(event.getPlayer().getUniqueID(), 1f);
+                CharacterState.promoteRelationWith(event.getPlayer(),outsiderEntity, 1f);
 
                 if(!target.world.isRemote())
                 {
@@ -41,7 +41,7 @@ public class OutsiderEventSubscriber {
             }
 
             for (OutsiderEntity outsiderEntity : target.getEntityWorld().getEntitiesWithinAABB(OutsiderEntity.class, target.getBoundingBox().expand(10, 10, 10))) {
-                outsiderEntity.getCharacterState().promoteRelationWith(event.getPlayer().getUniqueID(), 0.5F);
+                CharacterState.promoteRelationWith(event.getPlayer(),outsiderEntity, 0.5F);
 
                 if(!target.world.isRemote())
                 {
@@ -65,12 +65,13 @@ public class OutsiderEventSubscriber {
             ItemStack itemStack    = event.getItemStack();
             float     relaIncrease = (float) (0.02 * AIUtil.getItemValue(itemStack) * itemStack.getCount());
             boolean modified=false;
+            PlayerEntity player=outsiderEntity.world.getPlayerByUuid(throwerId);
             if(relaIncrease!=0)
             {
-                outsiderEntity.getCharacterState().promoteRelationWith(throwerId, relaIncrease);
+                CharacterState.promoteRelationWith(outsiderEntity,player, relaIncrease);
                 modified=true;
             }
-            PlayerEntity player=outsiderEntity.world.getPlayerByUuid(throwerId);
+
 
             float loveIncrease=0;
             if(player!=null &&player.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY).getGender().equals(outsiderEntity.getCharacterState().getSexualOrientation()))
@@ -79,7 +80,7 @@ public class OutsiderEventSubscriber {
 
                 if(loveIncrease!=0)
                 {
-                    outsiderEntity.getCharacterState().promoteLoveWith(throwerId, loveIncrease);
+                    CharacterState.promoteLoveWith(outsiderEntity,player, loveIncrease);
                     modified=true;
                 }
             }

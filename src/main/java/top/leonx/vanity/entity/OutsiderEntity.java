@@ -1004,7 +1004,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 BlockPos spawnPos = getBedPosition().orElse(world.getSpawnPoint());
                 outsiderEntity.setLocationAndAngles((double) spawnPos.getX() + 0.5D, spawnPos.getY(), (double) spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
                 outsiderEntity.onInitialSpawn(world, world.getDifficultyForLocation(spawnPos), SpawnReason.STRUCTURE, null, null);
-
+                outsiderEntity.setUniqueId(this.getUniqueID());
                 world.addEntity(outsiderEntity);
             }
         }
