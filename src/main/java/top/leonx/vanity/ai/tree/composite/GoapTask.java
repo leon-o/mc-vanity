@@ -32,6 +32,8 @@ public class GoapTask extends CompositeTask<OutsiderEntity> {
         if (getChildren().size() == 0) submitResult(Result.FAIL);
         else {
             getLastChild().callForStart(world, entity, executionDuration);
+            if(getLastChild().getResult()==Result.FAIL)
+                submitResult(Result.FAIL);
         }
     }
 
