@@ -20,7 +20,7 @@ import java.util.List;
 public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
     public static final ResourceLocation DIALOG_TEX = new ResourceLocation(VanityMod.MOD_ID, "textures/gui/dialog.png");
     int halfH,halfW, dialogPanelLeft, dialogPanelTop, dialogPanelBottom, dialogPanelWidth =256,dialogPanelHeight=80;
-    int infoPanelLeft,infoPanelTop,infoPanelBottom,infoPanelWidth=80,infoPanelHeight=96;
+    int infoPanelLeft,infoPanelTop,infoPanelBottom,infoPanelWidth=80,infoPanelHeight=80;
     private final List<DialogButton> dialogButtons=new ArrayList<>();
     private final List<Label> labels=new ArrayList<>();
     private ProcessBar relationShipProcessBar;
@@ -42,11 +42,11 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         dialogPanelTop =height-dialogPanelHeight-16;
         dialogPanelBottom = dialogPanelTop +dialogPanelHeight;
         updateDialogButtons();
-        addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+4,infoPanelTop+4));
-        addLabel(new Label("Relationship").setXY(infoPanelLeft+4,infoPanelTop+24));
-        relationShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+32,68,5).setMaxValue(CharacterState.MAX_RELATIONSHIP);
-        addLabel(new Label("Love").setXY(infoPanelLeft+4,infoPanelTop+40));
-        loveShipProcessBar= new ProcessBar(infoPanelLeft+4,infoPanelTop+48,68,5).setMaxValue(CharacterState.MAX_LOVE);
+        addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+8,infoPanelTop+8));
+        addLabel(new Label("Relationship").setXY(infoPanelLeft+6,infoPanelTop+28));
+        relationShipProcessBar= new ProcessBar(infoPanelLeft+6,infoPanelTop+38,68,5).setMaxValue(CharacterState.MAX_RELATIONSHIP);
+        addLabel(new Label("Love").setXY(infoPanelLeft+6,infoPanelTop+52));
+        loveShipProcessBar= new ProcessBar(infoPanelLeft+6,infoPanelTop+62,68,5).setMaxValue(CharacterState.MAX_LOVE);
         loveShipProcessBar.type= ProcessBar.Type.PINK;
     }
     private void addLabel(Label label)
@@ -57,7 +57,7 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         //this.renderBackground();
         Minecraft.getInstance().textureManager.bindTexture(DIALOG_TEX);
-        blit(infoPanelLeft,infoPanelTop,0,160,infoPanelWidth,infoPanelHeight);
+        blit(infoPanelLeft,infoPanelTop,0,176,infoPanelWidth,infoPanelHeight);
         blit(dialogPanelLeft, dialogPanelTop, 0, 0, dialogPanelWidth, dialogPanelHeight);
     }
     private int dialogButtonPage=0;
@@ -76,7 +76,8 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
              i < Math.min(container.availableRequests.size(),(dialogButtonPage+1)*buttonNumPerPage);
              i++) {
 
-            DialogButton  dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - dialogButtonHeight-8, dialogButtonWidth, dialogButtonHeight,"",null);
+            DialogButton  dialogButton = new DialogButton(dialogButtonStartX + i * (dialogButtonWidth + dialogButtonMargin), dialogPanelBottom - dialogButtonHeight-12, dialogButtonWidth,
+                                                          dialogButtonHeight,"",null);
             DialogRequest request      = container.availableRequests.get(i);
             dialogButton.setMessage(I18n.format(request.getTranslateKey()));
             dialogButton.onPress=e->container.requestOperation(request);

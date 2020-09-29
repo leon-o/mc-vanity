@@ -13,14 +13,14 @@ public class DialogButton extends ToggleWidget {
 
     public IPressable onPress;
     private int color=0X333333;
-    private final static float widthInTex=48;
-    private final static float heightInTex=24;
+    private final static float widthInTex=64;
+    private final static float heightInTex=32;
     //String msg;
     public DialogButton(int xIn, int yIn, int widthIn, int heightIn,String msg,IPressable onPress) {
         super(xIn, yIn, widthIn, heightIn, false);
         this.setMessage(msg);
         this.onPress=onPress;
-        initTextureValues(0,96,64,32,DIALOG_TEX);
+        initTextureValues(0,80,64,32,DIALOG_TEX);
     }
 
     @Override
