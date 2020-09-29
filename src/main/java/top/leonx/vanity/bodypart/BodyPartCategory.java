@@ -1,6 +1,5 @@
 package top.leonx.vanity.bodypart;
 
-import top.leonx.vanity.hair.IHasIcon;
 import top.leonx.vanity.init.ModBodyParts;
 
 import java.util.ArrayList;

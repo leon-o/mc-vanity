@@ -1,4 +1,4 @@
-package top.leonx.vanity.hair;
+package top.leonx.vanity.bodypart;
 
 import net.minecraft.util.ResourceLocation;
 

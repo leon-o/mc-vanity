@@ -3,12 +3,7 @@ package top.leonx.vanity.bodypart;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.ModDimension;
-import net.minecraftforge.registries.ForgeRegistryEntry;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.RegistryManager;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.hair.IHasIcon;
 import top.leonx.vanity.util.Gender;
 
 import javax.annotation.Nullable;

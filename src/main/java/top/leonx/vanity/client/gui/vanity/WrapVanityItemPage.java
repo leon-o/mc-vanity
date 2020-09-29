@@ -7,11 +7,9 @@ import net.minecraft.client.resources.I18n;
 import top.leonx.vanity.bodypart.*;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
-import top.leonx.vanity.hair.IHasIcon;
 import top.leonx.vanity.init.ModCapabilityTypes;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.stream.Collectors;

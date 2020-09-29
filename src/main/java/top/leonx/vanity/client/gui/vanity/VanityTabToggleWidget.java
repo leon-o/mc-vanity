@@ -6,8 +6,8 @@ import net.minecraft.client.gui.widget.ToggleWidget;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import top.leonx.vanity.bodypart.IHasIcon;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
-import top.leonx.vanity.hair.IHasIcon;
 import top.leonx.vanity.bodypart.BodyPartGroup;
 
 @OnlyIn(Dist.CLIENT)
@@ -87,7 +87,7 @@ public class VanityTabToggleWidget extends ToggleWidget {
 
     private void renderIcon(ItemRenderer itemRenderer) {
         IHasIcon icon = this.group.getIcon();
-        int  i    = this.stateTriggered ? -2 : 0;
+        int      i    = this.stateTriggered ? -2 : 0;
             Minecraft.getInstance().getTextureManager().bindTexture(icon.getIconLocation());
             blit(this.x + 5 + i,this.y + 1,0,0,24,24,24,24);
 
