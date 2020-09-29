@@ -109,7 +109,7 @@ public class OutsiderDialogContainer extends Container {
         }
 
         public static OperationMsg decoder(PacketBuffer buffer) {
-            return new OperationMsg(buffer.readString());
+            return new OperationMsg(buffer.readString(32767));
         }
 
         public static void encoder(OperationMsg msg, PacketBuffer buffer) {
