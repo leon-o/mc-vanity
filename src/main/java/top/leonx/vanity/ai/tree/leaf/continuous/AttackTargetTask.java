@@ -26,15 +26,15 @@ public class AttackTargetTask extends BehaviorTreeTask<OutsiderEntity> {
     @Override
     public void onStart(ServerWorld world, OutsiderEntity entity, long executionDuration) {
         LivingEntity attackTarget = selectAttackTarget(entity);
-
+        if (attackTarget == null) {
+            submitResult(Result.FAIL);
+            return;
+        }
         double damageBase = entity.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getBaseValue();
         double speedBase=entity.getAttribute(SharedMonsterAttributes.ATTACK_SPEED).getBaseValue();
         entity.inventory.findAndHeld(Hand.MAIN_HAND,t->true,itemStack-> AIUtil.getModifiedAttackDamage(damageBase,attackTarget,itemStack)*AIUtil.getModifiedAttackSpeed(speedBase,itemStack));
 
         entity.setAttackTarget(attackTarget);
-
-        if (attackTarget == null)
-            submitResult(Result.FAIL);
     }
 
     @Override

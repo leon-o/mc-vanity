@@ -6,10 +6,18 @@ import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.DyeColor;
+import net.minecraft.tileentity.BedTileEntity;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.IBlockReader;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.*;
 import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.client.BodyPartRenderer;
 import top.leonx.vanity.client.BodyPartRendererRegistry;
 import top.leonx.vanity.init.ModCapabilityTypes;
+import top.leonx.vanity.tileentity.VanityBedTileEntity;
 import top.leonx.vanity.util.Color;
 import top.leonx.vanity.util.ColorUtil;
 import top.leonx.vanity.bodypart.BodyPartStack;
@@ -39,6 +47,10 @@ public class PlayerRendererTransform {
     {
         renderItem(matrixStackIn,bufferIn,combinedLightIn,playerIn,false,renderer.getEntityModel());
     }
+    DyeColor color;
+    public TileEntity createNewTileEntity(IBlockReader worldIn) {
+        return new VanityBedTileEntity(this.color);
+    }
 //    private static void a(MethodNode node)
 //    {
 //        FieldInsnNode entityModel = new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/renderer/entity/PlayerRenderer", "entityModel", "Lnet/minecraft/client/renderer/entity/model/EntityModel;");
@@ -47,4 +59,5 @@ public class PlayerRendererTransform {
 //        InsnList list=new InsnList();
 //
 //    }
+
 }

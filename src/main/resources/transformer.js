@@ -57,7 +57,23 @@ function transformRenderLeftArm(method)
     method.instructions.add(insnList);
     return method;
 }
-
+function transformCreateNewTileEntity(method)
+{
+    var insnList=new InsnList();
+    var label0 = new Label();
+    insnList.add(new LabelNode(label0));
+    insnList.add(new TypeInsnNode(Opcodes.NEW,"top/leonx/vanity/tileentity/VanityBedTileEntity"));
+    insnList.add(new InsnNode(Opcodes.DUP));
+    insnList.add(new VarInsnNode(Opcodes.ALOAD,0));
+    insnList.add(new FieldInsnNode(Opcodes.GETFIELD,"net/minecraft/block/BedBlock","color", "Lnet/minecraft/item/DyeColor;"));
+    insnList.add(new MethodInsnNode(Opcodes.INVOKESPECIAL,"top/leonx/vanity/tileentity/VanityBedTileEntity", "<init>", "(Lnet/minecraft/item/DyeColor;)V", false));
+    insnList.add(new InsnNode(Opcodes.ARETURN));
+    var label1 = new Label();
+    insnList.add(new LabelNode(label1));
+    method.instructions.clear();
+    method.instructions.add(insnList);
+    return method;
+}
 function initializeCoreMod() {
     return {
         'setModelVisibilities': {
@@ -87,5 +103,14 @@ function initializeCoreMod() {
             },
             'transformer': transformRenderLeftArm
         },
+        'createNewTileEntity()': {
+        'target': {
+            'type': 'METHOD',
+                'class': 'net.minecraft.block.BedBlock',
+                'methodName': 'func_196283_a_',//createNewTileEntity
+                'methodDesc': '(Lnet/minecraft/world/IBlockReader;)Lnet/minecraft/tileentity/TileEntity;'
+        },
+        'transformer': transformCreateNewTileEntity
+    }
     }
 }

@@ -1,5 +1,10 @@
 package top.leonx.vanity.event;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.BedItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.village.PointOfInterestType;
@@ -19,12 +24,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.IForgeRegistry;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.ai.goap.PurposefulTaskRegistry;
-import top.leonx.vanity.init.ModBodyParts;
-import top.leonx.vanity.init.ModCapabilityTypes;
-import top.leonx.vanity.init.ModFeatures;
-import top.leonx.vanity.init.ModPointOfInterest;
+import top.leonx.vanity.init.*;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
@@ -69,12 +72,16 @@ public class ModEventSubscriber {
         }
     }
 
-/*    @SubscribeEvent
-    public static void onItemRegistry(final RegistryEvent.Register<Item> event)
-    {
-        IForgeRegistry<Item> registry = event.getRegistry();
-        registry.registerAll(ModItems.ITEMS);
-    }*/
+//    @SubscribeEvent
+//    public static void onItemRegistry(final RegistryEvent.Register<Item> event)
+//    {
+//        IForgeRegistry<Item> registry = event.getRegistry();
+//        for (Block bedBlock : ModBlocks.getAllBedBlocks()) {
+//            registry.registerAll(new BedItem(bedBlock, (new Item.Properties()).maxStackSize(1).group(ItemGroup.DECORATIONS)).setRegistryName(bedBlock.getRegistryName()));
+//        }
+//
+//    }
+    /*
 //    @SubscribeEvent
 //    public static void onBlockRegistry(final RegistryEvent.Register<Block> event)
 //    {
