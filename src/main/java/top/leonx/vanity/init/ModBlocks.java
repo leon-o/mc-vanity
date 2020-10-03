@@ -1,21 +1,16 @@
 package top.leonx.vanity.init;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.item.DyeColor;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.block.PillowBlock;
 import top.leonx.vanity.block.VanityMirrorBlock;
 
 public final class  ModBlocks {
     public static final DeferredRegister<Block> BLOCKS = new DeferredRegister<>(ForgeRegistries.BLOCKS, VanityMod.MOD_ID);
 
     public static final RegistryObject<Block> VANITY_MIRROR=BLOCKS.register("vanity_mirror",VanityMirrorBlock::new);
-    public static final RegistryObject<Block> PILLOW=BLOCKS.register("pillow",PillowBlock::new);
 //    public static final RegistryObject<Block>  VANITY_WHITE_BED = BLOCKS.register("vanity_white_bed", ()->new VanityBedBlock(DyeColor.WHITE,
 //                                                                                                             Block.Properties.create(Material.WOOL).sound(SoundType.WOOD).hardnessAndResistance(0.2F).notSolid()));
 //    public static final RegistryObject<Block>  VANITY_ORANGE_BED = BLOCKS.register("vanity_orange_bed", ()->new VanityBedBlock(DyeColor.ORANGE, Block.Properties.create(Material.WOOL).sound(SoundType.WOOD).hardnessAndResistance(0.2F).notSolid()));

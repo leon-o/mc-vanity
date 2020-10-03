@@ -6,7 +6,7 @@ public enum Occupations {
     COOKER,
     BUILDER,
     FARMER, LUMBERJACK,
-    MINER, WEAPON_MAKER, DRESSMAKER, RESEARCHER;
+    MINER, WEAPON_MAKER, DRESSMAKER, RESEARCHER, TRADER, DELIVERYMAN, SOLDIER;
 
     public String getTranslateKey()
     {
