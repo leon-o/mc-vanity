@@ -1,4 +1,4 @@
-package top.leonx.vanity.client.gui.vanity;
+package top.leonx.vanity.client.gui.mirror;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;

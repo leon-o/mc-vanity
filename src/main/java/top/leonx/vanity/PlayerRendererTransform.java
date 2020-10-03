@@ -47,10 +47,6 @@ public class PlayerRendererTransform {
     {
         renderItem(matrixStackIn,bufferIn,combinedLightIn,playerIn,false,renderer.getEntityModel());
     }
-    DyeColor color;
-    public TileEntity createNewTileEntity(IBlockReader worldIn) {
-        return new VanityBedTileEntity(this.color);
-    }
 //    private static void a(MethodNode node)
 //    {
 //        FieldInsnNode entityModel = new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/renderer/entity/PlayerRenderer", "entityModel", "Lnet/minecraft/client/renderer/entity/model/EntityModel;");

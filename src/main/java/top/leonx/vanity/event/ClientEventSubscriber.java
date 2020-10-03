@@ -27,6 +27,7 @@ import top.leonx.vanity.client.ModBodyPartRenderers;
 import top.leonx.vanity.client.layer.BodyPartLayer;
 import top.leonx.vanity.client.renderer.VanityBedTileEntityRenderer;
 import top.leonx.vanity.client.renderer.entity.OutsiderRenderer;
+import top.leonx.vanity.client.screen.BedScreen;
 import top.leonx.vanity.client.screen.DialogScreen;
 import top.leonx.vanity.client.screen.OutsiderInventoryScreen;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
@@ -47,12 +48,15 @@ public class ClientEventSubscriber {
             ScreenManager.registerFactory(ModContainerTypes.VANITY_MIRROR_CONTAINER.get(), VanityMirrorScreen::new);
             ScreenManager.registerFactory(ModContainerTypes.OUTSIDER_DIALOG.get(), DialogScreen::new);
             ScreenManager.registerFactory(ModContainerTypes.OUTSIDER_INVENTORY.get(), OutsiderInventoryScreen::new);
+            ScreenManager.registerFactory(ModContainerTypes.VANITY_BED_CONTAINER.get(), BedScreen::new);
+
         });
 
         ModBodyPartRenderers.register();
 
         RenderingRegistry.registerEntityRenderingHandler(ModEntityTypes.OUTSIDER_ENTITY_ENTITY_TYPE.get(), OutsiderRenderer::new);
         ClientRegistry.bindTileEntityRenderer(ModTileEntityTypes.VANITY_BED.get(), VanityBedTileEntityRenderer::new);
+
     }
 
     @SubscribeEvent

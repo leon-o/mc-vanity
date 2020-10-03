@@ -1,4 +1,4 @@
-package top.leonx.vanity.client.gui.vanity;
+package top.leonx.vanity.client.gui.mirror;
 
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -9,9 +9,9 @@ import net.minecraft.client.gui.widget.button.ChangePageButton;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WrapPanel extends AbstractGui implements IRenderable, IGuiEventListener {
+public class BodyPartWrap extends AbstractGui implements IRenderable, IGuiEventListener {
     int x,y,width,height;
-    public WrapPanel(int xIn, int yIn, int widthIn, int heightIn) {
+    public BodyPartWrap(int xIn, int yIn, int widthIn, int heightIn) {
         x=xIn;
         y=yIn;
         width=widthIn;

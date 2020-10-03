@@ -3,6 +3,7 @@ package top.leonx.vanity.event;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.Vec3d;
@@ -30,22 +31,26 @@ public class OutsiderEventSubscriber {
         if (target instanceof LivingEntity) {
             LivingEntity livingEntity = (LivingEntity) target;
 
+            PlayerEntity player = event.getPlayer();
             if (livingEntity.getAttackingEntity() instanceof OutsiderEntity) {
                 OutsiderEntity outsiderEntity = (OutsiderEntity) livingEntity;
-                CharacterState.promoteRelationWith(event.getPlayer(),outsiderEntity, 1f);
+                CharacterState.promoteRelationWith(player, outsiderEntity, 1f);
 
                 if(!target.world.isRemote())
                 {
                     CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+                    CharacterDataSynchronizer.UpdateDataToClient((ServerPlayerEntity) player, player.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY),player.getEntityId());
                 }
             }
 
             for (OutsiderEntity outsiderEntity : target.getEntityWorld().getEntitiesWithinAABB(OutsiderEntity.class, target.getBoundingBox().expand(10, 10, 10))) {
-                CharacterState.promoteRelationWith(event.getPlayer(),outsiderEntity, 0.5F);
+                CharacterState.promoteRelationWith(player, outsiderEntity, 0.5F);
 
                 if(!target.world.isRemote())
                 {
                     CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+                    CharacterDataSynchronizer.UpdateDataToClient((ServerPlayerEntity) player, player.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY),player.getEntityId());
+
                 }
             }
 
@@ -101,8 +106,12 @@ public class OutsiderEventSubscriber {
                 }
             }
 
-            if(modified)
+            if(!modified) return;
+
                 CharacterDataSynchronizer.UpdateDataToTracking(outsiderEntity, outsiderEntity.getCharacterState());
+            if(player==null) return;
+                CharacterDataSynchronizer.UpdateDataToClient((ServerPlayerEntity) player, player.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY),player.getEntityId());
+
         }
     }
 }

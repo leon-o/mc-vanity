@@ -1,4 +1,4 @@
-package top.leonx.vanity.client.gui.vanity;
+package top.leonx.vanity.client.gui.mirror;
 
 /*
  * Minecraft Forge

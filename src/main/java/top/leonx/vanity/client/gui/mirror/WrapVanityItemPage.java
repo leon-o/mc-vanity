@@ -1,4 +1,4 @@
-package top.leonx.vanity.client.gui.vanity;
+package top.leonx.vanity.client.gui.mirror;
 
 import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
@@ -27,8 +27,8 @@ public class WrapVanityItemPage {
     private       Queue<BodyPartStack> selectedItem;
     private       BodyPartGroup        currentGroup;
 
-    private final VanityMirrorScreen     parent;
-    private WrapPanel adjustPanel;
+    private final VanityMirrorScreen parent;
+    private       BodyPartWrap       adjustPanel;
 
     public WrapVanityItemPage(VanityMirrorScreen parent) {
         for(int i = 0; i < 20; ++i) {
@@ -49,7 +49,7 @@ public class WrapVanityItemPage {
         this.forwardButton.initTextureValues(208, 160, 13, 32, VanityMirrorScreen.VANITY_TEX);
         this.backButton = new ToggleWidget(x + 38, y + 137, 12, 17, true);
         this.backButton.initTextureValues(192, 160, 13, 32, VanityMirrorScreen.VANITY_TEX);
-        adjustPanel=new WrapPanel(x,y+144,176,32);
+        adjustPanel=new BodyPartWrap(x, y+144, 176, 32);
     }
 
 

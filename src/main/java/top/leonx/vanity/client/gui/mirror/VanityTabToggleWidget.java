@@ -1,4 +1,4 @@
-package top.leonx.vanity.client.gui.vanity;
+package top.leonx.vanity.client.gui.mirror;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;

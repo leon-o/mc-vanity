@@ -8,7 +8,6 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.item.PillowItem;
 
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, VanityMod.MOD_ID);
@@ -23,8 +22,6 @@ public class ModItems {
 
     public static final RegistryObject<Item> VANITY_MIRROR=ITEMS.register("vanity_mirror",
                                                           ()->createBlockItem(ModBlocks.VANITY_MIRROR,new Item.Properties().group(ItemGroup.DECORATIONS)));
-
-    public static final RegistryObject<Item> PILLOW_BLOCk=ITEMS.register("pillow",PillowItem::new);
 
     public static BlockItem createBlockItem(RegistryObject<Block> block, Item.Properties properties)
     {

@@ -1,4 +1,4 @@
-package top.leonx.vanity.client.gui.vanity;
+package top.leonx.vanity.client.gui.mirror;
 
 import net.minecraft.client.gui.widget.ToggleWidget;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;

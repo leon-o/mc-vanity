@@ -24,8 +24,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.capability.BodyPartCapabilityProvider;
+import top.leonx.vanity.bodypart.BodyPartGroup;
 import top.leonx.vanity.capability.BodyPartCapability;
+import top.leonx.vanity.capability.BodyPartCapabilityProvider;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.capability.CharacterStateCapabilityProvider;
 import top.leonx.vanity.container.OutsiderDialogContainer;
@@ -34,7 +35,6 @@ import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
 import top.leonx.vanity.util.BodyPartUtil;
-import top.leonx.vanity.bodypart.BodyPartGroup;
 import top.leonx.vanity.util.CharacterStateUtil;
 import top.leonx.vanity.util.NameGenerator;
 
