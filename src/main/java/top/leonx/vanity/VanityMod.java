@@ -1,11 +1,14 @@
 package top.leonx.vanity;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import top.leonx.vanity.bodypart.BodyPartRegistry;
+import top.leonx.vanity.entity.OutsiderHolder;
+import top.leonx.vanity.event.GamePlayEventSubscriber;
 import top.leonx.vanity.init.*;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -29,5 +32,7 @@ public class VanityMod
         ModPointOfInterest.POI_TYPE.register(modEventBus);
 
         modEventBus.addListener(BodyPartRegistry::initBodyParts);
+
+        MinecraftForge.EVENT_BUS.addListener(OutsiderHolder::onWorldLoaded);
     }
 }

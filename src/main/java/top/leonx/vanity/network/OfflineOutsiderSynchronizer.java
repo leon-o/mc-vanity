@@ -32,11 +32,9 @@ public class OfflineOutsiderSynchronizer {
 
     private static void handlerClient(OfflineOutsiderMsg msg, Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(()->{
-            Either<OutsiderEntity, OfflineOutsider> outsiderEither = OutsiderHolder.getOutsider(msg.targetUUID);
+            OfflineOutsider outsiderEither = OutsiderHolder.getOutsider(msg.targetUUID);
             if(outsiderEither==null) return;
-            outsiderEither.ifRight(outsider->{
-                outsider.getDataManager().setEntryValues(msg.dataEntries);
-            });
+            outsiderEither.getDataManager().setEntryValues(msg.dataEntries);
         });
         contextSupplier.get().setPacketHandled(true);
     }

@@ -589,14 +589,6 @@ public class OutsiderEntity extends AbstractOutsider {
     }
 
     @Override
-    public void readAdditional(CompoundNBT compound) {
-        super.readAdditional(compound);
-        UUID followed = compound.getUniqueId("followed");
-        if (!world.isRemote() && followed.getLeastSignificantBits() != 0 && followed.getMostSignificantBits() != 0) setFollowedPlayerUUID(followed);
-
-    }
-
-    @Override
     public CooldownTracker getCooldownTracker() {
         return cooldownTracker;
     }
@@ -725,10 +717,33 @@ public class OutsiderEntity extends AbstractOutsider {
         return cooldownTracker;
     }
 
+/*    @Override
+    public CompoundNBT writeWithoutTypeId(CompoundNBT compound) {
+        CompoundNBT compoundNBT = super.writeWithoutTypeId(compound);
+        OutsiderHolder.getOutsider(this.getUniqueID()).setEntityComponent(compoundNBT);
+
+        return compoundNBT;
+    }
+
+    @Override
+    public void read(CompoundNBT compound) {
+        OfflineOutsider outsider = OutsiderHolder.getOutsider(this.getUniqueID());
+
+        super.read(compound.merge(outsider.getEntityComponent()));
+    }*/
+
     @Override
     public void writeAdditional(CompoundNBT compound) {
         super.writeAdditional(compound);
         compound.putUniqueId("followed", getFollowedPlayerUUID().orElse(new UUID(0, 0)));
+    }
+
+    @Override
+    public void readAdditional(CompoundNBT compound) {
+        super.readAdditional(compound);
+        UUID followed = compound.getUniqueId("followed");
+        if (!world.isRemote() && followed.getLeastSignificantBits() != 0 && followed.getMostSignificantBits() != 0) setFollowedPlayerUUID(followed);
+
     }
 
     public void updateSwimming() {
@@ -754,7 +769,6 @@ public class OutsiderEntity extends AbstractOutsider {
         super.onAddedToWorld();
         OutsiderHolder.joinWorld(this);
     }
-
     @Override
     public void onRemovedFromWorld() {
         super.onRemovedFromWorld();

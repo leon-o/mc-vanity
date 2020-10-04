@@ -65,7 +65,7 @@ public class RenderUtil {
     static final BipedModel<DummyLivingEntity> bipedModel = new BipedModel<>(0f);
     public static void drawOfflineOutsiderOnScreen(int posX, int posY, int scale, float mouseX, float mouseY, float yawDelta, OfflineOutsider outsider)
     {
-        DummyLivingEntity livingEntity = DummyLivingEntityHolder.getDummyLivingEntity(Minecraft.getInstance().world).get();
+        DummyLivingEntity livingEntity = DummyLivingEntityHolder.getDummyLivingEntity(Minecraft.getInstance().world);
         List<BodyPartStack> bodyPartStacks = outsider.getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY).getItemStacksList();
         bipedModel.isChild=outsider.isChild();
 

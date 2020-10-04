@@ -90,7 +90,10 @@ public class OfflineDataManager {
             this.setEntry(key, value);
         }
     }
-
+    public <T> boolean hasKey(DataParameter<T> key)
+    {
+        return this.entries.containsKey(key.getId());
+    }
     private <T> void setEntry(DataParameter<T> key, T value) {
         EntityDataManager.DataEntry<T> dataEntry = new EntityDataManager.DataEntry<>(key, value);
         this.lock.writeLock().lock();

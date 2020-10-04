@@ -20,6 +20,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -32,6 +33,7 @@ import top.leonx.vanity.capability.CharacterStateCapabilityProvider;
 import top.leonx.vanity.container.OutsiderDialogContainer;
 import top.leonx.vanity.entity.OfflineOutsider;
 import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.entity.OutsiderHolder;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
@@ -198,4 +200,10 @@ public class ForgeEventSubscriber {
         }
         clientTickCount++;
     }
+
+/*    @SubscribeEvent
+    public static void onWorldLoad(WorldEvent.Load event)
+    {
+        OutsiderHolder.onWorldLoaded(event);
+    }*/
 }

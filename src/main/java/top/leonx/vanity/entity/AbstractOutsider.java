@@ -129,6 +129,10 @@ public abstract class AbstractOutsider extends AgeableEntity implements IHasFood
     {
         return serializeCaps();
     }
+    public void deserializeCapsProxy(CompoundNBT nbt)
+    {
+        this.deserializeNBT(nbt);
+    }
 
     public abstract CooldownTracker getCooldownTracker();
 
