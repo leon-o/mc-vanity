@@ -17,23 +17,31 @@ public class Avatar extends VanityWidget {
     public boolean triggered = false;
     public boolean active=true;
     public boolean visible=true;
-
+    private Label nameLabel;
     public Avatar(int x, int y, int width, int height, OfflineOutsider outsider) {
         super(x, y, width, height);
         this.outsider = outsider;
+        nameLabel=new Label(()->outsider.getCustomName().getFormattedText(),x,y+40,width,24).setCenter(true);
+        addChild(nameLabel);
+    }
+
+    @Override
+    public void init() {
+
     }
 
     @Override
     public void render(int mouseX, int mouseY, float partialTick) {
-        fill(x, y, x + width, y + height, 0xFF373737);
-        RenderUtil.drawOfflineOutsiderOnScreen(x + width / 2, y + height, Math.min(width, height) / 2, 0, 0, 30, outsider);
+        fill(getAbsulateX(), getAbsulateY(), getAbsulateX() + width, getAbsulateY() + height, 0xFF373737);
+        RenderUtil.drawOfflineOutsiderOnScreen(getAbsulateX() + width / 2, getAbsulateY() + height, Math.min(width, height) / 2, 0, 0, 30, outsider);
         Minecraft.getInstance().textureManager.bindTexture(AVATAR_TEX);
         float scaleFactorW = width / (float)widthInTex;
         float scaleFactorH = height / (float)heightInTex;
 
         int i = triggered ? widthInTex : 0;
         int j = isMouseOver(mouseX, mouseY) ? heightInTex : 0;
-        blit(this.x, this.y, (int) (i * scaleFactorW), (int) (j * scaleFactorH), this.width, this.height, (int) (256 * scaleFactorW), (int) (256 * scaleFactorH));
+        blit(getAbsulateX(), getAbsulateY(), (int) (i * scaleFactorW), (int) (j * scaleFactorH), this.width, this.height, (int) (256 * scaleFactorW), (int) (256 * scaleFactorH));
+        super.render(mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -49,6 +57,6 @@ public class Avatar extends VanityWidget {
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return this.active && this.visible && mouseX >= (double)this.x && mouseY >= (double)this.y && mouseX < (double)(this.x + this.width) && mouseY < (double)(this.y + this.height);
+        return this.active && this.visible && mouseX >= (double)getAbsulateX() && mouseY >= (double)getAbsulateY() && mouseX < (double)(getAbsulateX() + this.width) && mouseY < (double)(getAbsulateY() + this.height);
     }
 }

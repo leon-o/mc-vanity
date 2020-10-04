@@ -42,10 +42,10 @@ public class DialogScreen extends ContainerScreen<OutsiderDialogContainer> {
         dialogPanelTop =height-dialogPanelHeight-16;
         dialogPanelBottom = dialogPanelTop +dialogPanelHeight;
         updateDialogButtons();
-        addLabel(new Label(()-> container.outsider.getName().getString()).setXY(infoPanelLeft+8,infoPanelTop+8));
-        addLabel(new Label("Relationship").setXY(infoPanelLeft+6,infoPanelTop+28));
+        addLabel(new Label(()-> container.outsider.getName().getString(),infoPanelLeft+8,infoPanelTop+8,0,0));
+        addLabel(new Label("Relationship",infoPanelLeft+6,infoPanelTop+28,0,0));
         relationShipProcessBar= new ProcessBar(infoPanelLeft+6,infoPanelTop+38,68,5).setMaxValue(CharacterState.MAX_RELATIONSHIP);
-        addLabel(new Label("Love").setXY(infoPanelLeft+6,infoPanelTop+52));
+        addLabel(new Label("Love",infoPanelLeft+6,infoPanelTop+52,0,0));
         loveShipProcessBar= new ProcessBar(infoPanelLeft+6,infoPanelTop+62,68,5).setMaxValue(CharacterState.MAX_LOVE);
         loveShipProcessBar.type= ProcessBar.Type.PINK;
     }

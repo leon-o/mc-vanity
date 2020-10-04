@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.common.MinecraftForge;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.client.gui.Avatar;
 import top.leonx.vanity.client.gui.Label;
@@ -16,12 +17,11 @@ import top.leonx.vanity.entity.OutsiderEntity;
 
 public class BedScreen extends ContainerScreen<BedContainer> {
     private WrapPanel<Avatar> panel;
-    private Label titleLabel;
+    //private Label titleLabel;
     static final ResourceLocation BED_BACKGROUND_TEX = new ResourceLocation(VanityMod.MOD_ID, "textures/gui/bed.png");
 
     public BedScreen(BedContainer screenContainer, PlayerInventory inv, ITextComponent titleIn) {
         super(screenContainer, inv, titleIn);
-        titleLabel=new Label("Delivery To");
     }
 
     @Override
@@ -29,8 +29,7 @@ public class BedScreen extends ContainerScreen<BedContainer> {
         xSize=240;
         ySize=192;
         super.init();
-        titleLabel.setXY(guiLeft+8,guiTop+8);
-
+        //titleLabel=new Label("Delivery To",guiLeft+8,guiTop+8,0,0);
         panel=new WrapPanel<>(guiLeft+20, guiTop+26, xSize-36, ySize-36);
         for (OfflineOutsider offlineOutsider : container.entities) {
             Avatar avatar = new Avatar(0, 0, 48, 64, offlineOutsider);
@@ -53,7 +52,7 @@ public class BedScreen extends ContainerScreen<BedContainer> {
     public void render(int mouseX, int mouseY, float partialTick) {
         super.render(mouseX, mouseY, partialTick);
         panel.render(mouseX, mouseY, partialTick);
-        titleLabel.render(mouseX, mouseY, partialTick);
+        Minecraft.getInstance().fontRenderer.drawString("Delivery To",guiLeft+8,guiTop+8,0x202020);
     }
 
 /*    @Override

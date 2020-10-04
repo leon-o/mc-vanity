@@ -2,7 +2,6 @@ package top.leonx.vanity.client.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.ToggleWidget;
-import top.leonx.vanity.client.screen.VanityMirrorScreen;
 
 import java.util.function.Consumer;
 
@@ -26,9 +25,9 @@ public class PageTurnButton extends VanityWidget {
 
     @Override
     public void init() {
-        this.forwardButton = new ToggleWidget(x + width-12, y, 12, 17, false);
+        this.forwardButton = new ToggleWidget(getAbsulateX() + width-12, getAbsulateY(), 12, 17, false);
         this.forwardButton.initTextureValues(128, 0, 0, 32, WIDGET_TEX);
-        this.backButton = new ToggleWidget(x, y, 12, 17, false);
+        this.backButton = new ToggleWidget(getAbsulateX(), getAbsulateY(), 12, 17, false);
         this.backButton.initTextureValues(144, 0, 0, 32, WIDGET_TEX);
         updateArrowButtons();
     }
@@ -42,7 +41,7 @@ public class PageTurnButton extends VanityWidget {
             String str= (currentPage + 1) +"/"+ (totalPages-1);
             int strWidth=Minecraft.getInstance().fontRenderer.getStringWidth(str);
             Minecraft.getInstance().fontRenderer.drawString(str,
-                                                            x+width/2f-strWidth/2f,y+4,numberColor);
+                                                            getAbsulateX()+width/2f-strWidth/2f,getAbsulateY()+4,numberColor);
         }
     }
 

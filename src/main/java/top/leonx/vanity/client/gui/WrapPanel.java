@@ -15,7 +15,8 @@ public class WrapPanel<T extends LayoutElement & IGuiEventListener> extends Vani
     int pageIndex;
     public WrapPanel(int x, int y, int width, int height) {
         super(x, y, width, height);
-        pageTurnButton=new PageTurnButton(x,y+height-20,width,18,t-> this.pageIndex= t);
+        pageTurnButton=new PageTurnButton(0,height-20,width,18,t-> this.pageIndex= t);
+        addChild(pageTurnButton);
     }
 
     @Override
@@ -33,7 +34,7 @@ public class WrapPanel<T extends LayoutElement & IGuiEventListener> extends Vani
             t.render(mouseX,mouseY,partialTick);
         }
 
-        pageTurnButton.render(mouseX, mouseY, partialTick);
+        super.render(mouseX, mouseY, partialTick);
     }
 
     public void updateLayout() {
@@ -54,8 +55,7 @@ public class WrapPanel<T extends LayoutElement & IGuiEventListener> extends Vani
                 pagedChildren.add(currentPage);//start new page
                 currentY=0;
             }
-            child.x=currentX+x+child.marginLeft;
-            child.y=currentY+y+child.marginTop;
+            child.setXY(getAbsulateX()+currentX+child.marginLeft,getAbsulateY()+currentY+child.marginTop);
             currentPage.add(child);
             currentX+=child.width+child.marginLeft+child.marginRight;
         }
