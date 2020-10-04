@@ -1,25 +1,14 @@
 package top.leonx.vanity.event;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.BedItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.village.PointOfInterestType;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.IFeatureConfig;
 import net.minecraft.world.gen.placement.IPlacementConfig;
 import net.minecraft.world.gen.placement.Placement;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
@@ -28,18 +17,14 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.network.NetworkHooks;
-import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.ai.goap.PurposefulTaskRegistry;
 import top.leonx.vanity.init.*;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
-import top.leonx.vanity.tileentity.VanityBedTileEntity;
-import top.leonx.vanity.util.PlayerSimulator;
+import top.leonx.vanity.util.FakePlayerHolder;
 import top.theillusivec4.curios.api.CuriosAPI;
 import top.theillusivec4.curios.api.imc.CurioIMCMessage;
 
@@ -57,7 +42,7 @@ public class ModEventSubscriber {
         VanityPacketHandler.Init();
         VanityEquipDataSynchronizer.register();
         CharacterDataSynchronizer.register();
-        PlayerSimulator.register();
+        FakePlayerHolder.register();
         PurposefulTaskRegistry.register();
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)

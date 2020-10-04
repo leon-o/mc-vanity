@@ -11,6 +11,7 @@ import top.leonx.vanity.client.gui.Avatar;
 import top.leonx.vanity.client.gui.Label;
 import top.leonx.vanity.client.gui.WrapPanel;
 import top.leonx.vanity.container.BedContainer;
+import top.leonx.vanity.entity.OfflineOutsider;
 import top.leonx.vanity.entity.OutsiderEntity;
 
 public class BedScreen extends ContainerScreen<BedContainer> {
@@ -31,8 +32,8 @@ public class BedScreen extends ContainerScreen<BedContainer> {
         titleLabel.setXY(guiLeft+8,guiTop+8);
 
         panel=new WrapPanel<>(guiLeft+20, guiTop+26, xSize-36, ySize-36);
-        for (OutsiderEntity entity : container.entities) {
-            Avatar avatar = new Avatar(0, 0, 48, 64, entity);
+        for (OfflineOutsider offlineOutsider : container.entities) {
+            Avatar avatar = new Avatar(0, 0, 48, 64, offlineOutsider);
             avatar.marginBottom=avatar.marginTop=2;
             avatar.marginLeft=avatar.marginRight=1;
             panel.children.add(avatar);

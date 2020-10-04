@@ -10,6 +10,7 @@ import top.leonx.vanity.bodypart.BodyPartRegistry;
 import top.leonx.vanity.bodypart.BodyPartStack;
 import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.capability.CharacterState;
+import top.leonx.vanity.entity.AbstractOutsider;
 import top.leonx.vanity.entity.OutsiderEntity;
 
 import java.util.*;
@@ -45,7 +46,7 @@ public class BodyPartUtil {
     }
 
     public static boolean hasBodyPart(LivingEntity entity) {
-        return entity instanceof PlayerEntity || entity instanceof OutsiderEntity || entity instanceof ZombieEntity || entity instanceof VillagerEntity;
+        return entity instanceof PlayerEntity || entity instanceof AbstractOutsider || entity instanceof ZombieEntity || entity instanceof VillagerEntity;
     }
 
 

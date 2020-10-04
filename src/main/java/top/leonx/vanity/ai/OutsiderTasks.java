@@ -18,6 +18,7 @@ import top.leonx.vanity.ai.tree.composite.*;
 import top.leonx.vanity.ai.tree.leaf.Instantaneous.LookTurnToTask;
 import top.leonx.vanity.ai.tree.leaf.Instantaneous.SwitchActivityTask;
 import top.leonx.vanity.ai.tree.leaf.continuous.*;
+import top.leonx.vanity.entity.AbstractOutsider;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.util.AIUtil;
@@ -60,7 +61,7 @@ public class OutsiderTasks {
         findFoodThenEatTask.addChild(findFood());
         findFoodThenEatTask.addChild(new EatFoodTask());
 
-        feedSelfTask.addChild(findFoodThenEatTask); //背包里没有就要去找
+        feedSelfTask.addChild(findFoodThenEatTask); //背包里没有就要去找www
 
         return feedSelfTask;
     }
@@ -131,7 +132,7 @@ public class OutsiderTasks {
         },new SleepTask<>());
 
         utilitySelectTask.addChild((w,e,t)->{
-            GeneralFoodStats<OutsiderEntity> foodStats = e.getFoodStats();
+            GeneralFoodStats<AbstractOutsider> foodStats = e.getFoodStats();
             return AIUtil.sigmod(foodStats.getFoodLevel()/20d,-23.56, -17.4);
         },new GoapTask("eat",new EatFoodGoapGoal()));
 

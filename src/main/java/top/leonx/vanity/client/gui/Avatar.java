@@ -3,7 +3,7 @@ package top.leonx.vanity.client.gui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.entity.OfflineOutsider;
 import top.leonx.vanity.util.RenderUtil;
 
 import java.util.function.Consumer;
@@ -13,20 +13,20 @@ public class Avatar extends VanityWidget {
     final int widthInTex  = 48;
     final int heightInTex = 64;
     public Consumer<Avatar> onTriggered;
-    OutsiderEntity entity;
+    OfflineOutsider outsider;
     public boolean triggered = false;
     public boolean active=true;
     public boolean visible=true;
 
-    public Avatar(int x, int y, int width, int height, OutsiderEntity entity) {
+    public Avatar(int x, int y, int width, int height, OfflineOutsider outsider) {
         super(x, y, width, height);
-        this.entity = entity;
+        this.outsider = outsider;
     }
 
     @Override
     public void render(int mouseX, int mouseY, float partialTick) {
         fill(x, y, x + width, y + height, 0xFF373737);
-        RenderUtil.drawEntityOnScreen(x + width / 2, y + height, Math.min(width, height) / 2, 0, 0, 30, entity);
+        RenderUtil.drawOfflineOutsiderOnScreen(x + width / 2, y + height, Math.min(width, height) / 2, 0, 0, 30, outsider);
         Minecraft.getInstance().textureManager.bindTexture(AVATAR_TEX);
         float scaleFactorW = width / (float)widthInTex;
         float scaleFactorH = height / (float)heightInTex;

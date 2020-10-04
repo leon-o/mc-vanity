@@ -1,18 +1,15 @@
 package top.leonx.vanity.util;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.play.ServerPlayNetHandler;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
-import net.minecraftforge.event.RegistryEvent;
 
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 
-public class PlayerSimulator {
+public class FakePlayerHolder {
     private static GameProfile gameProfile;
     private static WeakReference<ServerPlayerEntity> fakePlayer;
 
@@ -28,7 +25,7 @@ public class PlayerSimulator {
         {
             FakePlayer fakePlayer = FakePlayerFactory.get(server, gameProfile);
             fakePlayer.connection=new DummyServerPlayNetHandler(fakePlayer);
-            PlayerSimulator.fakePlayer = new WeakReference<>(fakePlayer);
+            FakePlayerHolder.fakePlayer = new WeakReference<>(fakePlayer);
         }
         else
         {

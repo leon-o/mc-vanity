@@ -26,7 +26,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.item.UseAction;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -60,8 +59,9 @@ import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
 import top.leonx.vanity.util.OutsiderInventory;
-import top.leonx.vanity.util.PlayerSimulator;
+import top.leonx.vanity.util.FakePlayerHolder;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
@@ -70,7 +70,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @SuppressWarnings({"UnusedReturnValue"})
-public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<OutsiderEntity>, IPlayerSimulated, IRangedAttackMob {
+public class OutsiderEntity extends AbstractOutsider {
+    public static final DataParameter<Optional<UUID>> FOLLOWED_PLAYER_ID = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.OPTIONAL_UNIQUE_ID);
     private static final ImmutableList<MemoryModuleType<?>> MEMORY_TYPES = ImmutableList.of(MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.HOME, MemoryModuleType.JOB_SITE,
                                                                                             MemoryModuleType.MEETING_POINT, MemoryModuleType.MOBS, MemoryModuleType.VISIBLE_MOBS,
                                                                                             MemoryModuleType.VISIBLE_VILLAGER_BABIES, MemoryModuleType.NEAREST_PLAYERS,
@@ -82,50 +83,33 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                                                                                             MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.LAST_SLEPT,
                                                                                             MemoryModuleType.field_226332_A_, MemoryModuleType.LAST_WORKED_AT_POI,
                                                                                             MemoryModuleType.GOLEM_LAST_SEEN_TIME);
-
     private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
                                                                                                                              SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
                                                                                                                              SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR.get(),
                                                                                                                              ModSensorTypes.OUTSIDER_NEAREST_HOSTEL_SENSOR.get());
+    protected GeneralFoodStats<AbstractOutsider> foodStats;
+    protected NeedsStatus                        needsStatus;
+    public    OutsiderInventory inventory;
+    protected PlayerAbilities abilities;
+    protected CooldownTracker cooldownTracker;
+    public final        OutsiderInteractionManager    interactionManager = new OutsiderInteractionManager(this);
+    protected final     PlayerSimPathNavigator        waterNavigator;
+    protected final     GroundPathNavigator           groundNavigator;
+    public              ServerPlayerEntity            interactingPlayer  = null;
+    private             CharacterState                characterState;
 
-    public final OutsiderInventory inventory = new OutsiderInventory(this);
-
-    public final    OutsiderInteractionManager       interactionManager = new OutsiderInteractionManager(this);
-    protected final PlayerSimPathNavigator           waterNavigator;
-    protected final GroundPathNavigator              groundNavigator;
-    //private static final DataParameter<BlockPos>      SPAWN_POS               = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.BLOCK_POS);
-    private final   GeneralFoodStats<OutsiderEntity> foodStats          = new GeneralFoodStats<>(this);
-    private final   NeedsStatus                      needsStatus        = new NeedsStatus(this);
-    private final   PlayerAbilities                  abilities          = new PlayerAbilities();
-    private final   CooldownTracker                  cooldownTracker    = new CooldownTracker();
-    public          ServerPlayerEntity          interactingPlayer  = null;
-    public static final DataParameter<Optional<UUID>> FOLLOWED_PLAYER_ID =EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.OPTIONAL_UNIQUE_ID);
-    private         CharacterState                   characterState;
-
-    public OutsiderEntity(EntityType<OutsiderEntity> type, World world) {
+    public OutsiderEntity(EntityType<? extends OutsiderEntity> type, World world) {
         super(type, world);
         moveController = new OutsiderMovementController(this);
         this.waterNavigator = new PlayerSimPathNavigator(this, world);
         this.groundNavigator = new PlayerSimPathNavigator(this, world);
         this.navigator = groundNavigator;
-    }
 
-    @Override
-    protected void registerData() {
-        super.registerData();
-        dataManager.register(FOLLOWED_PLAYER_ID,Optional.empty());
-    }
-
-    /**
-     * Add the exhaustion of food Stats
-     */
-    @Override
-    public void addExhaustion(float exhaustion) {
-        if (!this.abilities.disableDamage) {
-            if (!this.world.isRemote) {
-                this.foodStats.addExhaustion(exhaustion);
-            }
-        }
+        foodStats = new GeneralFoodStats<>(this);
+        needsStatus = new NeedsStatus(this);
+        inventory = new OutsiderInventory(this);
+        abilities = new PlayerAbilities();
+        cooldownTracker = new CooldownTracker();
     }
 
     /**
@@ -388,42 +372,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     }
 
-    @Nullable
-    public ItemEntity dropItem(ItemStack droppedItem, boolean dropAround, boolean traceItem) {
-        if (droppedItem.isEmpty()) {
-            return null;
-        } else {
-            double     d0         = this.getPosYEye() - (double) 0.3F;
-            ItemEntity itementity = new ItemEntity(this.world, this.getPosX(), d0, this.getPosZ(), droppedItem);
-            itementity.setPickupDelay(40);
-            if (traceItem) {
-                itementity.setThrowerId(this.getUniqueID());
-            }
-
-            if (dropAround) {
-                float f  = this.rand.nextFloat() * 0.5F;
-                float f1 = this.rand.nextFloat() * ((float) Math.PI * 2F);
-                itementity.setMotion(-MathHelper.sin(f1) * f, 0.2F, MathHelper.cos(f1) * f);
-            } else {
-                //float f7 = 0.3F;
-                float f8 = MathHelper.sin(this.rotationPitch * ((float) Math.PI / 180F));
-                float f2 = MathHelper.cos(this.rotationPitch * ((float) Math.PI / 180F));
-                float f3 = MathHelper.sin(this.rotationYaw * ((float) Math.PI / 180F));
-                float f4 = MathHelper.cos(this.rotationYaw * ((float) Math.PI / 180F));
-                float f5 = this.rand.nextFloat() * ((float) Math.PI * 2F);
-                float f6 = 0.02F * this.rand.nextFloat();
-                itementity.setMotion((double) (-f3 * f2 * 0.3F) + Math.cos(f5) * (double) f6, -f8 * 0.3F + 0.1F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F,
-                                     (double) (f4 * f2 * 0.3F) + Math.sin(f5) * (double) f6);
-            }
-
-            return itementity;
-        }
-    }
-
-    public PlayerAbilities getAbilities() {
-        return abilities;
-    }
-
     @Override
     public Iterable<ItemStack> getArmorInventoryList() {
         return inventory.armorInventory;
@@ -508,9 +456,8 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     //get fake player for block placing or breaking.
     public ServerPlayerEntity getFakePlayer() {
         if (world.isRemote) return null;
-        return PlayerSimulator.getFakePlayer((ServerWorld) world).get();
+        return FakePlayerHolder.getFakePlayer((ServerWorld) world).get();
     }
-
 
     /**
      * @return the entity final speed
@@ -531,38 +478,15 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     public void setFollowedPlayer(@Nullable ServerPlayerEntity entity) {
-        setFollowedPlayerUUID(entity!=null?entity.getUniqueID():null);
+        setFollowedPlayerUUID(entity != null ? entity.getUniqueID() : null);
     }
 
     public Optional<UUID> getFollowedPlayerUUID() {
         return dataManager.get(FOLLOWED_PLAYER_ID);
     }
+
     public void setFollowedPlayerUUID(UUID uuid) {
-        dataManager.set(FOLLOWED_PLAYER_ID,Optional.ofNullable(uuid));
-    }
-    @Override
-    public GeneralFoodStats<OutsiderEntity> getFoodStats() {
-        return foodStats;
-    }
-
-    public CooldownTracker getItemCooldownTracker() {
-        return this.cooldownTracker;
-    }
-
-    @Override
-    public ItemStack getItemStackFromSlot(EquipmentSlotType slotIn) {
-        if (slotIn == EquipmentSlotType.MAINHAND) {
-            return this.inventory.getMainHandSlotIndex();
-        } else if (slotIn == EquipmentSlotType.OFFHAND) {
-            return this.inventory.offHandInventory.get(0);
-        } else {
-            return slotIn.getSlotType() == EquipmentSlotType.Group.ARMOR ? this.inventory.armorInventory.get(slotIn.getIndex()) : ItemStack.EMPTY;
-        }
-    }
-
-    public void EquipItem(EquipmentSlotType slotIn, ItemStack stack) {
-        setItemStackToSlot(slotIn, stack.copy());
-        stack.setCount(0);
+        dataManager.set(FOLLOWED_PLAYER_ID, Optional.ofNullable(uuid));
     }
 
     @Override
@@ -641,12 +565,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     @Override
-    public ItemStack onFoodEaten(World world, ItemStack stack) {
-        getFoodStats().consume(stack.getItem(), stack);
-        return super.onFoodEaten(world, stack);
-    }
-
-    @Override
     public boolean processInteract(PlayerEntity player, Hand hand) {
         boolean successful = super.processInteract(player, hand);
         successful |= player.getHeldItemMainhand().interactWithEntity(player, this, Hand.MAIN_HAND);
@@ -663,7 +581,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
                 }
             };
             NetworkHooks.openGui((ServerPlayerEntity) player, provider, t -> t.writeInt(this.getEntityId()));
-            interactingPlayer= (ServerPlayerEntity) player;
+            interactingPlayer = (ServerPlayerEntity) player;
             successful = true;
         }
 
@@ -673,14 +591,14 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     @Override
     public void readAdditional(CompoundNBT compound) {
         super.readAdditional(compound);
-        foodStats.read(compound);
-        needsStatus.read(compound);
-        abilities.read(compound);
-        ListNBT listnbt  = compound.getList("Inventory", 10);
-        UUID    followed = compound.getUniqueId("followed");
-        if (!world.isRemote() && followed.getLeastSignificantBits() != 0 && followed.getMostSignificantBits() != 0)
-            setFollowedPlayerUUID(followed);
-        this.inventory.read(listnbt);
+        UUID followed = compound.getUniqueId("followed");
+        if (!world.isRemote() && followed.getLeastSignificantBits() != 0 && followed.getMostSignificantBits() != 0) setFollowedPlayerUUID(followed);
+
+    }
+
+    @Override
+    public CooldownTracker getCooldownTracker() {
+        return cooldownTracker;
     }
 
     public void resetAttackCooldown() {
@@ -742,11 +660,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     @Override
-    public boolean shouldHeal() {
-        return this.getHealth() > 0.0F && this.getHealth() < this.getMaxHealth();
-    }
-
-    @Override
     public void tick() {
         super.tick();
         this.inventory.tick();
@@ -761,10 +674,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     public void tickCooldown() {
         ++this.ticksSinceLastSwing;
         this.cooldownTracker.tick();
-    }
-
-    public CooldownTracker getCooldownTracker() {
-        return cooldownTracker;
     }
 
     public boolean isSecondaryUseActive() {
@@ -790,15 +699,37 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     @Override
-    public void writeAdditional(CompoundNBT compound) {
-        super.writeAdditional(compound);
-        foodStats.write(compound);
-        needsStatus.write(compound);
-        abilities.write(compound);
-        compound.put("Inventory", this.inventory.write(new ListNBT()));
-        compound.putUniqueId("followed", getFollowedPlayerUUID().orElse(new UUID(0,0)));
+    public GeneralFoodStats<AbstractOutsider> getFoodStats() {
+        return foodStats;
     }
 
+    @Override
+    public PlayerAbilities getAbilities() {
+        return abilities;
+    }
+
+    @Nonnull
+    @Override
+    public NeedsStatus getNeedsStatus() {
+        return needsStatus;
+    }
+
+    @Nonnull
+    @Override
+    public OutsiderInventory getInventory() {
+        return inventory;
+    }
+
+    @Override
+    public CooldownTracker getItemCooldownTracker() {
+        return cooldownTracker;
+    }
+
+    @Override
+    public void writeAdditional(CompoundNBT compound) {
+        super.writeAdditional(compound);
+        compound.putUniqueId("followed", getFollowedPlayerUUID().orElse(new UUID(0, 0)));
+    }
 
     public void updateSwimming() {
         if (!this.world.isRemote) {
@@ -813,35 +744,21 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     }
 
     @Override
-    protected void triggerItemUseEffects(ItemStack item, int count) {
-        if (!item.isEmpty() && this.isHandActive()) {
-            if (item.getUseAction() == UseAction.DRINK) {
-                this.playSound(this.getDrinkSound(item), 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
-            }
-
-            if (item.getUseAction() == UseAction.EAT) {
-                this.addItemParticles(item, count);
-                this.playSound(this.getEatSound(item), 0.5F + 0.5F * (float)this.rand.nextInt(2), (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F);
-            }
-        }
+    public void setRevengeTarget(@Nullable LivingEntity livingBase) {
+        if (livingBase instanceof MobEntity && !Objects.equals(((MobEntity) livingBase).getAttackTarget(), this)) return; //I know you didn't mean it.
+        super.setRevengeTarget(livingBase);
     }
 
-    private void addItemParticles(ItemStack stack, int count) {
-        for(int i = 0; i < count; ++i) {
-            Vec3d speedvec = new Vec3d(((double)this.rand.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D);
-            speedvec = speedvec.rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F));
-            speedvec = speedvec.rotateYaw(-this.rotationYawHead * ((float)Math.PI / 180F));
-            double d0 = (double)(-this.rand.nextFloat()) * 0.6D - 0.3D;
-            Vec3d posVec = new Vec3d(((double)this.rand.nextFloat() - 0.5D) * 0.3D, d0, 0.4D);
-            posVec = posVec.rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F));
-            posVec = posVec.rotateYaw(-this.rotationYawHead * ((float)Math.PI / 180F));
-            posVec = posVec.add(this.getPosX(), this.getPosYEye(), this.getPosZ());
-            if (this.world instanceof ServerWorld) //Forge: Fix MC-2518 spawnParticle is nooped on server, need to use server specific variant
-                ((ServerWorld)this.world).spawnParticle(new ItemParticleData(ParticleTypes.ITEM, stack), posVec.x, posVec.y, posVec.z, 1, speedvec.x, speedvec.y + 0.05D, speedvec.z, 0.0D);
-            else
-                this.world.addParticle(new ItemParticleData(ParticleTypes.ITEM, stack), posVec.x, posVec.y, posVec.z, speedvec.x, speedvec.y + 0.05D, speedvec.z);
-        }
+    @Override
+    public void onAddedToWorld() {
+        super.onAddedToWorld();
+        OutsiderHolder.joinWorld(this);
+    }
 
+    @Override
+    public void onRemovedFromWorld() {
+        super.onRemovedFromWorld();
+        OutsiderHolder.removedFromWorld(this);
     }
 
     //////
@@ -850,10 +767,21 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
 
     //////
 
-    @Override
-    public void setRevengeTarget(@Nullable LivingEntity livingBase) {
-        if (livingBase instanceof MobEntity && !Objects.equals(((MobEntity) livingBase).getAttackTarget(), this)) return; //I know you didn't mean it.
-        super.setRevengeTarget(livingBase);
+    private void addItemParticles(ItemStack stack, int count) {
+        for (int i = 0; i < count; ++i) {
+            Vec3d speedvec = new Vec3d(((double) this.rand.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D);
+            speedvec = speedvec.rotatePitch(-this.rotationPitch * ((float) Math.PI / 180F));
+            speedvec = speedvec.rotateYaw(-this.rotationYawHead * ((float) Math.PI / 180F));
+            double d0     = (double) (-this.rand.nextFloat()) * 0.6D - 0.3D;
+            Vec3d  posVec = new Vec3d(((double) this.rand.nextFloat() - 0.5D) * 0.3D, d0, 0.4D);
+            posVec = posVec.rotatePitch(-this.rotationPitch * ((float) Math.PI / 180F));
+            posVec = posVec.rotateYaw(-this.rotationYawHead * ((float) Math.PI / 180F));
+            posVec = posVec.add(this.getPosX(), this.getPosYEye(), this.getPosZ());
+            if (this.world instanceof ServerWorld) //Forge: Fix MC-2518 spawnParticle is nooped on server, need to use server specific variant
+                ((ServerWorld) this.world).spawnParticle(new ItemParticleData(ParticleTypes.ITEM, stack), posVec.x, posVec.y, posVec.z, 1, speedvec.x, speedvec.y + 0.05D, speedvec.z, 0.0D);
+            else this.world.addParticle(new ItemParticleData(ParticleTypes.ITEM, stack), posVec.x, posVec.y, posVec.z, speedvec.x, speedvec.y + 0.05D, speedvec.z);
+        }
+
     }
 
     protected void blockUsingShield(LivingEntity entityIn) {
@@ -950,7 +878,7 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
     protected void onDeathUpdate() {
         ++this.deathTime;
         if (this.deathTime == 20) {
-            respawnEntity();
+            if (OutsiderHolder.onlineOutsiders.containsKey(getUniqueID())) respawnEntity();
             this.remove(true);
 
             for (int i = 0; i < 20; ++i) {
@@ -961,7 +889,6 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
             }
         }
     }
-
     /**
      * Called when item use finished.
      * If the onItemUseFinished isn't null, it will be called.
@@ -981,6 +908,12 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         this.getAttributes().registerAttribute(PlayerEntity.REACH_DISTANCE);
         this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.1D);
         this.getAttribute(SWIM_SPEED).setBaseValue(5F);
+    }
+
+    @Override
+    protected void registerData() {
+        super.registerData();
+        dataManager.register(FOLLOWED_PLAYER_ID, Optional.empty());
     }
 
     /**
@@ -1041,11 +974,23 @@ public class OutsiderEntity extends AgeableEntity implements IHasFoodStats<Outsi
         /*}*/
     }
 
+    @Override
+    protected void triggerItemUseEffects(ItemStack item, int count) {
+        if (!item.isEmpty() && this.isHandActive()) {
+            if (item.getUseAction() == UseAction.DRINK) {
+                this.playSound(this.getDrinkSound(item), 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
+            }
+
+            if (item.getUseAction() == UseAction.EAT) {
+                this.addItemParticles(item, count);
+                this.playSound(this.getEatSound(item), 0.5F + 0.5F * (float) this.rand.nextInt(2), (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F);
+            }
+        }
+    }
+
     protected void updateAITasks() {
         this.world.getProfiler().startSection("brain");
         this.getBrain().tick((ServerWorld) this.world, this);
         this.world.getProfiler().endSection();
     }
-
-
 }

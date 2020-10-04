@@ -30,6 +30,7 @@ import top.leonx.vanity.capability.BodyPartCapabilityProvider;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.capability.CharacterStateCapabilityProvider;
 import top.leonx.vanity.container.OutsiderDialogContainer;
+import top.leonx.vanity.entity.OfflineOutsider;
 import top.leonx.vanity.entity.OutsiderEntity;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
@@ -42,12 +43,19 @@ import top.leonx.vanity.util.NameGenerator;
 public class ForgeEventSubscriber {
     @SubscribeEvent
     public static void attachCapabilitiesToEntity(final AttachCapabilitiesEvent<Entity> event) {
-        if (event.getObject() instanceof PlayerEntity || event.getObject() instanceof VillagerEntity || event.getObject() instanceof ZombieEntity || event.getObject() instanceof  OutsiderEntity)
+        if(event.getObject() instanceof LivingEntity && BodyPartUtil.hasBodyPart((LivingEntity)event.getObject()))
         {
             event.addCapability(new ResourceLocation(VanityMod.MOD_ID, "body_part_cap"), new BodyPartCapabilityProvider());
+        }
+        if(event.getObject() instanceof LivingEntity && CharacterStateUtil.hasCharacterState((LivingEntity)event.getObject()))
+        {
             event.addCapability(new ResourceLocation(VanityMod.MOD_ID, "char_state_cap"), new CharacterStateCapabilityProvider());
         }
-
+    }
+    @SubscribeEvent
+    public static void attachCapabilitiesToOfflineOutsider(final AttachCapabilitiesEvent<OfflineOutsider> event) {
+        event.addCapability(new ResourceLocation(VanityMod.MOD_ID, "body_part_cap"), new BodyPartCapabilityProvider());
+        event.addCapability(new ResourceLocation(VanityMod.MOD_ID, "char_state_cap"), new CharacterStateCapabilityProvider());
     }
 
     @SubscribeEvent

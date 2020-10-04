@@ -25,7 +25,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.antlr.v4.runtime.misc.Triple;
-import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.entity.AbstractOutsider;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -39,12 +39,12 @@ public class OutsiderInventory implements IInventory, INameable {
     public final  NonNullList<ItemStack>       armorInventory    = NonNullList.withSize(4, ItemStack.EMPTY);
     public final  NonNullList<ItemStack>       offHandInventory  = NonNullList.withSize(1, ItemStack.EMPTY);
     public final  int                          mainHandSlotIndex = 0;
-    public final  OutsiderEntity               entity;
+    public final  AbstractOutsider               entity;
     private final List<NonNullList<ItemStack>> allInventories    = ImmutableList.of(this.mainInventory, this.armorInventory, this.offHandInventory);
     private       ItemStack                    itemStack         = ItemStack.EMPTY;
     private       int                          timesChanged;
 
-    public OutsiderInventory(OutsiderEntity entity) {
+    public OutsiderInventory(AbstractOutsider entity) {
         this.entity = entity;
     }
 
@@ -533,7 +533,7 @@ public class OutsiderInventory implements IInventory, INameable {
     /**
      * Don't rename this method to canInteractWith due to conflicts with Container
      */
-    public boolean isUsableByEntity(OutsiderEntity entity) {
+    public boolean isUsableByEntity(AbstractOutsider entity) {
         if (!this.entity.isAlive()) {
             return false;
         } else {

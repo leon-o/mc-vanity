@@ -60,7 +60,7 @@ public class CharacterDataSynchronizer {
         contextSupplier.get().setPacketHandled(true);
     }
 
-    private static void handlerServer(CharacterDataSynchronizer.CharacterStateMsg msg, Supplier<NetworkEvent.Context> contextSupplier) {
+    static void handlerServer(CharacterDataSynchronizer.CharacterStateMsg msg, Supplier<NetworkEvent.Context> contextSupplier) {
         ServerPlayerEntity playerEntity = contextSupplier.get().getSender();
         contextSupplier.get().enqueueWork(() -> {
             if (playerEntity == null) return;
@@ -83,7 +83,7 @@ public class CharacterDataSynchronizer {
     }
 
     public static class CharacterStateMsg {
-        public int                 targetId;
+        public int targetId;
         public CompoundNBT root;
 
         public CharacterStateMsg() {
