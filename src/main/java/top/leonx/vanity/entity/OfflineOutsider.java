@@ -3,6 +3,7 @@ package top.leonx.vanity.entity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import top.leonx.vanity.network.OfflineDataManager;
 
@@ -30,10 +31,8 @@ public class OfflineOutsider extends CapabilityProvider<OfflineOutsider> {
     }
 
     public void setEntityComponent(CompoundNBT entityComponent) {
-        CompoundNBT capsNbt=entityComponent.getCompound("ForgeCaps");
-        if(capsNbt.size()>0)
-            deserializeCaps(capsNbt);
         this.entityComponent = entityComponent;
+        read(entityComponent);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -82,16 +81,23 @@ public class OfflineOutsider extends CapabilityProvider<OfflineOutsider> {
 
     }
 
-    public boolean isDirty() {
+/*    public boolean isDirty() {
         return dirty;
     }
 
     public void markDarty() {
         dirty = true;
-    }
-
-    public String getCustomName()
+    }*/
+    ITextComponent customName;
+    public void read(CompoundNBT compound)
     {
-        return entityComponent.getString("CustomName");
+        customName=ITextComponent.Serializer.fromJson(compound.getString("CustomName"));
+        CompoundNBT capsNbt=entityComponent.getCompound("ForgeCaps");
+        if(capsNbt.size()>0)
+            deserializeCaps(capsNbt);
+    }
+    public ITextComponent getCustomName()
+    {
+        return customName;
     }
 }
