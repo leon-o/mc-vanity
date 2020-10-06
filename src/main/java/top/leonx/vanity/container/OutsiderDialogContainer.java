@@ -26,8 +26,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OutsiderDialogContainer extends Container {
-    static {
-        VanityPacketHandler.registerMessage(3, OperationMsg.class, OperationMsg::encoder, OperationMsg::decoder, OutsiderDialogContainer::handler);
+    public static void registerChanel(){
+        VanityPacketHandler.registerMessage(OperationMsg.class, OperationMsg::encoder, OperationMsg::decoder, OutsiderDialogContainer::handler);
     }
 
     public OutsiderEntity outsider;

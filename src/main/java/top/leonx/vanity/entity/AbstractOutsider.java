@@ -13,12 +13,11 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.CooldownTracker;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import top.leonx.vanity.util.OutsiderInventory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public abstract class AbstractOutsider extends AgeableEntity implements IHasFoodStats<AbstractOutsider>, IRangedAttackMob, INPC {
+public abstract class AbstractOutsider extends AgeableEntity implements IHasFoodStats<AbstractOutsider>, IRangedAttackMob, INPC , IOutsider {
 
 
     protected AbstractOutsider(EntityType<? extends AgeableEntity> type, World worldIn) {

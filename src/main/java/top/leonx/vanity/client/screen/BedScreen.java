@@ -1,23 +1,20 @@
 package top.leonx.vanity.client.screen;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.common.MinecraftForge;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.client.gui.Avatar;
-import top.leonx.vanity.client.gui.Label;
 import top.leonx.vanity.client.gui.WrapPanel;
 import top.leonx.vanity.container.BedContainer;
-import top.leonx.vanity.entity.OfflineOutsider;
-import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.entity.OutsiderIncorporeal;
 
 public class BedScreen extends ContainerScreen<BedContainer> {
     private WrapPanel<Avatar> panel;
     //private Label titleLabel;
+    private Avatar avatarLastSelected=null;
     static final ResourceLocation BED_BACKGROUND_TEX = new ResourceLocation(VanityMod.MOD_ID, "textures/gui/bed.png");
 
     public BedScreen(BedContainer screenContainer, PlayerInventory inv, ITextComponent titleIn) {
@@ -31,14 +28,32 @@ public class BedScreen extends ContainerScreen<BedContainer> {
         super.init();
         //titleLabel=new Label("Delivery To",guiLeft+8,guiTop+8,0,0);
         panel=new WrapPanel<>(guiLeft+20, guiTop+26, xSize-36, ySize-36);
-        for (OfflineOutsider offlineOutsider : container.entities) {
-            Avatar avatar = new Avatar(0, 0, 48, 64, offlineOutsider);
+        for (OutsiderIncorporeal outsiderIncorporeal : container.entities) {
+            Avatar avatar = new Avatar(0, 0, 48, 64, outsiderIncorporeal);
             avatar.marginBottom=avatar.marginTop=2;
             avatar.marginLeft=avatar.marginRight=1;
+            if(outsiderIncorporeal.getHome().isPresent() && outsiderIncorporeal.getHome().get().equals(container.bedPos))
+            {
+                avatar.triggered = true;
+                avatarLastSelected=avatar;
+            }
+            avatar.onTriggerChanged =this::onAvatarSelectedChanged;
             panel.children.add(avatar);
         }
         panel.init();
         children.add(panel);
+    }
+
+    private void onAvatarSelectedChanged(Avatar avatar) {
+        if(avatar.isTriggered())
+        {
+            if(avatarLastSelected!=null)
+                avatarLastSelected.setTriggered(false);
+            avatarLastSelected=avatar;
+            container.requestSetBed(avatar.outsider.getRealUniqueId());
+        }else{
+            container.requestUnsetBed(avatar.outsider.getRealUniqueId());
+        }
     }
 
     @Override

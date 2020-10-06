@@ -10,14 +10,13 @@ import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.world.lighting.WorldLightManager;
 import top.leonx.vanity.bodypart.BodyPartStack;
 import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.client.BodyPartRenderer;
 import top.leonx.vanity.client.BodyPartRendererRegistry;
 import top.leonx.vanity.entity.DummyLivingEntity;
-import top.leonx.vanity.entity.OfflineOutsider;
+import top.leonx.vanity.entity.OutsiderIncorporeal;
 import top.leonx.vanity.init.ModCapabilityTypes;
 
 import java.util.List;
@@ -63,7 +62,7 @@ public class RenderUtil {
         RenderSystem.popMatrix();
     }
     static final BipedModel<DummyLivingEntity> bipedModel = new BipedModel<>(0f);
-    public static void drawOfflineOutsiderOnScreen(int posX, int posY, int scale, float mouseX, float mouseY, float yawDelta, OfflineOutsider outsider)
+    public static void drawOfflineOutsiderOnScreen(int posX, int posY, int scale, float mouseX, float mouseY, float yawDelta, OutsiderIncorporeal outsider)
     {
         DummyLivingEntity livingEntity = DummyLivingEntityHolder.getDummyLivingEntity(Minecraft.getInstance().world);
         List<BodyPartStack> bodyPartStacks = outsider.getCapability(ModCapabilityTypes.BODY_PART).orElse(BodyPartCapability.BodyPartData.EMPTY).getItemStacksList();

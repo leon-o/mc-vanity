@@ -107,7 +107,7 @@ public class OutsiderTasks {
         utilitySelectTask.addChild((w,e,t)->e.interactingPlayer!=null?0.1:0,new LookTurnToTask<>(outsider->outsider.interactingPlayer!=null?outsider.interactingPlayer.getEyePosition(0f):
                 outsider.getEyePosition(0f).add(outsider.getLookVec().scale(5))));
 
-        utilitySelectTask.addChild((w,e,t)->!e.getFollowedPlayerUUID().isPresent()?0.5:0,new SwitchActivityTask<>(()-> Activity.IDLE));
+        utilitySelectTask.addChild((w,e,t)->!e.getFollowedPlayerId().isPresent()?0.5:0,new SwitchActivityTask<>(()-> Activity.IDLE));
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }
 
@@ -154,7 +154,7 @@ public class OutsiderTasks {
         utilitySelectTask.addChild((w,e,t)->e.interactingPlayer!=null?0.1:0,new LookTurnToTask<>(outsider->outsider.interactingPlayer!=null?outsider.interactingPlayer.getEyePosition(0f):
                 outsider.getEyePosition(0f).add(outsider.getLookVec().scale(5))));
 
-        utilitySelectTask.addChild((w,e,t)->e.getFollowedPlayerUUID().isPresent()?0.5:0,new SwitchActivityTask<>(()-> Activity.CORE));
+        utilitySelectTask.addChild((w,e,t)->e.getFollowedPlayerId().isPresent()?0.5:0,new SwitchActivityTask<>(()-> Activity.CORE));
 
         return ImmutableList.of(new Pair<>(1, new BehaviorTreeRootTask<>(utilitySelectTask)));
     }

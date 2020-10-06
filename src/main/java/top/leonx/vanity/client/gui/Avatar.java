@@ -3,25 +3,26 @@ package top.leonx.vanity.client.gui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.entity.OfflineOutsider;
+import top.leonx.vanity.entity.OutsiderIncorporeal;
 import top.leonx.vanity.util.RenderUtil;
 
+import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 
 public class Avatar extends VanityWidget {
     static final ResourceLocation AVATAR_TEX = new ResourceLocation(VanityMod.MOD_ID, "textures/gui/avatar.png");
     final int widthInTex  = 48;
-    final int heightInTex = 64;
-    public Consumer<Avatar> onTriggered;
-    OfflineOutsider outsider;
+    final int               heightInTex = 64;
+    public Consumer<Avatar> onTriggerChanged;
+    public OutsiderIncorporeal outsider;
     public boolean triggered = false;
     public boolean active=true;
     public boolean visible=true;
-    private Label nameLabel;
-    public Avatar(int x, int y, int width, int height, OfflineOutsider outsider) {
+
+    public Avatar(int x, int y, int width, int height,@Nonnull OutsiderIncorporeal outsider) {
         super(x, y, width, height);
         this.outsider = outsider;
-        nameLabel=new Label(()->outsider.getCustomName().getFormattedText(),x,y+40,width,24).setCenter(true);
+        Label nameLabel = new Label(() -> outsider.getCustomName().getFormattedText(), x, y + 40, width, 24).setCenter(true);
         addChild(nameLabel);
     }
 
@@ -47,12 +48,22 @@ public class Avatar extends VanityWidget {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int partialTick) {
         if (!isMouseOver(mouseX, mouseY)) return false;
-        triggered = !triggered;
+        setTriggered(!triggered);
         this.playDownSound(Minecraft.getInstance().getSoundHandler());
 
-        if (onTriggered == null) return true;
-        onTriggered.accept(this);
+
         return true;
+    }
+
+    public boolean isTriggered() {
+        return triggered;
+    }
+
+    public void setTriggered(boolean triggered) {
+        this.triggered = triggered;
+
+        if (onTriggerChanged == null) return;
+        onTriggerChanged.accept(this);
     }
 
     @Override

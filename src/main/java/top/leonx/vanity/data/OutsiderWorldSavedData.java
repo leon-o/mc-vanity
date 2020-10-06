@@ -50,6 +50,7 @@ public class OutsiderWorldSavedData extends WorldSavedData {
     public CompoundNBT write(CompoundNBT compound) {
         ListNBT outsiders = new ListNBT();
         offlineOutsiderMap.forEach((key, value)->{
+            if(key.getLeastSignificantBits()==0 && key.getMostSignificantBits()==0) return;
             outsiders.add(value);
         });
         CompoundNBT compoundNBT=new CompoundNBT();

@@ -141,7 +141,8 @@ public class AIUtil {
         if (visibleMobsOpt.isPresent()) {
             List<LivingEntity>     visibleMobs   = visibleMobsOpt.get();
             Optional<LivingEntity> mostDangerous =
-                    visibleMobs.stream().filter(t->!Objects.equals(t.getUniqueID(),entity.getFollowedPlayerUUID())).max(Comparator.comparingDouble(mob -> AIUtil.entityDangerousAssessment(mob,entity)));
+                    visibleMobs.stream().filter(t->!Objects.equals(t.getUniqueID(),entity.getFollowedPlayerId().orElse(null))).max(Comparator.comparingDouble(mob -> AIUtil.entityDangerousAssessment(mob,
+                                                                                                                                                                                           entity)));
             return mostDangerous.orElse(null);
         }
         return null;

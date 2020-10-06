@@ -3,6 +3,7 @@ package top.leonx.vanity.entity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import top.leonx.vanity.data.OutsiderWorldSavedData;
 
 import java.util.HashMap;
@@ -10,25 +11,42 @@ import java.util.Map;
 import java.util.UUID;
 
 public class OutsiderHolder {
-    public static Map<UUID,OutsiderEntity> onlineOutsiders =new HashMap<>();
-    public static Map<UUID,OfflineOutsider> offlineOutsiders =new HashMap<>();
-
-    public static void joinWorld(OutsiderEntity outsider)
+    private static OutsiderHolder logicalServerInstance;
+    private static OutsiderHolder logicalClientInstance;
+    public static OutsiderHolder getInstance()
     {
-        OutsiderHolder.onlineOutsiders.put(outsider.getUniqueID(), outsider);
-        OfflineOutsider offlineOutsider = getOutsider(outsider.getUniqueID());
-        offlineOutsider.bindTo(outsider);
-        if(!outsider.world.isRemote())
-            OutsiderWorldSavedData.get(((ServerWorld) outsider.world)).setOutsiderComponent(outsider.getUniqueID(), offlineOutsider.getEntityComponent());
+        if(Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER)
+        {
+            if(logicalServerInstance==null)
+                logicalServerInstance=new OutsiderHolder();
+            return logicalServerInstance;
+        }else {
+            if(logicalClientInstance==null)
+                logicalClientInstance=new OutsiderHolder();
+
+            return logicalClientInstance;
+        }
+    }
+    private OutsiderHolder(){}
+    public Map<UUID,OutsiderEntity>       onlineOutsiders  =new HashMap<>();
+    public Map<UUID, OutsiderIncorporeal> offlineOutsiders =new HashMap<>();
+
+    public void joinWorld(OutsiderEntity outsider)
+    {
+        onlineOutsiders.put(outsider.getUniqueID(), outsider);
+//        OutsiderIncorporeal outsiderIncorporeal = getOutsider(outsider.getUniqueID());
+//        outsiderIncorporeal.bindTo(outsider); now bind in entity;
+//        if(!outsider.world.isRemote())
+//            OutsiderWorldSavedData.get(((ServerWorld) outsider.world)).setOutsiderComponent(outsider.getUniqueID(), outsiderIncorporeal.getComponent());
     }
 
-    public static void removedFromWorld(OutsiderEntity outsider)
+    public void removedFromWorld(OutsiderEntity outsider)
     {
-        OutsiderHolder.onlineOutsiders.remove(outsider.getUniqueID());
-        OfflineOutsider offlineOutsider = getOutsider(outsider.getUniqueID());
-        offlineOutsider.disbandTo(outsider);
-        if(!outsider.world.isRemote())
-            OutsiderWorldSavedData.get(((ServerWorld) outsider.world)).setOutsiderComponent(outsider.getUniqueID(),offlineOutsider.getEntityComponent());
+        onlineOutsiders.remove(outsider.getUniqueID());
+//        OutsiderIncorporeal outsiderIncorporeal = getOutsider(outsider.getUniqueID());
+//        outsiderIncorporeal.disbandTo(outsider);
+//        if(!outsider.world.isRemote())
+//            OutsiderWorldSavedData.get(((ServerWorld) outsider.world)).setOutsiderComponent(outsider.getUniqueID(), outsiderIncorporeal.getComponent());
     }
 
     public static void onWorldLoaded(WorldEvent.Load event)
@@ -38,26 +56,21 @@ public class OutsiderHolder {
         ServerWorld world = (ServerWorld) event.getWorld();
         OutsiderWorldSavedData outsiderWorldSavedData = OutsiderWorldSavedData.get(world);
         outsiderWorldSavedData.getOfflineOutsiderMap().forEach((k, v)->{
-            OfflineOutsider outsider = new OfflineOutsider(k);
+            OutsiderIncorporeal outsider = new OutsiderIncorporeal(k);
             outsider.setEntityComponent(v);
-            offlineOutsiders.put(k,outsider);
+            getInstance().offlineOutsiders.put(k,outsider);
         });
     }
 
-    public static OfflineOutsider createOfflineCopy(OutsiderEntity entity)
+    public OutsiderIncorporeal createOfflineCopy(OutsiderEntity entity)
     {
-        OfflineOutsider outsider = new OfflineOutsider(entity.getUniqueID());
+        OutsiderIncorporeal outsider = new OutsiderIncorporeal(entity.getUniqueID());
         outsider.setEntityComponent(entity.writeWithoutTypeId(new CompoundNBT()));
         return outsider;
     }
-/*    private static void addOutsider(OutsiderEntity entity)
+
+    public OutsiderIncorporeal getOutsider(UUID uuid)
     {
-        OfflineOutsider outsider = createOfflineCopy(entity);
-        outsiderWorldSavedData.setOutsiderComponent(entity.getUniqueID(),outsider.getEntityComponent());
-        offlineOutsiders.put(entity.getUniqueID(),outsider);
-    }*/
-    public static OfflineOutsider getOutsider(UUID uuid)
-    {
-        return offlineOutsiders.computeIfAbsent(uuid, OfflineOutsider::new);
+        return offlineOutsiders.computeIfAbsent(uuid, OutsiderIncorporeal::new);
     }
 }

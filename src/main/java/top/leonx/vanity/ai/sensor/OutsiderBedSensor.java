@@ -6,14 +6,17 @@ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.Sensor;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.tileentity.VanityBedTileEntity;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -35,10 +38,14 @@ public class OutsiderBedSensor extends Sensor<OutsiderEntity> {
 
     @Override
     protected void update(ServerWorld worldIn, OutsiderEntity entityIn) {
-        Optional<BlockPos> bedPosition = entityIn.getBedPosition();
+        Optional<BlockPos> bedPosition = entityIn.getHome();
         if (bedPosition.isPresent() && worldIn.isAreaLoaded(bedPosition.get(), 1)) {
-            entityIn.getBrain().setMemory(MemoryModuleType.NEAREST_BED, bedPosition.get());
-            return;
+            TileEntity tileEntity = worldIn.getTileEntity(bedPosition.get());
+            if(tileEntity instanceof VanityBedTileEntity && Objects.equals(((VanityBedTileEntity) tileEntity).getOwner(),entityIn.getUniqueID()))
+            {
+                entityIn.getBrain().setMemory(MemoryModuleType.NEAREST_BED, bedPosition.get());
+                return;
+            }
         }
 
         this.checkTimes = 0;

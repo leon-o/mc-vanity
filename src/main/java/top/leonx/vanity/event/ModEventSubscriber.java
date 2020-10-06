@@ -20,8 +20,11 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.ai.goap.PurposefulTaskRegistry;
+import top.leonx.vanity.container.BedContainer;
+import top.leonx.vanity.container.OutsiderDialogContainer;
 import top.leonx.vanity.init.*;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
+import top.leonx.vanity.network.OutsiderIncorporealSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
 import top.leonx.vanity.network.VanityPacketHandler;
 import top.leonx.vanity.util.FakePlayerHolder;
@@ -39,9 +42,14 @@ public class ModEventSubscriber {
     @SubscribeEvent
     public static void setup(final FMLCommonSetupEvent event) {
         ModCapabilityTypes.register();
+
         VanityPacketHandler.Init();
         VanityEquipDataSynchronizer.register();
         CharacterDataSynchronizer.register();
+        OutsiderIncorporealSynchronizer.register();
+        OutsiderDialogContainer.registerChanel();
+        BedContainer.registerChanel();
+
         FakePlayerHolder.register();
         PurposefulTaskRegistry.register();
     }

@@ -1,29 +1,25 @@
 package top.leonx.vanity.network;
 
-import com.mojang.datafixers.util.Either;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.network.NetworkEvent;
-import top.leonx.vanity.capability.CharacterState;
-import top.leonx.vanity.entity.OfflineOutsider;
-import top.leonx.vanity.entity.OutsiderEntity;
+import top.leonx.vanity.data.IncorporealDataManager;
+import top.leonx.vanity.entity.OutsiderIncorporeal;
 import top.leonx.vanity.entity.OutsiderHolder;
 
 import java.io.IOException;
-import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class OfflineOutsiderSynchronizer {
+public class OutsiderIncorporealSynchronizer {
     public static void register() {
         if (FMLEnvironment.dist.isClient()) {
-            VanityPacketHandler.registerMessage(3, OfflineOutsiderMsg.class, OfflineOutsiderMsg::encode, OfflineOutsiderMsg::decode, OfflineOutsiderSynchronizer::handlerClient);
+            VanityPacketHandler.registerMessage(OfflineOutsiderMsg.class, OfflineOutsiderMsg::encode, OfflineOutsiderMsg::decode, OutsiderIncorporealSynchronizer::handlerClient);
         } else {
-            VanityPacketHandler.registerMessage(3, OfflineOutsiderMsg.class, OfflineOutsiderMsg::encode,
-                                                OfflineOutsiderMsg::decode, OfflineOutsiderSynchronizer::handlerServer);
+            VanityPacketHandler.registerMessage(OfflineOutsiderMsg.class, OfflineOutsiderMsg::encode,
+                                                OfflineOutsiderMsg::decode, OutsiderIncorporealSynchronizer::handlerServer);
         }
     }
 
@@ -32,7 +28,7 @@ public class OfflineOutsiderSynchronizer {
 
     private static void handlerClient(OfflineOutsiderMsg msg, Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(()->{
-            OfflineOutsider outsiderEither = OutsiderHolder.getOutsider(msg.targetUUID);
+            OutsiderIncorporeal outsiderEither = OutsiderHolder.getInstance().getOutsider(msg.targetUUID);
             if(outsiderEither==null) return;
             outsiderEither.getDataManager().setEntryValues(msg.dataEntries);
         });
@@ -43,7 +39,7 @@ public class OfflineOutsiderSynchronizer {
         public UUID                                 targetUUID;
         public List<EntityDataManager.DataEntry<?>> dataEntries;
 
-        public OfflineOutsiderMsg(OfflineDataManager dataManager, UUID targetUUID) {
+        public OfflineOutsiderMsg(IncorporealDataManager dataManager, UUID targetUUID) {
             this(dataManager.getDirty(),targetUUID);
         }
         public OfflineOutsiderMsg(List<EntityDataManager.DataEntry<?>> entries, UUID targetUUID) {
@@ -54,7 +50,7 @@ public class OfflineOutsiderSynchronizer {
         public static void encode(OfflineOutsiderMsg msg, PacketBuffer buffer) {
             try {
                 buffer.writeUniqueId(msg.targetUUID);
-                OfflineDataManager.writeEntries(msg.dataEntries,buffer);
+                IncorporealDataManager.writeEntries(msg.dataEntries, buffer);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -63,7 +59,7 @@ public class OfflineOutsiderSynchronizer {
         public static OfflineOutsiderMsg decode(PacketBuffer buffer) {
             try {
                 UUID targetUUID=buffer.readUniqueId();
-                List<EntityDataManager.DataEntry<?>> dataEntries = OfflineDataManager.readEntries(buffer);
+                List<EntityDataManager.DataEntry<?>> dataEntries = IncorporealDataManager.readEntries(buffer);
                 return new OfflineOutsiderMsg(dataEntries,targetUUID);
             } catch (IOException e) {
                 e.printStackTrace();

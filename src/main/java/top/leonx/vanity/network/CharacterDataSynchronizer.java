@@ -21,11 +21,11 @@ import java.util.function.Supplier;
 public class CharacterDataSynchronizer {
     public static void register() {
         if (FMLEnvironment.dist.isClient()) {
-            VanityPacketHandler.registerMessage(1, CharacterStateMsg.class, CharacterStateMsg::encode,
+            VanityPacketHandler.registerMessage(CharacterStateMsg.class, CharacterStateMsg::encode,
                                                 CharacterStateMsg::decode,
                                                 CharacterDataSynchronizer::handlerClient);
         } else {
-            VanityPacketHandler.registerMessage(1, CharacterStateMsg.class, CharacterStateMsg::encode,
+            VanityPacketHandler.registerMessage(CharacterStateMsg.class, CharacterStateMsg::encode,
                                                 CharacterStateMsg::decode, CharacterDataSynchronizer::handlerServer);
         }
 

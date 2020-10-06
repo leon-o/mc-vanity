@@ -27,7 +27,6 @@ import net.minecraft.item.SwordItem;
 import net.minecraft.item.UseAction;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
 import net.minecraft.particles.ItemParticleData;
@@ -48,6 +47,8 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.ai.OutsiderTasks;
 import top.leonx.vanity.bodypart.BodyPartStack;
@@ -58,45 +59,47 @@ import top.leonx.vanity.event.OutsiderEvent;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.init.ModEntityTypes;
 import top.leonx.vanity.init.ModSensorTypes;
-import top.leonx.vanity.util.OutsiderInventory;
 import top.leonx.vanity.util.FakePlayerHolder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 @SuppressWarnings({"UnusedReturnValue"})
 public class OutsiderEntity extends AbstractOutsider {
-    public static final DataParameter<Optional<UUID>> FOLLOWED_PLAYER_ID = EntityDataManager.createKey(OutsiderEntity.class, DataSerializers.OPTIONAL_UNIQUE_ID);
-    private static final ImmutableList<MemoryModuleType<?>> MEMORY_TYPES = ImmutableList.of(MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.HOME, MemoryModuleType.JOB_SITE,
-                                                                                            MemoryModuleType.MEETING_POINT, MemoryModuleType.MOBS, MemoryModuleType.VISIBLE_MOBS,
-                                                                                            MemoryModuleType.VISIBLE_VILLAGER_BABIES, MemoryModuleType.NEAREST_PLAYERS,
-                                                                                            MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.WALK_TARGET, MemoryModuleType.LOOK_TARGET,
-                                                                                            MemoryModuleType.INTERACTION_TARGET, MemoryModuleType.BREED_TARGET, MemoryModuleType.PATH,
-                                                                                            MemoryModuleType.INTERACTABLE_DOORS, MemoryModuleType.field_225462_q, MemoryModuleType.NEAREST_BED,
-                                                                                            MemoryModuleType.HURT_BY, MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE,
-                                                                                            MemoryModuleType.SECONDARY_JOB_SITE, MemoryModuleType.HIDING_PLACE, MemoryModuleType.HEARD_BELL_TIME,
-                                                                                            MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.LAST_SLEPT,
-                                                                                            MemoryModuleType.field_226332_A_, MemoryModuleType.LAST_WORKED_AT_POI,
-                                                                                            MemoryModuleType.GOLEM_LAST_SEEN_TIME);
+    private static final ImmutableList<MemoryModuleType<?>>                                  MEMORY_TYPES = ImmutableList.of(MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.HOME,
+                                                                                                                             MemoryModuleType.JOB_SITE, MemoryModuleType.MEETING_POINT,
+                                                                                                                             MemoryModuleType.MOBS, MemoryModuleType.VISIBLE_MOBS,
+                                                                                                                             MemoryModuleType.VISIBLE_VILLAGER_BABIES, MemoryModuleType.NEAREST_PLAYERS,
+                                                                                                                             MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.WALK_TARGET,
+                                                                                                                             MemoryModuleType.LOOK_TARGET, MemoryModuleType.INTERACTION_TARGET,
+                                                                                                                             MemoryModuleType.BREED_TARGET, MemoryModuleType.PATH,
+                                                                                                                             MemoryModuleType.INTERACTABLE_DOORS, MemoryModuleType.field_225462_q,
+                                                                                                                             MemoryModuleType.NEAREST_BED, MemoryModuleType.HURT_BY,
+                                                                                                                             MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE,
+                                                                                                                             MemoryModuleType.SECONDARY_JOB_SITE, MemoryModuleType.HIDING_PLACE,
+                                                                                                                             MemoryModuleType.HEARD_BELL_TIME,
+                                                                                                                             MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, MemoryModuleType.LAST_SLEPT,
+                                                                                                                             MemoryModuleType.field_226332_A_, MemoryModuleType.LAST_WORKED_AT_POI,
+                                                                                                                             MemoryModuleType.GOLEM_LAST_SEEN_TIME);
     private static final ImmutableList<SensorType<? extends Sensor<? super OutsiderEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS,
                                                                                                                              SensorType.INTERACTABLE_DOORS, SensorType.NEAREST_BED, SensorType.HURT_BY,
                                                                                                                              SensorType.GOLEM_LAST_SEEN, ModSensorTypes.OUTSIDER_BED_SENSOR.get(),
                                                                                                                              ModSensorTypes.OUTSIDER_NEAREST_HOSTEL_SENSOR.get());
-    protected GeneralFoodStats<AbstractOutsider> foodStats;
-    protected NeedsStatus                        needsStatus;
-    public    OutsiderInventory inventory;
-    protected PlayerAbilities abilities;
-    protected CooldownTracker cooldownTracker;
-    public final        OutsiderInteractionManager    interactionManager = new OutsiderInteractionManager(this);
-    protected final     PlayerSimPathNavigator        waterNavigator;
-    protected final     GroundPathNavigator           groundNavigator;
-    public              ServerPlayerEntity            interactingPlayer  = null;
-    private             CharacterState                characterState;
+
+    public final    OutsiderInteractionManager         interactionManager     = new OutsiderInteractionManager(this);
+    protected final PlayerSimPathNavigator             waterNavigator;
+    protected final GroundPathNavigator                groundNavigator;
+    private         HashSet<DataParameter<?>>          doNotNotifyIncorporeal;
+    public          OutsiderInventory                  inventory;
+    public          ServerPlayerEntity                 interactingPlayer      = null;
+    protected       GeneralFoodStats<AbstractOutsider> foodStats;
+    protected       NeedsStatus                        needsStatus;
+    protected       PlayerAbilities                    abilities;
+    protected       CooldownTracker                    cooldownTracker;
+    private         CharacterState                     characterState;
+    private         OutsiderIncorporeal                incorporeal;
 
     public OutsiderEntity(EntityType<? extends OutsiderEntity> type, World world) {
         super(type, world);
@@ -110,6 +113,14 @@ public class OutsiderEntity extends AbstractOutsider {
         inventory = new OutsiderInventory(this);
         abilities = new PlayerAbilities();
         cooldownTracker = new CooldownTracker();
+    }
+
+    @Override
+    public void setUniqueId(UUID uniqueIdIn) {
+        super.setUniqueId(uniqueIdIn);
+        bindIncorporeal(); //update incorporeal
+        if(this.world.isRemote())
+            incorporeal.setEntityComponent(writeWithoutTypeId(new CompoundNBT()));
     }
 
     /**
@@ -473,26 +484,35 @@ public class OutsiderEntity extends AbstractOutsider {
     @Nullable
     public PlayerEntity getFollowedPlayer() {
         if (world.isRemote) return null;
-        Optional<UUID> optionalUUID = getFollowedPlayerUUID();
+        Optional<UUID> optionalUUID = getFollowedPlayerId();
         return optionalUUID.map(uuid -> world.getPlayerByUuid(uuid)).orElse(null);
     }
 
     public void setFollowedPlayer(@Nullable ServerPlayerEntity entity) {
-        setFollowedPlayerUUID(entity != null ? entity.getUniqueID() : null);
-    }
-
-    public Optional<UUID> getFollowedPlayerUUID() {
-        return dataManager.get(FOLLOWED_PLAYER_ID);
-    }
-
-    public void setFollowedPlayerUUID(UUID uuid) {
-        dataManager.set(FOLLOWED_PLAYER_ID, Optional.ofNullable(uuid));
+        setFollowedPlayerId(entity != null ? entity.getUniqueID() : null);
     }
 
     @Override
     public HandSide getPrimaryHand() {
         return HandSide.RIGHT;
     }
+
+    /////////////////////////////////////////////
+    // Capabilities modify.
+    /////////////////////////////////////////////
+
+
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+        bindIncorporeal();
+        LazyOptional<T> incorporealCapability = incorporeal.getCapability(capability, facing);
+        if(incorporealCapability.isPresent())
+            return incorporealCapability;
+        return super.getCapability(capability, facing);
+    }
+
+    /////////////////////////////////////////////
+
 
     @Override
     public void livingTick() {
@@ -717,33 +737,38 @@ public class OutsiderEntity extends AbstractOutsider {
         return cooldownTracker;
     }
 
-/*    @Override
+    @Override
     public CompoundNBT writeWithoutTypeId(CompoundNBT compound) {
         CompoundNBT compoundNBT = super.writeWithoutTypeId(compound);
-        OutsiderHolder.getOutsider(this.getUniqueID()).setEntityComponent(compoundNBT);
-
+        bindIncorporeal();
+        this.incorporeal.writeComponent(compoundNBT);
         return compoundNBT;
     }
 
     @Override
     public void read(CompoundNBT compound) {
-        OfflineOutsider outsider = OutsiderHolder.getOutsider(this.getUniqueID());
-
-        super.read(compound.merge(outsider.getEntityComponent()));
-    }*/
+        if (compound.hasUniqueId("UUID")) {
+            this.entityUniqueID = compound.getUniqueId("UUID");
+            this.cachedUniqueIdString = this.entityUniqueID.toString();
+            bindIncorporeal();
+            super.read(compound);
+            this.incorporeal.readComponent(compound);
+        } else {
+            super.read(compound); //Just summoned.
+            bindIncorporeal();
+        }
+    }
 
     @Override
     public void writeAdditional(CompoundNBT compound) {
         super.writeAdditional(compound);
-        compound.putUniqueId("followed", getFollowedPlayerUUID().orElse(new UUID(0, 0)));
+        writeDataParameter(compound);
     }
 
     @Override
     public void readAdditional(CompoundNBT compound) {
         super.readAdditional(compound);
-        UUID followed = compound.getUniqueId("followed");
-        if (!world.isRemote() && followed.getLeastSignificantBits() != 0 && followed.getMostSignificantBits() != 0) setFollowedPlayerUUID(followed);
-
+        readDataParameter(compound);
     }
 
     public void updateSwimming() {
@@ -767,19 +792,41 @@ public class OutsiderEntity extends AbstractOutsider {
     @Override
     public void onAddedToWorld() {
         super.onAddedToWorld();
-        OutsiderHolder.joinWorld(this);
+        OutsiderHolder.getInstance().joinWorld(this);
     }
+
     @Override
     public void onRemovedFromWorld() {
         super.onRemovedFromWorld();
-        OutsiderHolder.removedFromWorld(this);
+        OutsiderHolder.getInstance().removedFromWorld(this);
     }
 
-    //////
+    @Override
+    public EntityDataManager getDataManager() {
+        return this.dataManager;
+    }
+    @Override
+    public void notifyDataManagerChange(DataParameter<?> key) {
+        super.notifyDataManagerChange(key);
 
-    // SHIELD
+        if(doNotNotifyIncorporeal==null) //Not very elegant
+            doNotNotifyIncorporeal=new HashSet<>();
 
-    //////
+        if (doNotNotifyIncorporeal.contains(key)) {
+            doNotNotifyIncorporeal.remove(key);
+        } else if (this.incorporeal != null) {
+            //noinspection unchecked,rawtypes,rawtypes
+            incorporeal.notifyDataManagerChangeFromEntity((DataParameter) key, dataManager.get(key));
+        }
+    }
+
+    public <T> void notifyDataManagerChangeFromIncorporeal(DataParameter<T> key, T value) {
+        if(doNotNotifyIncorporeal==null)
+            doNotNotifyIncorporeal=new HashSet<>();
+
+        doNotNotifyIncorporeal.add(key);
+        dataManager.set(key, value);
+    }
 
     private void addItemParticles(ItemStack stack, int count) {
         for (int i = 0; i < count; ++i) {
@@ -796,6 +843,19 @@ public class OutsiderEntity extends AbstractOutsider {
             else this.world.addParticle(new ItemParticleData(ParticleTypes.ITEM, stack), posVec.x, posVec.y, posVec.z, speedvec.x, speedvec.y + 0.05D, speedvec.z);
         }
 
+    }
+    //////
+
+    // SHIELD
+
+    //////
+
+    private void bindIncorporeal() {
+        if (this.incorporeal != null && this.incorporeal.getRealUniqueId().equals(this.getUniqueID())) return;
+
+        this.incorporeal = OutsiderHolder.getInstance().getOutsider(this.entityUniqueID);
+        this.incorporeal.bindTo(this);
+        //this.incorporeal.notifier = this::notifyDataManagerChangeFromIncorporeal;
     }
 
     protected void blockUsingShield(LivingEntity entityIn) {
@@ -892,7 +952,7 @@ public class OutsiderEntity extends AbstractOutsider {
     protected void onDeathUpdate() {
         ++this.deathTime;
         if (this.deathTime == 20) {
-            if (OutsiderHolder.onlineOutsiders.containsKey(getUniqueID())) respawnEntity();
+            if (OutsiderHolder.getInstance().offlineOutsiders.containsKey(getUniqueID())) respawnEntity();
             this.remove(true);
 
             for (int i = 0; i < 20; ++i) {
@@ -903,6 +963,7 @@ public class OutsiderEntity extends AbstractOutsider {
             }
         }
     }
+
     /**
      * Called when item use finished.
      * If the onItemUseFinished isn't null, it will be called.
@@ -927,7 +988,7 @@ public class OutsiderEntity extends AbstractOutsider {
     @Override
     protected void registerData() {
         super.registerData();
-        dataManager.register(FOLLOWED_PLAYER_ID, Optional.empty());
+        registerDataParameter();
     }
 
     /**

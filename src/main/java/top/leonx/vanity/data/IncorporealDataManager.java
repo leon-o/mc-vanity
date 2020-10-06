@@ -1,4 +1,4 @@
-package top.leonx.vanity.network;
+package top.leonx.vanity.data;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,7 +18,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import top.leonx.vanity.entity.OfflineOutsider;
+import top.leonx.vanity.entity.OutsiderIncorporeal;
+import top.leonx.vanity.util.DummyLivingEntityHolder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -28,54 +29,15 @@ import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class OfflineDataManager {
-    private static final Logger                                LOGGER      = LogManager.getLogger();
-    private static final  Map<Class<? extends Entity>, Integer> NEXT_ID_MAP = Maps.newHashMap();
+public class IncorporealDataManager extends EntityDataManager {
     private final         Map<Integer, EntityDataManager.DataEntry<?>> entries     = Maps.newHashMap();
     private final         ReadWriteLock                                lock        = new ReentrantReadWriteLock();
     private               boolean                                      empty       = true;
-    private               boolean                                      dirty;
-    private final OfflineOutsider outsider;
-    public OfflineDataManager(OfflineOutsider outsider) {
+    private       boolean             dirty;
+    private final OutsiderIncorporeal outsider;
+    public IncorporealDataManager(OutsiderIncorporeal outsider) {
+        super(null);
         this.outsider=outsider;
-    }
-
-    public static <T> DataParameter<T> createKey(Class<? extends Entity> clazz, IDataSerializer<T> serializer) {
-        // Forge: This is very useful for mods that register keys on classes that are not their own
-        try {
-            Class<?> oclass = Class.forName(Thread.currentThread().getStackTrace()[2].getClassName());
-            if (!oclass.equals(clazz)) {
-                // Forge: log at warn, mods should not add to classes that they don't own, and only add stacktrace when in debug is enabled as it is mostly not needed and consumes time
-                if (LOGGER.isDebugEnabled()) LOGGER.warn("defineId called for: {} from {}", clazz, oclass, new RuntimeException());
-                else LOGGER.warn("defineId called for: {} from {}", clazz, oclass);
-            }
-        } catch (ClassNotFoundException ignored) {
-        }
-
-        int j;
-        if (NEXT_ID_MAP.containsKey(clazz)) {
-            j = NEXT_ID_MAP.get(clazz) + 1;
-        } else {
-            int i = 0;
-            Class<?> oclass1 = clazz;
-
-            while(oclass1 != Entity.class) {
-                oclass1 = oclass1.getSuperclass();
-                if (NEXT_ID_MAP.containsKey(oclass1)) {
-                    i = NEXT_ID_MAP.get(oclass1) + 1;
-                    break;
-                }
-            }
-
-            j = i;
-        }
-
-        if (j > 254) {
-            throw new IllegalArgumentException("Data value id is too big with " + j + "! (Max is " + 254 + ")");
-        } else {
-            NEXT_ID_MAP.put(clazz, j);
-            return serializer.createKey(j);
-        }
     }
 
     public <T> void register(DataParameter<T> key, T value) {
@@ -132,7 +94,15 @@ public class OfflineDataManager {
             dataEntry.setDirty(true);
             this.dirty = true;
         }
-
+    }
+    public <T> void setWithNotify(DataParameter<T> key, T value)
+    {
+        EntityDataManager.DataEntry<T> dataEntry = this.getEntry(key);
+        if (ObjectUtils.notEqual(value, dataEntry.getValue())) {
+            dataEntry.setValue(value);
+            dataEntry.setDirty(true);
+            this.dirty = true;
+        }
     }
 
     public boolean isDirty() {

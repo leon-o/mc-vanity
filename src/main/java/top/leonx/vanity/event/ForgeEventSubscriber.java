@@ -5,9 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.monster.MonsterEntity;
-import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
@@ -20,7 +18,6 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -31,9 +28,8 @@ import top.leonx.vanity.capability.BodyPartCapabilityProvider;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.capability.CharacterStateCapabilityProvider;
 import top.leonx.vanity.container.OutsiderDialogContainer;
-import top.leonx.vanity.entity.OfflineOutsider;
+import top.leonx.vanity.entity.OutsiderIncorporeal;
 import top.leonx.vanity.entity.OutsiderEntity;
-import top.leonx.vanity.entity.OutsiderHolder;
 import top.leonx.vanity.init.ModCapabilityTypes;
 import top.leonx.vanity.network.CharacterDataSynchronizer;
 import top.leonx.vanity.network.VanityEquipDataSynchronizer;
@@ -55,7 +51,7 @@ public class ForgeEventSubscriber {
         }
     }
     @SubscribeEvent
-    public static void attachCapabilitiesToOfflineOutsider(final AttachCapabilitiesEvent<OfflineOutsider> event) {
+    public static void attachCapabilitiesToOfflineOutsider(final AttachCapabilitiesEvent<OutsiderIncorporeal> event) {
         event.addCapability(new ResourceLocation(VanityMod.MOD_ID, "body_part_cap"), new BodyPartCapabilityProvider());
         event.addCapability(new ResourceLocation(VanityMod.MOD_ID, "char_state_cap"), new CharacterStateCapabilityProvider());
     }

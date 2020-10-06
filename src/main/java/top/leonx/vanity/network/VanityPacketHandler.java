@@ -23,10 +23,11 @@ public class VanityPacketHandler {
                 "1"::equals
         );
     }
-    public static <T> void registerMessage(int id,Class<T> type,
+    static int idCount=0;
+    public static <T> void registerMessage(Class<T> type,
     BiConsumer<T, PacketBuffer> encoder, Function<PacketBuffer,
             T> decoder, BiConsumer<T,Supplier<NetworkEvent.Context>> handler)
     {
-       CHANNEL.registerMessage(id,type,encoder,decoder,handler);
+       CHANNEL.registerMessage(idCount++,type,encoder,decoder,handler);
     }
 }

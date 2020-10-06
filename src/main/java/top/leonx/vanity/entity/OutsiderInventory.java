@@ -1,4 +1,4 @@
-package top.leonx.vanity.util;
+package top.leonx.vanity.entity;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.block.BlockState;
@@ -25,7 +25,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.antlr.v4.runtime.misc.Triple;
-import top.leonx.vanity.entity.AbstractOutsider;
 
 import javax.annotation.Nonnull;
 import java.util.*;

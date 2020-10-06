@@ -29,9 +29,9 @@ public class VanityEquipDataSynchronizer {
 
     public static void register() {
         if (FMLEnvironment.dist.isClient()) {
-            VanityPacketHandler.registerMessage(0, UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerClient);
+            VanityPacketHandler.registerMessage(UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerClient);
         } else {
-            VanityPacketHandler.registerMessage(0, UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerServer);
+            VanityPacketHandler.registerMessage(UpdateVanityEquipDataMsg.class, UpdateVanityEquipDataMsg::encode, UpdateVanityEquipDataMsg::decode, VanityEquipDataSynchronizer::handlerServer);
         }
 
     }
