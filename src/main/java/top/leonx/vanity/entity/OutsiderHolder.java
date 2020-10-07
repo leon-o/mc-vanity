@@ -28,8 +28,8 @@ public class OutsiderHolder {
         }
     }
     private OutsiderHolder(){}
-    public Map<UUID,OutsiderEntity>       onlineOutsiders  =new HashMap<>();
-    public Map<UUID, OutsiderIncorporeal> offlineOutsiders =new HashMap<>();
+    public Map<UUID,OutsiderEntity>       onlineOutsiders        =new HashMap<>();
+    public Map<UUID, OutsiderIncorporeal> outsiderIncorporealMap =new HashMap<>();
 
     public void joinWorld(OutsiderEntity outsider)
     {
@@ -58,7 +58,7 @@ public class OutsiderHolder {
         outsiderWorldSavedData.getOfflineOutsiderMap().forEach((k, v)->{
             OutsiderIncorporeal outsider = new OutsiderIncorporeal(k);
             outsider.setEntityComponent(v);
-            getInstance().offlineOutsiders.put(k,outsider);
+            getInstance().outsiderIncorporealMap.put(k, outsider);
         });
     }
 
@@ -71,6 +71,6 @@ public class OutsiderHolder {
 
     public OutsiderIncorporeal getOutsider(UUID uuid)
     {
-        return offlineOutsiders.computeIfAbsent(uuid, OutsiderIncorporeal::new);
+        return outsiderIncorporealMap.computeIfAbsent(uuid, OutsiderIncorporeal::new);
     }
 }

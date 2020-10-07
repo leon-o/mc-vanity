@@ -120,7 +120,7 @@ public class OutsiderEntity extends AbstractOutsider {
         super.setUniqueId(uniqueIdIn);
         bindIncorporeal(); //update incorporeal
         if(this.world.isRemote())
-            incorporeal.setEntityComponent(writeWithoutTypeId(new CompoundNBT()));
+            getIncorporeal().setEntityComponent(writeWithoutTypeId(new CompoundNBT()));
     }
 
     /**
@@ -715,6 +715,20 @@ public class OutsiderEntity extends AbstractOutsider {
         return foodStats;
     }
 
+    public OutsiderIncorporeal getIncorporeal()
+    {
+        if(incorporeal==null)
+            bindIncorporeal();
+
+        return incorporeal;
+    }
+    private void bindIncorporeal() {
+        if (this.incorporeal != null && this.incorporeal.getRealUniqueId().equals(this.getUniqueID())) return;
+
+        this.incorporeal = OutsiderHolder.getInstance().getOutsider(this.entityUniqueID);
+        this.incorporeal.bindTo(this);
+        //this.incorporeal.notifier = this::notifyDataManagerChangeFromIncorporeal;
+    }
     @Override
     public PlayerAbilities getAbilities() {
         return abilities;
@@ -740,8 +754,7 @@ public class OutsiderEntity extends AbstractOutsider {
     @Override
     public CompoundNBT writeWithoutTypeId(CompoundNBT compound) {
         CompoundNBT compoundNBT = super.writeWithoutTypeId(compound);
-        bindIncorporeal();
-        this.incorporeal.writeComponent(compoundNBT);
+        getIncorporeal().writeComponent(compoundNBT);
         return compoundNBT;
     }
 
@@ -750,9 +763,8 @@ public class OutsiderEntity extends AbstractOutsider {
         if (compound.hasUniqueId("UUID")) {
             this.entityUniqueID = compound.getUniqueId("UUID");
             this.cachedUniqueIdString = this.entityUniqueID.toString();
-            bindIncorporeal();
             super.read(compound);
-            this.incorporeal.readComponent(compound);
+            getIncorporeal().readComponent(compound);
         } else {
             super.read(compound); //Just summoned.
             bindIncorporeal();
@@ -798,6 +810,9 @@ public class OutsiderEntity extends AbstractOutsider {
     @Override
     public void onRemovedFromWorld() {
         super.onRemovedFromWorld();
+        if(this.dead && OutsiderHolder.getInstance().outsiderIncorporealMap.containsKey(getUniqueID()))
+            respawnEntity();
+
         OutsiderHolder.getInstance().removedFromWorld(this);
     }
 
@@ -850,13 +865,6 @@ public class OutsiderEntity extends AbstractOutsider {
 
     //////
 
-    private void bindIncorporeal() {
-        if (this.incorporeal != null && this.incorporeal.getRealUniqueId().equals(this.getUniqueID())) return;
-
-        this.incorporeal = OutsiderHolder.getInstance().getOutsider(this.entityUniqueID);
-        this.incorporeal.bindTo(this);
-        //this.incorporeal.notifier = this::notifyDataManagerChangeFromIncorporeal;
-    }
 
     protected void blockUsingShield(LivingEntity entityIn) {
         super.blockUsingShield(entityIn);
@@ -943,25 +951,6 @@ public class OutsiderEntity extends AbstractOutsider {
         brain.setFallbackActivity(Activity.IDLE);
         brain.switchTo(Activity.IDLE);
         brain.updateActivity(this.world.getDayTime(), this.world.getGameTime());
-    }
-
-    /**
-     * Handle death update and respawn the entity.
-     */
-    @Override
-    protected void onDeathUpdate() {
-        ++this.deathTime;
-        if (this.deathTime == 20) {
-            if (OutsiderHolder.getInstance().offlineOutsiders.containsKey(getUniqueID())) respawnEntity();
-            this.remove(true);
-
-            for (int i = 0; i < 20; ++i) {
-                double d0 = this.rand.nextGaussian() * 0.02D;
-                double d1 = this.rand.nextGaussian() * 0.02D;
-                double d2 = this.rand.nextGaussian() * 0.02D;
-                this.world.addParticle(ParticleTypes.POOF, this.getPosXRandom(1.0D), this.getPosYRandom(), this.getPosZRandom(1.0D), d0, d1, d2);
-            }
-        }
     }
 
     /**
