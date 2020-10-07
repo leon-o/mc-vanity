@@ -28,7 +28,7 @@ public class BedScreen extends ContainerScreen<BedContainer> {
         super.init();
         //titleLabel=new Label("Delivery To",guiLeft+8,guiTop+8,0,0);
         panel=new WrapPanel<>(guiLeft+20, guiTop+26, xSize-36, ySize-36);
-        for (OutsiderIncorporeal outsiderIncorporeal : container.entities) {
+        for (OutsiderIncorporeal outsiderIncorporeal : container.selectableOutsider) {
             Avatar avatar = new Avatar(0, 0, 48, 64, outsiderIncorporeal);
             avatar.marginBottom=avatar.marginTop=2;
             avatar.marginLeft=avatar.marginRight=1;
