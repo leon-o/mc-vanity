@@ -184,18 +184,12 @@ public class ForgeEventSubscriber {
         serverTickCount++;
     }
 
-    @OnlyIn(Dist.CLIENT)
+/*    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event)
     {
-        if(clientTickCount >=5) {
-            if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.openContainer instanceof OutsiderDialogContainer) {
-                ((OutsiderDialogContainer) Minecraft.getInstance().player.openContainer).updateAvailableRequest();
-            }
-            clientTickCount=0;
-        }
-        clientTickCount++;
-    }
+
+    }*/
 
 /*    @SubscribeEvent
     public static void onWorldLoad(WorldEvent.Load event)
