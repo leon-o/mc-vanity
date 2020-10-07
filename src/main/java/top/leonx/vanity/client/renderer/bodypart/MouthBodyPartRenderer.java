@@ -29,22 +29,24 @@ public class MouthBodyPartRenderer extends BodyPartRenderer {
         float uSize=0.5f,vSize=0.25f;
         float vStart=0;
         float uStart=0;
-        switch (mood) {
-            case NORMAL:
-                break;
-            case HAPPY:
-                uStart=0.5f;
-                break;
-            case ANGRY:
-                vStart=0.25f;
-                break;
-            case SAD:
-                uStart=0.5f;
-                vStart=0.25f;
-                break;
-            case SURPRISED:
-                vStart=0.5f;
-                break;
+        if(!livingEntity.isSleeping()){
+            switch (mood) {
+                case NORMAL:
+                    break;
+                case HAPPY:
+                    uStart=0.5f;
+                    break;
+                case ANGRY:
+                    vStart=0.25f;
+                    break;
+                case SAD:
+                    uStart=0.5f;
+                    vStart=0.25f;
+                    break;
+                case SURPRISED:
+                    vStart=0.5f;
+                    break;
+            }
         }
 
         float mouthHeight = attributes.getOrDefault("mouth_height", (float) 0);
