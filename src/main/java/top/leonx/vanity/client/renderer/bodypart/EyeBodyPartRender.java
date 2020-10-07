@@ -85,10 +85,18 @@ public class EyeBodyPartRender extends BodyPartRenderer {
     @Override
     public <T extends LivingEntity, M extends EntityModel<T> & IHasHead> void render(LivingEntity livingEntity, M entityModel, Map<String, Float> attributes, CharacterState characterState, Color color, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, int packedOverlayIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         matrixStackIn.push();
+
+        if(livingEntity.isSleeping()) { //close eyes when sleeping
+            matrixStackIn.translate(0,-0.175,0);
+            matrixStackIn.scale(1, 0.1f, 1);
+            matrixStackIn.translate(0,0.175,0);
+        }
+
         ModelRenderer modelHead = entityModel.getModelHead();
         modelHead.translateRotate(matrixStackIn);
         RenderType renderType = model.getRenderType(location);
         Float      height     = attributes.getOrDefault("eye_height", 0f);
+
         model.setEyeballTranslate(new Vector3f(-MathHelper.clamp(MathHelper.wrapDegrees(netHeadYaw),-30,30),
                                                MathHelper.clamp(MathHelper.wrapDegrees(headPitch),-30,5),
                                                0));
