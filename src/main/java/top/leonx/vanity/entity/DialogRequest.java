@@ -6,7 +6,6 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.Util;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.fml.network.NetworkHooks;
 import top.leonx.vanity.VanityMod;
@@ -17,7 +16,6 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -29,7 +27,7 @@ public class DialogRequest {
     public static final  DialogRequest              DISBAND       = DialogRequest.create("disband", tuple -> tuple.getB().setFollowedPlayer(null),
                                                                                          tuple -> tuple.getB().getFollowedPlayerId().isPresent());
 
-    public static final  DialogRequest OPEN_INVENTORY  = DialogRequest.create("open_inventory", tuple -> {
+    public static final DialogRequest OPEN_INVENTORY = DialogRequest.create("open_inventory", tuple -> {
         PlayerEntity   player = tuple.getA();
         OutsiderEntity entity = tuple.getB();
         INamedContainerProvider provider = new INamedContainerProvider() {
@@ -45,15 +43,14 @@ public class DialogRequest {
         };
         NetworkHooks.openGui((ServerPlayerEntity) player, provider, t -> t.writeInt(entity.getEntityId()));
     });
-    public static final DialogRequest JOIN_US = DialogRequest.create("join_us",tuple -> {
-        tuple.getB().setLeaderUUID(tuple.getA().getUniqueID());
-    },tuple -> tuple.getB().getLeaderUUID().orElse(new UUID(0,0)).equals(tuple.getA().getUniqueID()));
+    public static final DialogRequest JOIN_US        = DialogRequest.create("join_us", tuple -> tuple.getB().setLeaderUUID(tuple.getA().getUniqueID()), tuple -> !tuple.getA().getUniqueID().equals(
+            tuple.getB().getLeaderUUID().orElse(null)) && tuple.getB().getCharacterState().getRelationWith(tuple.getA().getUniqueID()) > 20);
 
 
-    private final static DialogRequest DUMMY_OPERATION = new DialogRequest("dummy", (t) -> {}, t -> true);
-    private final        String        name;
-    private final Consumer<Tuple<PlayerEntity, OutsiderEntity>>          execute;
-    private final Function<Tuple<PlayerEntity, OutsiderEntity>, Boolean> premise;
+    private final static DialogRequest                                          DUMMY_OPERATION = new DialogRequest("dummy", (t) -> {}, t -> true);
+    private final        String                                                 name;
+    private final        Consumer<Tuple<PlayerEntity, OutsiderEntity>>          execute;
+    private final        Function<Tuple<PlayerEntity, OutsiderEntity>, Boolean> premise;
 
     private DialogRequest(String opCode, Consumer<Tuple<PlayerEntity, OutsiderEntity>> execute, Function<Tuple<PlayerEntity, OutsiderEntity>, Boolean> premise) {
         this.name = opCode;

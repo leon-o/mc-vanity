@@ -20,13 +20,14 @@ import top.leonx.vanity.tileentity.VanityBedTileEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 public class BedContainer extends Container {
     public PlayerEntity              player;
-    public List<OutsiderIncorporeal> entities = new ArrayList<>();
-    public BlockPos bedPos;
+    public List<OutsiderIncorporeal> selectableOutsider = new ArrayList<>();
+    public BlockPos                  bedPos;
     VanityBedTileEntity tileEntity;
     public BedContainer(int windowId, PlayerInventory inventory, VanityBedTileEntity tileEntity) {
         super(ModContainerTypes.VANITY_BED_CONTAINER.get(), windowId);
@@ -34,10 +35,10 @@ public class BedContainer extends Container {
         this.tileEntity = tileEntity;
         if (tileEntity == null) return;
         bedPos = tileEntity.getPos();
-        CharacterState characterState = player.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY);
-        OutsiderHolder.getInstance().offlineOutsiders.forEach((key, value) -> {
-            if (characterState.getRelationWith(key) < 20) return;
-            entities.add(value);
+        //CharacterState characterState = player.getCapability(ModCapabilityTypes.CHARACTER_STATE).orElse(CharacterState.EMPTY);
+        OutsiderHolder.getInstance().outsiderIncorporealMap.forEach((key, value) -> {
+            if (!value.getLeaderUUID().isPresent() || !Objects.equals(player.getUniqueID(), value.getLeaderUUID().get())) return;
+            selectableOutsider.add(value);
         });
     }
     public BedContainer(int windowId, PlayerInventory inv, PacketBuffer data) {
@@ -86,7 +87,7 @@ public class BedContainer extends Container {
     public static class OperationMsg {
         public UUID targetUUID;
         public BlockPos bedPos;
-        boolean trueSetFalseUnset = true;
+        boolean trueSetFalseUnset;
 
         public OperationMsg(UUID targetUUID, BlockPos bedPos) {
             this.targetUUID = targetUUID;
