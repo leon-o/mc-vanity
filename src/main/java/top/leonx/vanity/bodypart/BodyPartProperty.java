@@ -5,6 +5,8 @@ import net.minecraft.nbt.CompoundNBT;
 import org.antlr.v4.runtime.misc.Triple;
 import top.leonx.vanity.VanityMod;
 import top.leonx.vanity.capability.BodyPartCapability;
+import top.leonx.vanity.util.Color;
+import top.leonx.vanity.util.ColorUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ public class BodyPartProperty {
     public BodyPartGroup group;
     public Function<BodyPartCapability.BodyPartData,Boolean> precondition=t->true;
     public int maxStack=1;
+    private List<Integer> avalableColors;
     private float rarity=1;
     private float                     commonness           =1;
     public  List<AdjustableAttribute> adjustableAttributes =new ArrayList<>();
@@ -64,6 +67,15 @@ public class BodyPartProperty {
         return this;
     }
 
+    public List<Integer> getAvailableColors() {
+        return avalableColors==null? ColorUtil.COLORS:avalableColors;
+    }
+
+    public BodyPartProperty setAvailableColors(List<Integer> colors)
+    {
+        this.avalableColors=colors;
+        return this;
+    }
 
     public static class AdjustableAttribute {
         float min,max,defaultV;

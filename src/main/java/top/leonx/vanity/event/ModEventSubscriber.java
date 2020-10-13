@@ -36,8 +36,7 @@ public class ModEventSubscriber {
     @SubscribeEvent
     public static void enqueueIMC(final InterModEnqueueEvent event)
     {
-        InterModComms.sendTo("curios", CuriosAPI.IMC.REGISTER_TYPE, () -> new CurioIMCMessage("hair").setSize(2));
-        InterModComms.sendTo("curios","register_icon", ()->new Tuple<>("hair", new ResourceLocation(VanityMod.MOD_ID, "item/empty_" + "hair" + "_slot")));
+        InterModComms.sendTo("curios", CuriosAPI.IMC.REGISTER_TYPE, () -> new CurioIMCMessage("legs").setSize(1));
     }
     @SubscribeEvent
     public static void setup(final FMLCommonSetupEvent event) {

@@ -12,8 +12,8 @@ import java.util.List;
 
 public abstract class BodyPart implements IHasIcon {
     private final BodyPartProperty   property;
-    private int   color;
     private String name;
+    private ResourceLocation iconLocation;
     public BodyPart(BodyPartProperty property)
     {
         this.property=property;
@@ -30,7 +30,9 @@ public abstract class BodyPart implements IHasIcon {
     {
         return Gender.BOTH;
     }
-    public abstract List<Integer> getAvailableColors();
+    public List<Integer> getAvailableColors(){
+        return property.getAvailableColors();
+    }
     public int getRandomColor()
     {
         List<Integer> availableColors = getAvailableColors();
@@ -38,13 +40,13 @@ public abstract class BodyPart implements IHasIcon {
     }
 
     /**
-     * 调整
+     * 根据其他的BodyPartStack，调整当前的BodyPartStack
      */
-    public void adjust(Collection<BodyPartStack> stacks, BodyPartStack selfStack)
+    public void adjustWithContext(Collection<BodyPartStack> stacks, BodyPartStack selfStack)
     {
-        // DO NOTHING
+        //DEFAULT DO NOTHING
     }
-    ResourceLocation iconLocation;
+
     @Override
     @OnlyIn(Dist.CLIENT)
     public ResourceLocation getIconLocation() {

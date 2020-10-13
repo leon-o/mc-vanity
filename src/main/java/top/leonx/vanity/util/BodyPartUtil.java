@@ -11,7 +11,6 @@ import top.leonx.vanity.bodypart.BodyPartStack;
 import top.leonx.vanity.capability.BodyPartCapability;
 import top.leonx.vanity.capability.CharacterState;
 import top.leonx.vanity.entity.AbstractOutsider;
-import top.leonx.vanity.entity.OutsiderEntity;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,7 +40,7 @@ public class BodyPartUtil {
         for (BodyPartStack bodyPartStack : list) {
             if (bodyPartStack.getItem().getProperty().precondition.apply(tmpData)) result.add(bodyPartStack);
         }
-        result.forEach(t -> t.getItem().adjust(result, t));
+        result.forEach(t -> t.getItem().adjustWithContext(result, t));
         return result;
     }
 

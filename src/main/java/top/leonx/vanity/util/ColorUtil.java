@@ -1,11 +1,6 @@
 package top.leonx.vanity.util;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.monster.ZombieEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.DyeColor;
-import top.leonx.vanity.entity.OutsiderEntity;
 
 import java.util.*;
 import java.util.stream.Collectors;

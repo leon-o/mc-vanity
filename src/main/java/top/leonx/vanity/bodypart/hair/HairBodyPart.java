@@ -19,8 +19,4 @@ public abstract class HairBodyPart extends BodyPart {
         return suitableGender;
     }
 
-    @Override
-    public List<Integer> getAvailableColors() {
-        return ColorUtil.COLORS;
-    }
 }

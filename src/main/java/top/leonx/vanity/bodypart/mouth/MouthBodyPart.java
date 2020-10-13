@@ -12,9 +12,4 @@ public class MouthBodyPart extends BodyPart {
 
         super(BodyPartProperty.create().setGroup(BodyPartGroup.MOUTH).addFloat("mouth_height", -0.05f, 0.1f, 0f).addFloat("mouth_size", 0.5f, 2, 1f));
     }
-
-    @Override
-    public List<Integer> getAvailableColors() {
-        return ColorUtil.COLORS;
-    }
 }

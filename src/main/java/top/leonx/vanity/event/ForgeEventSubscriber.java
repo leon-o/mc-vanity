@@ -170,7 +170,6 @@ public class ForgeEventSubscriber {
     }
 
     private static int serverTickCount =0;
-    private static int clientTickCount =0;
     @SubscribeEvent
     public static void  onServerTick(TickEvent.ServerTickEvent event)
     {
@@ -183,17 +182,4 @@ public class ForgeEventSubscriber {
         }
         serverTickCount++;
     }
-
-/*    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event)
-    {
-
-    }*/
-
-/*    @SubscribeEvent
-    public static void onWorldLoad(WorldEvent.Load event)
-    {
-        OutsiderHolder.onWorldLoaded(event);
-    }*/
 }

@@ -19,9 +19,10 @@ public class ExtraHairBodyPart extends HairBodyPart {
     }
 
     @Override
-    public void adjust(Collection<BodyPartStack> stacks, BodyPartStack selfStack) {
-        Optional<BodyPartStack> first = stacks.stream().filter(t -> t.getItem().getGroup().equals(BodyPartGroup.BASE_HAIR_GROUP)).findFirst();
-        if(first.isPresent() && selfStack!=null && selfStack.getItem() instanceof ExtraHairBodyPart)
-            selfStack.setColor(first.get().getColor());
+    public void adjustWithContext(Collection<BodyPartStack> stacks, BodyPartStack selfStack) {
+        //获取已有的base hair，并将颜色设置成与base hair相同的颜色
+        Optional<BodyPartStack> firstBaseHair = stacks.stream().filter(t -> t.getItem().getGroup().equals(BodyPartGroup.BASE_HAIR_GROUP)).findFirst();
+        if(firstBaseHair.isPresent() && selfStack!=null && selfStack.getItem() instanceof ExtraHairBodyPart)
+            selfStack.setColor(firstBaseHair.get().getColor());
     }
 }
