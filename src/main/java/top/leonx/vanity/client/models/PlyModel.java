@@ -5,30 +5,43 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Vector3f;
+import net.minecraft.client.renderer.Vector4f;
 import net.minecraft.client.renderer.model.Model;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec2f;
 import net.minecraftforge.client.model.obj.LineReader;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class PlyModel extends Model {
-    private final ResourceLocation modelLocation;
-    public Vertex[] vertices=new Vertex[0];
-    public Face[] faces= new Face[0];
+    private final static Map<ResourceLocation,List<Face>> facesCache=new HashMap<>();
+    public final ResourceLocation modelLocation;
 
-    public PlyModel(ResourceLocation modelLocation) throws IOException
+    public List<Face> faces;
+
+    public PlyModel(ResourceLocation modelLocation)
     {
         super(RenderType::getEntityCutoutNoCull);
         this.modelLocation = modelLocation;
-        readPlyFile();
+
+        if(facesCache.containsKey(modelLocation))
+            faces=facesCache.get(modelLocation);
+        else {
+            try {
+                faces=readPlyFile(modelLocation);
+                facesCache.put(modelLocation,faces);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    private void readPlyFile() throws IOException
+    private static List<Face> readPlyFile(ResourceLocation location) throws IOException
     {
-        LineReader reader =new LineReader(Minecraft.getInstance().getResourceManager().getResource(modelLocation));
+        List<Face> results= new ArrayList<>();
+
+        LineReader reader =new LineReader(Minecraft.getInstance().getResourceManager().getResource(location));
 
         String[] head = reader.readAndSplitLine(true);
         if (head==null || !head[0].equals("ply")) {
@@ -42,6 +55,7 @@ public class PlyModel extends Model {
 
         List<PropertyType> vertexFormat=new ArrayList<>();
 
+        int vertexCount=0,faceCount=0;
         //read head
         String[] headLine;
         while((headLine = reader.readAndSplitLine(true)) != null)
@@ -57,14 +71,12 @@ public class PlyModel extends Model {
                     {
                         case "vertex":
                         {
-                            int count = Integer.parseInt(headLine[2]);
-                            vertices=new Vertex[count];
+                            vertexCount = Integer.parseInt(headLine[2]);
                             break;
                         }
                         case "face":
                         {
-                            int count = Integer.parseInt(headLine[2]);
-                            faces=new Face[count];
+                            faceCount = Integer.parseInt(headLine[2]);
                             break;
                         }
                     }
@@ -85,24 +97,27 @@ public class PlyModel extends Model {
             if(end)
                 break;
         }
+        List<Vertex> vertices=new ArrayList<>();
 
-        for (int i = 0; i < vertices.length; i++) {
+        for (int i = 0; i < vertexCount; i++) {
             String[] vertexLine = reader.readAndSplitLine(true);
             if(vertexLine==null) break;
-            vertices[i]= parseToVertex(vertexLine, vertexFormat);
+            vertices.add(parseToVertex(vertexLine, vertexFormat));
         }
 
-        for (int i = 0; i < faces.length; i++) {
+        for (int i = 0; i < faceCount; i++) {
             String[] faceLine = reader.readAndSplitLine(true);
             if(faceLine==null) break;
-            faces[i]=makeFace(faceLine,vertices);
+            results.add(makeFace(faceLine,vertices));
         }
+
+        return results;
     }
 
-    public Vertex parseToVertex(String[] lines, List<PropertyType> vertexFormat)
+    public static Vertex parseToVertex(String[] lines, List<PropertyType> vertexFormat)
     {
         float x=0,y=0,z=0,nx=0,ny=0,nz=0,u=0,v=0;
-        short r=0,g=0,b=0,a=0;
+        float r=0,g=0,b=0,a=0;
         for (int i = 0; i < lines.length; i++) {
             switch (vertexFormat.get(i))
             {
@@ -132,37 +147,54 @@ public class PlyModel extends Model {
                     v=Float.parseFloat(lines[i]);
                     break;
                 case RED:
-                    r=Short.parseShort(lines[i]);
+                    r=Short.parseShort(lines[i])/255F;
                     break;
                 case GREEN:
-                    g=Short.parseShort(lines[i]);
+                    g=Short.parseShort(lines[i])/255F;
                     break;
                 case BLUE:
-                    b=Short.parseShort(lines[i]);
+                    b=Short.parseShort(lines[i])/255F;
                     break;
                 case ALPHA:
-                    a=Short.parseShort(lines[i]);
+                    a=Short.parseShort(lines[i])/255F;
                     break;
             }
         }
 
-        return new Vertex(new Vector3f(x,y,z),new Vector3f(nx,ny,nz),new Vec2f(u,v),new short[]{r,g,b,a});
+        return new Vertex(new Vector3f(x,y,z),new Vector3f(nx,ny,nz),new Vec2f(u,v),new float[]{r,g,b,a});
     }
 
-    public Face makeFace(String[] faceLine,Vertex[] vertices)
+    public static Face makeFace(String[] faceLine,List<Vertex> vertices)
     {
         int vertexCount=Integer.parseInt(faceLine[0]);
         Vertex[] verticesSelected=new Vertex[vertexCount];
         for (int i = 0; i < vertexCount; i++) {
             int vertexIndex=Integer.parseInt(faceLine[i+1]);
-            verticesSelected[i]=vertices[vertexIndex];
+            verticesSelected[i]=vertices.get(vertexIndex);
         }
         return new Face(verticesSelected);
     }
 
     @Override
     public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+        renderFaces(faces, matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    }
 
+    protected static void renderFaces(Collection<Face> faces,MatrixStack matrixStackIn, IVertexBuilder bufferIn,
+                                int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
+    {
+        for (Face face : faces) {
+            for (Vertex vertex : face.vertices) {
+                MatrixStack.Entry last = matrixStackIn.getLast();
+                Vector4f pos4f=new Vector4f(vertex.position);
+                pos4f.transform(last.getMatrix());
+                Vector3f normal=vertex.normal.copy();
+                normal.transform(last.getNormal());
+                bufferIn.addVertex(pos4f.getX(),pos4f.getY(),pos4f.getZ(),red,green,blue,alpha,vertex.texCoords.x,
+                                   vertex.texCoords.y,packedOverlayIn,packedLightIn,normal.getX(),normal.getY(),
+                                   normal.getZ());
+            }
+        }
     }
 
     public static class Face
@@ -198,9 +230,9 @@ public class PlyModel extends Model {
         public Vector3f position;
         public Vector3f normal;
         public Vec2f  texCoords;
-        public short[] colors;
+        public float[] colors;
 
-        public Vertex(Vector3f position, Vector3f normal, Vec2f texCoords, short[] colors) {
+        public Vertex(Vector3f position, Vector3f normal, Vec2f texCoords, float[] colors) {
             this.position = position;
             this.normal = normal;
             this.texCoords = texCoords;
