@@ -4,10 +4,12 @@ import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.item.Items;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.leonx.vanity.VanityMod;
+import top.leonx.vanity.item.SkirtClothItem;
 
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, VanityMod.MOD_ID);
@@ -22,6 +24,9 @@ public class ModItems {
 
     public static final RegistryObject<Item> VANITY_MIRROR=ITEMS.register("vanity_mirror",
                                                           ()->createBlockItem(ModBlocks.VANITY_MIRROR,new Item.Properties().group(ItemGroup.DECORATIONS)));
+
+    public static final RegistryObject<Item> Skirt_1= ITEMS.register("skirt_1",
+                                                                         SkirtClothItem::new);
 
     public static BlockItem createBlockItem(RegistryObject<Block> block, Item.Properties properties)
     {

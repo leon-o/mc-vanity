@@ -28,4 +28,9 @@ public class BaseHairModel extends AbstractHairModel{
         hairModelRender.render(matrixStackIn,bufferIn,packedLightIn,packedOverlayIn,red,green,blue,alpha);
         hairWearModelRender.render(matrixStackIn,bufferIn,packedLightIn,packedOverlayIn,red,green,blue,alpha);
     }
+
+    @Override
+    public void resetPhysic() {
+
+    }
 }

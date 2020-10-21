@@ -1,6 +1,7 @@
 package top.leonx.vanity.client.gui.mirror;
 
 import net.minecraft.client.gui.widget.ToggleWidget;
+import net.minecraft.util.math.MathHelper;
 import top.leonx.vanity.client.screen.VanityMirrorScreen;
 import top.leonx.vanity.util.ColorUtil;
 
@@ -49,7 +50,7 @@ public class ColorSelectPage {
         int i = allColors.indexOf(currentColor);
         currentPage=i/numberPerPage;
         buttons.forEach(t->t.setStateTriggered(false));
-        buttons.get(i%numberPerPage).setStateTriggered(true);
+        buttons.get(MathHelper.clamp(i%numberPerPage,0, buttons.size()-1)).setStateTriggered(true);
         updateShowingColor();
     }
     public void render(int mouseX,int mouseY,float partialTicks)

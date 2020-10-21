@@ -104,4 +104,10 @@ public class DoublePonytailModel extends AbstractHairModel {
         //band2.rotateAngleZ+=rotateDeltaZ;
         //band2.rotateAngleY-=rotateDeltaY;
     }
+
+    @Override
+    public void resetPhysic() {
+        setRotationAngle(band,0,0,0);
+        setRotationAngle(band2,0,0,0);
+    }
 }

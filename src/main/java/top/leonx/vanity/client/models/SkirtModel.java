@@ -11,14 +11,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class DressPlyModel extends PlyModel implements IHasPhysic {
+public class SkirtModel extends PlyModel implements IHasPhysic {
     List<Face> facesWithPhysic = new ArrayList<>();
-
-    public DressPlyModel(ResourceLocation modelLocation) {
+    public SkirtModel(ResourceLocation modelLocation) {
         super(modelLocation);
     }
 
@@ -51,6 +51,11 @@ public class DressPlyModel extends PlyModel implements IHasPhysic {
             }
             facesWithPhysic.add(new Face(verticesNew));
         }
+    }
+
+    @Override
+    public void resetPhysic() {
+        facesWithPhysic.clear();
     }
 
     @Override

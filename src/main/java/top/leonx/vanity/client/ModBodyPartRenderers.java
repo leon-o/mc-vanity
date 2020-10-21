@@ -1,15 +1,10 @@
 package top.leonx.vanity.client;
 
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 import top.leonx.vanity.VanityMod;
-import top.leonx.vanity.bodypart.BodyPartRegistry;
 import top.leonx.vanity.client.models.*;
 import top.leonx.vanity.client.renderer.bodypart.*;
 import top.leonx.vanity.init.ModBodyParts;
-
-import java.io.IOException;
-import java.util.function.Function;
 
 public class ModBodyPartRenderers {
     private static ResourceLocation getHairLocation(String name)
@@ -22,7 +17,6 @@ public class ModBodyPartRenderers {
     }
     private static ResourceLocation getSkinLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/skin/%s.png", name));}
     private static ResourceLocation getMouthLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/mouth/%s.png", name));}
-    private static ResourceLocation getDressLocation(String name){return new ResourceLocation(VanityMod.MOD_ID, String.format("textures/bodypart/dress/%s.png", name));}
 
     public static void register()
     {
@@ -45,9 +39,6 @@ public class ModBodyPartRenderers {
 
         //BodyPartRendererRegistry.register(ModBodyParts.MOUTH_DEBUG,new MouthBodyPartRenderer(getMouthLocation(ModBodyParts.MOUTH_DEBUG.get().getName())));
         BodyPartRendererRegistry.register(ModBodyParts.MOUTH_1,new MouthBodyPartRenderer(getMouthLocation(ModBodyParts.MOUTH_1.get().getName())));
-
-        BodyPartRendererRegistry.register(ModBodyParts.DRESS_DEBUG,new DressBodyPartRenderer(entity -> new DressPlyModel(new ResourceLocation(VanityMod.MOD_ID, "models/bodypart/dress.ply")),
-                                                                                                 getDressLocation(ModBodyParts.DRESS_DEBUG.get().getName())));
 
     }
 }

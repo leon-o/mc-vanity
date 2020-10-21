@@ -23,4 +23,5 @@ public interface IHasPhysic {
     }
 
     void applyPhysic(LivingEntity livingEntity,float partialTicks,Vec3d deltaDis,float deltaYawOffset,float deltaYaw,float deltaPitch);
+    void resetPhysic();
 }

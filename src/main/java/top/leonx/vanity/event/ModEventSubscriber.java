@@ -66,10 +66,10 @@ public class ModEventSubscriber {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPostRegistryPOI(final RegistryEvent.Register<PointOfInterestType> event)
     {
-        for (RegistryObject<PointOfInterestType> type : ModPointOfInterest.POI_TYPE.getEntries()) {
+        /*for (RegistryObject<PointOfInterestType> type : ModPointOfInterest.POI_TYPE.getEntries()) {
             if(type.getId().getNamespace().equals(VanityMod.MOD_ID))
             PointOfInterestType.registerBlockStates(type.get()); //NOTICE THIS
-        }
+        }*/
     }
 
 //    @SubscribeEvent

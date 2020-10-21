@@ -21,10 +21,22 @@ public class PurposefulTaskWrap {
      */
     public Function<GoapGoal,BehaviorTreeTask<OutsiderEntity>> task;
 
+    /**
+     *
+     * @param precondition Precondition. The goal must be reached to run this task.
+     * @param goapGoalHandler Which goal this task deals.
+     */
     public PurposefulTaskWrap(GoapGoal precondition, Function<GoapGoal, GoapCost> goapGoalHandler, Function<GoapGoal,BehaviorTreeTask<OutsiderEntity>> task)
     {
         this(t->precondition,goapGoalHandler,task);
     }
+
+    /**
+     *
+     * @param precondition Precondition. To run this task, which goal must be done. Converted from the goal this task
+     *                     handled.
+     * @param goapGoalHandler Which goal this task deals.
+     */
     public PurposefulTaskWrap(Function<GoapGoal,GoapGoal> precondition, Function<GoapGoal, GoapCost> goapGoalHandler, Function<GoapGoal,BehaviorTreeTask<OutsiderEntity>> task) {
         this.precondition = precondition;
         this.goapGoalHandler = goapGoalHandler;

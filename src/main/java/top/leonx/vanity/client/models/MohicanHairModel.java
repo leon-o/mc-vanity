@@ -46,4 +46,9 @@ public class MohicanHairModel extends AbstractHairModel {
         modelRenderer.rotateAngleY = y;
         modelRenderer.rotateAngleZ = z;
     }
+
+    @Override
+    public void resetPhysic() {
+
+    }
 }

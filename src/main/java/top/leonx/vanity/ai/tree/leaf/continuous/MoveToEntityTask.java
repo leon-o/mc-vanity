@@ -7,6 +7,7 @@ import net.minecraft.world.server.ServerWorld;
 import top.leonx.vanity.ai.tree.BehaviorTreeTask;
 import top.leonx.vanity.util.TernaryFunc;
 
+@Deprecated
 public class MoveToEntityTask<T extends MobEntity> extends BehaviorTreeTask<T> {
     public LivingEntity targetEntity;
 

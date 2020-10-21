@@ -38,7 +38,6 @@ public class PonytailModel extends AbstractHairModel {
     public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
         //super.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         band.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        setRotationAngle(band,0,0,0);
     }
 
     @Override
@@ -50,5 +49,10 @@ public class PonytailModel extends AbstractHairModel {
         band.rotateAngleY-=rotateDeltaY;
 
         band.rotateAngleX= (float) Math.min(Math.PI/2, band.rotateAngleX);
+    }
+
+    @Override
+    public void resetPhysic() {
+        setRotationAngle(band,0,0,0);
     }
 }

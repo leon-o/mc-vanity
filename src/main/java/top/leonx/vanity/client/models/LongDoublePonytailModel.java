@@ -59,8 +59,7 @@ public class LongDoublePonytailModel extends AbstractHairModel {
         //super.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         band.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         bandRight.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        setRotationAngle(band,0,0,0);
-        setRotationAngle(bandRight,0,0,0);
+
     }
 
     @Override
@@ -76,5 +75,11 @@ public class LongDoublePonytailModel extends AbstractHairModel {
         bandRight.rotateAngleX+=rotateDeltaX;
         bandRight.rotateAngleZ+=rotateDeltaZ;
         bandRight.rotateAngleY-=rotateDeltaY;
+    }
+
+    @Override
+    public void resetPhysic() {
+        setRotationAngle(band,0,0,0);
+        setRotationAngle(bandRight,0,0,0);
     }
 }

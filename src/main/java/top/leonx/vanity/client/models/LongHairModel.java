@@ -55,9 +55,6 @@ public class LongHairModel extends AbstractHairModel {
 		//super.render(matrixStack, buffer, packedLight, packedOverlay,red,green,blue,alpha);
 		bone.render(matrixStack, buffer, packedLight, packedOverlay,red,green,blue,alpha);
 		front.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-		for (ModelRenderer renderer : Bones) {
-			setRotationAngle(renderer,0,0,0);
-		}
 	}
 
 	public void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
@@ -87,5 +84,12 @@ public class LongHairModel extends AbstractHairModel {
 			renderer.rotateAngleY-=deltaRadianY;
 		}
 		bone.rotateAngleX=Math.max(0,bone.rotateAngleX);
+	}
+
+	@Override
+	public void resetPhysic() {
+		for (ModelRenderer renderer : Bones) {
+			setRotationAngle(renderer,0,0,0);
+		}
 	}
 }

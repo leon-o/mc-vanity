@@ -49,6 +49,7 @@ public class HairBodyPartRenderer extends BodyPartRenderer {
         if(baseHairModel!=null) {
             baseHairModel.applyPhysic(livingEntity, partialTicks);
             baseHairModel.render(matrixStackIn, bufferIn.getBuffer(getRenderType()), packedLightIn, OverlayTexture.NO_OVERLAY, color.r,color.g,color.b,color.a);
+            baseHairModel.resetPhysic();
         }
 
         matrixStackIn.pop();
